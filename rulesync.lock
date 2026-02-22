@@ -1,0 +1,240 @@
+{
+  "lockfileVersion": 1,
+  "sources": {
+    "sickn33/antigravity-awesome-skills": {
+      "requestedRef": "main",
+      "resolvedRef": "c8831a47434692ca1cc547f311dffb4364a13e9f",
+      "resolvedAt": "2026-02-22T22:38:58.558Z",
+      "skills": {
+        "ab-test-setup": {
+          "integrity": "sha256-de275b731449a5885ded9de93ba18b49223117c84ac32a687b7700622e6466dc"
+        },
+        "agent-evaluation": {
+          "integrity": "sha256-8c06b43a54298af10d063c5f6decc4ad106e56a83cd8e0b505205d180eeabc64"
+        },
+        "algorithmic-art": {
+          "integrity": "sha256-06e916c3d9818dcb0ebd055cd0b1a255398b9af1e768d3c793a68d6078d6caa6"
+        },
+        "analytics-tracking": {
+          "integrity": "sha256-5fc2c18245575f29c91e940791c51d440741096f44dc2d5ea4b1f91a1d6c7367"
+        },
+        "api-security-best-practices": {
+          "integrity": "sha256-3bfca59c3f33edc31b7e9637b9b435d98d29cbf418bb2d85c4ab896489763db4"
+        },
+        "architecture-decision-records": {
+          "integrity": "sha256-4c1da8810b56b632d4c1f8ed07e427ba257907a1910a6bb0128273621f4c8ef6"
+        },
+        "architecture-patterns": {
+          "integrity": "sha256-e18b55f5dcc8dc74361d07f3e6214870de2a2327be065711e96803d77aed6bb9"
+        },
+        "auth-implementation-patterns": {
+          "integrity": "sha256-d79fd37431bd4e74b4bbdbfb5936f2750a573a01d55af23080ae979c7afcd0b3"
+        },
+        "backend-security-coder": {
+          "integrity": "sha256-85002514ba18574bf723325432ae25d5fda2b2f25d1625d9196ebc212ab95281"
+        },
+        "browser-automation": {
+          "integrity": "sha256-00338b719aa5b708a5d076d24d4fba0d2086c7bbf6167625a32da5b02281cf2d"
+        },
+        "burp-suite-testing": {
+          "integrity": "sha256-8ec801c62db6f302bb3284b0c8a2ba7665e2f2965c3a5df0d8cb27d6a1b5def2"
+        },
+        "canvas-design": {
+          "integrity": "sha256-a9af81e16e8bba8f379ba01bbad76b7598b471ccc773aff855d012593a1a9e4f"
+        },
+        "cc-skill-security-review": {
+          "integrity": "sha256-1be407452fa7c50d0dec0322780d20c15bf901bb52720d0ccad248984e9f492b"
+        },
+        "changelog-automation": {
+          "integrity": "sha256-496e673750aa7b430eb9536f8d7184491264c82c5992d97f838baf7db1b10c59"
+        },
+        "cloud-penetration-testing": {
+          "integrity": "sha256-824adadc90f517cc619ce978da942b17f41bd040f8af61e3830d0e5d225a28c7"
+        },
+        "code-review-checklist": {
+          "integrity": "sha256-485e3964d5bb1f4e959338d3ff1b852c719c09b1554594ae5bcd8b1e00a39ce7"
+        },
+        "commit": {
+          "integrity": "sha256-e50ac09ee9b0f2d31008310f07c2f7e9a0df207e7b79249b5ecca602bc814408"
+        },
+        "competitive-landscape": {
+          "integrity": "sha256-68eca1880e0e36bce6d9bccf0aae6d77cb7d2fb6a72e54cb740678cd7519ef84"
+        },
+        "competitor-alternatives": {
+          "integrity": "sha256-9adfd4cf70bd161220e62e3a3e1ebecc51e7a5347f664cc2a6845bcb40da876e"
+        },
+        "concise-planning": {
+          "integrity": "sha256-8ba22e008e7cd09c6c663c3ace81e8ad272f5d3b2cf7384f02fb4f6b36c4f5a1"
+        },
+        "content-creator": {
+          "integrity": "sha256-903e7a33594efb3de8541a6c49436261d20574d8c9cbb79e80fe98993779623c"
+        },
+        "context-window-management": {
+          "integrity": "sha256-aa2a4e9e6517dfe8c61390e373ff65756f4b641fb520c03091850475f9966de5"
+        },
+        "copy-editing": {
+          "integrity": "sha256-54cba1d8cc60f79b211e89a48c824620227a2ce8b3a65fc5d7bf58edad34fc78"
+        },
+        "copywriting": {
+          "integrity": "sha256-7a91c96c11e82006e461925398df8c0ccd86610ed02e7174b2e007b9258a9fb2"
+        },
+        "create-pr": {
+          "integrity": "sha256-5f9bae14ad0ed3c521bf2d825ade5b17950dfefb803e1e021479632433c31612"
+        },
+        "ddd-context-mapping": {
+          "integrity": "sha256-970983a3e763ffb26f593ce04a3825472b79594b0a7015aada9e71a1c8413bf4"
+        },
+        "ddd-strategic-design": {
+          "integrity": "sha256-442d07eab9623af3232e53a37754d01badbfd98012c794e6d9b5cc80d1fcb773"
+        },
+        "ddd-tactical-patterns": {
+          "integrity": "sha256-64d876aa4e18489e01e7bef3926562a6d86f3748d61eee3a1d686203f60cedea"
+        },
+        "distributed-tracing": {
+          "integrity": "sha256-7e955015ba7074ff30e44ff7f918dc546a66f975d09eb542c25cbfaf2fd89e75"
+        },
+        "documentation-generation-doc-generate": {
+          "integrity": "sha256-f7bba29e47359ad73042e65e79d87e500b6a66c07aacbe7d14dac92f350addec"
+        },
+        "documentation-templates": {
+          "integrity": "sha256-4bea4608bc996fd97f18625919ee4f50d105452f29b2030ab910781a4e5e5941"
+        },
+        "domain-driven-design": {
+          "integrity": "sha256-50ab8d80dac9331ee532bc167d3e923c15410da19205a0f83c4d06b70ddec127"
+        },
+        "e2e-testing-patterns": {
+          "integrity": "sha256-2c188e470bd064c5c0d03cb6e0f904428808f1eec352f76a4d3364838c24147b"
+        },
+        "email-sequence": {
+          "integrity": "sha256-6bcc08d9ee6eebae1ef2272488276a89ab7988b3929c9af75093e1e58601ad8e"
+        },
+        "ethical-hacking-methodology": {
+          "integrity": "sha256-ec102c5556b9be9ed02dc85acd53bbed8e1ea7c1a8006d0411523fc6316a4d51"
+        },
+        "frontend-design": {
+          "integrity": "sha256-e15a16a212df876238a38e87d682fac2698ebc555ffcf506eeeae4b2d614e895"
+        },
+        "frontend-security-coder": {
+          "integrity": "sha256-17ac8c221ef0b9e206f919450112d82d7af063f2fb70101e7cf58e12b9e6a9d3"
+        },
+        "git-advanced-workflows": {
+          "integrity": "sha256-5e6f5e3ad4056ef4a6a9b69c5c6beb5fba7b11c26b245f7c2e38bfc1cd3b6aac"
+        },
+        "git-pushing": {
+          "integrity": "sha256-0d22d5edda4ca7de1a103b4357f74a5bb1a3daed08b2cb593c46ae91d9e93f73"
+        },
+        "incident-responder": {
+          "integrity": "sha256-ae61132d7594897d19bc169129450134e7385649c9e2e4a7156a714c42f2550a"
+        },
+        "interactive-portfolio": {
+          "integrity": "sha256-dd038495732412c3d535b0d4b0435c73b3ced1ff3f2153078a00141e794f8941"
+        },
+        "javascript-pro": {
+          "integrity": "sha256-22b00729ca836839296c37f0906a6746db256ed9286de8280fbfe6544f60e748"
+        },
+        "kaizen": {
+          "integrity": "sha256-8d74bb320678e15b82036b7e2372b300348aecbb29f0a20d64856c6948037f07"
+        },
+        "langfuse": {
+          "integrity": "sha256-7a7f28110d367bb61ee1b1da811c1f32eacdd127beb339e60666490e38fdf74d"
+        },
+        "langgraph": {
+          "integrity": "sha256-f11380ed6a5b4db9b6d2c67cb56da5591ee3e7ee0ad03c0672430c767263d807"
+        },
+        "launch-strategy": {
+          "integrity": "sha256-cade5a9c0b3dededac399f9e295b63c625b8591c5b318e5f10d6f0970c2cf8f3"
+        },
+        "lint-and-validate": {
+          "integrity": "sha256-49843bdb78d9a23f3334e184e542c056da38b0c22c224d3e41efccc89ed12aaa"
+        },
+        "linux-privilege-escalation": {
+          "integrity": "sha256-d3d0468722f1816e7602c7f302d05ca7335c401422144964bfa0111b23b4d658"
+        },
+        "llm-app-patterns": {
+          "integrity": "sha256-f82ec80f38ceb50a345c9edf7f6132346eba4e6764fcbbec78103965e8a2f065"
+        },
+        "mcp-builder": {
+          "integrity": "sha256-93a5d3a1959f9e5846da31daa9cb8a1d059d2c2614ca7b1f818d4c4b899368b0"
+        },
+        "nodejs-best-practices": {
+          "integrity": "sha256-9933852e640abced1ebdf176e466ccfd4e562d96deda720b11a66bb38a5a7941"
+        },
+        "observability-engineer": {
+          "integrity": "sha256-f5aca2ea6f22b7eb2738b5f3b8269486a655d6a174294af249788cec8b42cb45"
+        },
+        "pci-compliance": {
+          "integrity": "sha256-773824f0c7fb1258aabe0d8421d4e2a2105189133e2483ec01608d94dcdedb2e"
+        },
+        "performance-engineer": {
+          "integrity": "sha256-c6d105f38b05fa17ad61da596aa336cf0021439d0613950d49ad328a8e8a4f36"
+        },
+        "postmortem-writing": {
+          "integrity": "sha256-bbc7742478cfccb6771bafaf42c40a1ec8f32e8da77ecac7a256a92185133662"
+        },
+        "product-manager-toolkit": {
+          "integrity": "sha256-be381c0b2d8f8a5e015be98e3625721cf410f49e55382b0a2eb27874afa1dd93"
+        },
+        "programmatic-seo": {
+          "integrity": "sha256-a5e0dd0650565bf047291a6c2f0fb0c6e2e017f3f9bd686a030cdc073e3dd5c6"
+        },
+        "prompt-caching": {
+          "integrity": "sha256-4309347e15f721b489c4ede4ae130f02b03dbdca2f6397123bc63f7869aab2a0"
+        },
+        "prompt-engineering": {
+          "integrity": "sha256-35d9465970730e85e5ea4090717d6cc80208cf91fe088199ac494b6d76030923"
+        },
+        "rag-engineer": {
+          "integrity": "sha256-1fb0f3edd9bb52c652bc497279b61f5bfac05df7c880d811b2010b2b4782a784"
+        },
+        "rag-implementation": {
+          "integrity": "sha256-4545d41d06ab50424243acd07c85116653b0223632ff30976e1f63af7fe43bb3"
+        },
+        "receiving-code-review": {
+          "integrity": "sha256-3dd50c4d0b2f9de1d2817fcc29639bdf64bf79d4c86ae7964a7fce3810f000e1"
+        },
+        "requesting-code-review": {
+          "integrity": "sha256-173340aaecf11ebf282c71a6fddc0d36c503235517b6f697b54113d8b1e20865"
+        },
+        "scroll-experience": {
+          "integrity": "sha256-33aeff4d1e9cf5200a54ee720d580cc26bab187be0efdf68f63977b4d149d364"
+        },
+        "senior-architect": {
+          "integrity": "sha256-f4814757f55d3b9afba915bb1039a58f92298e4b2fd16b75518d4073ae16e7b0"
+        },
+        "seo-audit": {
+          "integrity": "sha256-f1ca51ceeb36917a0f4a6938888785a05348e713daffa5f9245b43f728620323"
+        },
+        "skill-creator": {
+          "integrity": "sha256-c06459422f62afcabab18c3a8d682b78b0b49950ff61445db5c9bdc4f55d5cb7"
+        },
+        "skill-developer": {
+          "integrity": "sha256-193271e12cedc3c910e243ef28daf12a56c9cacd9c82be30c9e1cdaf9bd36d0c"
+        },
+        "slo-implementation": {
+          "integrity": "sha256-a3150ef5f4ac07ad52236f406c1b26e2b0e9d1065b12793ca8e8d88c26d30270"
+        },
+        "systematic-debugging": {
+          "integrity": "sha256-5f65c141177bb1bb232bbb9fcf58ad7be7a233c2dc63926b690acee0fa4a9020"
+        },
+        "test-driven-development": {
+          "integrity": "sha256-ddd3c48c387c2b8422af44d216faada37d4511bb6c9b2dac7201da49c713dc6f"
+        },
+        "test-fixing": {
+          "integrity": "sha256-613361201bddc3a7a94acdebf4a7d6f3ad351630b43fef1999e0ecdfa3326b0e"
+        },
+        "top-web-vulnerabilities": {
+          "integrity": "sha256-b92f3df10ebee3584bbbec371c140e611be8a1e1352bf4c924c588b127afa2b0"
+        },
+        "verification-before-completion": {
+          "integrity": "sha256-662369d0a287b796d630a057496b01cb0e02f372ea14c3da227190b0dec39cef"
+        },
+        "vulnerability-scanner": {
+          "integrity": "sha256-8a81356bad045dcca1f9bba6533119735b027e1ce1482e3f127efcf3af553ac8"
+        },
+        "writing-skills": {
+          "integrity": "sha256-27404a6ea2f98cc973c87cef4ebd6491c2f94755e5762b0ca8636a3cef94a481"
+        }
+      }
+    }
+  }
+}

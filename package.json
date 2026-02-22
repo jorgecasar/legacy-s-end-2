@@ -1,0 +1,16 @@
+{
+  "name": "legacys-ends",
+  "version": "1.0.0",
+  "description": "Legacy's End: A narrative game following Clean Architecture and modern standards.",
+  "type": "module",
+  "scripts": {
+    "rulesync": "rulesync",
+    "serena": "uvx --from git+https://github.com/oraios/serena serena"
+  },
+  "keywords": [],
+  "author": "Jorge Casar",
+  "license": "MIT",
+  "devDependencies": {
+    "rulesync": "^7.6.3"
+  }
+}

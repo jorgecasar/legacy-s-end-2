@@ -12,6 +12,8 @@ Bienvenido a la documentación oficial para la replicación integral de **Legacy
 6. [**Stack Tecnológico y Calidad**](./06-tech-stack-and-qa.md): Node 24, Lit, Web Awesome, TDD/BDD y validación en navegadores reales.
 7. [**Contrato de Datos (Contenido)**](./07-data-contract.md): Esquemas JSON/JS para crear nuevas misiones, capítulos y entidades.
 8. [**AI Agent Capabilities & Skills**](./08-ai-agent-capabilities.md): Ecosistema de habilidades (skills) que potencian el desarrollo autónomo y la calidad del proyecto.
+9. [**AI Infrastructure & Rulesync**](./09-ai-infrastructure.md): Configuración de herramientas de asistencia (Serena, Rulesync) y reglas unificadas para agentes.
+10. [**Getting Started & Setup**](./10-getting-started.md): Pasos iniciales para configurar el entorno de desarrollo.
 
 ---
 Este sistema de documentación garantiza que cualquier desarrollador pueda conocer completamente el juego y extenderlo siguiendo los estándares de "Jorge Casar Persona".
