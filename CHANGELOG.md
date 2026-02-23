@@ -8,13 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initialized npm project as native ESM.
 - Configured **AI Infrastructure** using **Rulesync** and **Serena** MCP for semantic code analysis.
 - Defined **Google Antigravity** and **Gemini CLI** as authorized agents with official and community skills.
 - Established core standards: **Conventional Commits**, **Clean Architecture**, and **Serena-inspired workflow**.
 - Integrated over 70 specialized agent capabilities from `antigravity-awesome-skills` managed via **Rulesync**.
 - Created initial documentation and automated project tracking rules.
+- Configured **JavaScript Quality Stack**:
+  - **Oxlint**: Integrated as an ultrafast linter with JSDoc support.
+  - **Oxfmt**: Integrated for high-performance code formatting.
+  - **Exclusions**: Ignored AI-related directories (`.rulesync`, `.serena`, etc.) from linting, formatting, and type checking.
+  - **Type Checking**: Established strict JSDoc validation using TypeScript (`jsconfig.json`).
+- Configured **Git Hooks with Husky**:
+  - **commit-msg**: Added validation for Conventional Commits using `commitlint`.
+  - **pre-commit**: Integrated `lint-staged` (configured via `.lintstagedrc.json`) to automatically format and lint files before committing.
+  - **Scripts**: Added `lint`, `format`, and `type-check` to `package.json`.
 
 ### Fixed
+
 - Resolved YAML syntax errors in external skills and refined documentation consistency.
 - Corrected `.gitignore` rules to properly exclude generated agent settings.
