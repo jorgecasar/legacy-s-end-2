@@ -29,3 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resolved YAML syntax errors in external skills and refined documentation consistency.
 - Corrected `.gitignore` rules to properly exclude generated agent settings.
+
+### Changed
+
+- Improved documentation structure and clarity:
+  - Created root `README.md` as a central entry point.
+  - Refactored `docs/10-getting-started.md` to be more actionable for new developers.
+  - Added `docs/13-roadmap.md` to track project progress and milestones.
+  - Updated `docs/README.md` index to include new documents.
+- Translated all project documentation to English to follow professional standards and ensure global accessibility.

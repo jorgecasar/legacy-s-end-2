@@ -1,17 +1,34 @@
-# 01 - Visión de Producto y Narrativa
+## 4. Pedagogical Method: "The Refactor Loop"
 
-## 1. El Propósito
-**Legacy's End** no es solo un juego; es una herramienta pedagógica diseñada para enseñar **Alta Ingeniería de Software** (Clean Architecture, Web Components, Desacoplamiento) a través de una experiencia inmersiva. El aprendizaje ocurre mediante la resolución narrativa de problemas técnicos reales.
+The game follows a specific educational cycle for every mission:
 
-## 2. El Lore del Mundo
-- **El Monolito**: Una entidad ancestral de código corrupto que representa el "Código Legado". Se manifiesta como acoplamiento extremo, efectos secundarios impredecibles y estilos globales que rompen la realidad.
-- **Las Zonas de Corrupción**: Cada misión representa un "Code Smell" o un anti-patrón (ej: El Pantano del Scope Global, El Altar de la Mutación).
+1.  **Encounter**: The player encounters a "Corrupted" zone or NPC blocked by a technical debt metaphor.
+2.  **Instruction**: Through the Dialogue System, the "Code Smell" is explained using code comparisons and diagrams.
+3.  **Insight**: The player gains a theoretical understanding (Skill) of the architectural solution.
+4.  **Transformation**: Completing the mission "Heals" the world, providing a visual reward for the cognitive shift.
 
-## 3. Alarion: El Protagonista Evolutivo
-El jugador asume el papel de Alarion, un "Adepto del Código Limpio" cuya misión es refactorizar el mundo.
+This method ensures that abstract concepts like "Dependency Inversion" are grounded in a tangible, narrative context.
+**Legacy's End** is not just a game; it is a pedagogical tool designed to teach **High-Quality Software Engineering** (Clean Architecture, Web Components, Decoupling) through an immersive experience. Learning happens by narratively solving real technical problems.
 
-### 3.1 Evolución del Ser
-Alarion no tiene niveles de experiencia tradicionales. Su progresión es:
-- **Habilidades Arquitectónicas**: Al completar retos, Alarion desbloquea "Habilidades" (ej: "Escudo de Encapsulación") que son en realidad conceptos de ingeniería.
-- **Evolución Visual**: El personaje cambia dinámicamente. Al obtener recompensas o interactuar con elementos, puede cambiar su **vestimenta (skin)**, su aura o accesorios.
-- **Modificación de Atributos**: Las interacciones pueden alterar aspectos de su ser que cambian cómo percibe o interactúa con los NPCs en capítulos futuros.
+### 1.1 Target Audience
+
+- **Frontend developers** who are starting out or want to deepen their knowledge of best practices.
+- People interested in learning **Web Components**, clean architecture, and design patterns.
+- No prior game development experience required.
+
+## 2. World Lore
+
+- **The Monolith**: An ancient entity of corrupt code representing "Legacy Code". It manifests as extreme coupling, unpredictable side effects, and global styles that break reality.
+- **Corruption Zones**: Each mission represents a "Code Smell" or anti-pattern (e.g., The Global Scope Swamp, The Mutation Altar).
+
+## 3. Alarion: The Evolving Protagonist
+
+The player takes on the role of Alarion, an "Adept of Clean Code" whose mission is to refactor the world.
+
+### 3.1 Evolution
+
+Alarion does not have traditional experience levels. His progression is:
+
+- **Architectural Skills**: By completing challenges, Alarion unlocks "Skills" (e.g., "Encapsulation Shield") which are actually engineering concepts.
+- **Visual Evolution**: The character changes dynamically. Upon obtaining rewards or interacting with elements, they can change their **outfit (skin)**, aura, or accessories.
+- **Attribute Modification**: Interactions can alter hero properties (e.g., obtaining an `outfit` that changes appearance, or an `aura` reflecting mastery of a concept). These changes affect how NPCs respond in future chapters (conditional dialogues based on acquired skills/outfits).

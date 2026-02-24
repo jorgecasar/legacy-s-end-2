@@ -10,11 +10,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true,
-		"skipLibCheck": false,
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["src/*"]
-		}
+		"skipLibCheck": false
 	},
 	"include": ["src/**/*.js", "docs/**/*.md"],
 	"exclude": ["node_modules", "dist", ".rulesync", ".serena", ".agent", ".gemini"]

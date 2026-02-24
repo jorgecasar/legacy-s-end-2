@@ -1,19 +1,27 @@
 # 🎮 Legacy's End: Master Replication Guide
 
-Bienvenido a la documentación oficial para la replicación integral de **Legacy's End**. Este conjunto de documentos define cada aspecto técnico, narrativo y de negocio necesario para construir el proyecto desde cero.
+Welcome to the official documentation for the comprehensive replication of **Legacy's End**. This set of documents defines every technical, narrative, and business aspect necessary to build the project from scratch.
 
-## Índice de Documentación
+## Documentation Index
 
-1.  [**Visión de Producto y Narrativa**](./01-product-and-narrative.md): Propósito pedagógico, el Lore del "Monolito" y la evolución del héroe Alarion.
-2.  [**UX y Flujo de Navegación**](./02-ux-and-flow.md): Detalle del Quest Hub (Home), Dashboard de progreso y el Viewport de juego.
-3.  [**Mecánicas de Juego Avanzadas**](./03-game-mechanics.md): Motor de interacciones por coordenadas %, sistema de condiciones y mundo reactivo.
-4.  [**Sistema de Diálogos y Slides**](./04-dialogue-system.md): Composición de barajas (decks) de diapositivas y componentes de aprendizaje.
-5.  [**Arquitectura y Estándares de Código**](./05-architecture-and-standards.md): Clean Architecture (4 capas), Inyección de Dependencias y el uso de `accessor`.
-6. [**Stack Tecnológico y Calidad**](./06-tech-stack-and-qa.md): Node 24, Lit, Web Awesome, TDD/BDD y validación en navegadores reales.
-7. [**Contrato de Datos (Contenido)**](./07-data-contract.md): Esquemas JSON/JS para crear nuevas misiones, capítulos y entidades.
-8. [**AI Agent Capabilities & Skills**](./08-ai-agent-capabilities.md): Ecosistema de habilidades (skills) que potencian el desarrollo autónomo y la calidad del proyecto.
-9. [**AI Infrastructure & Rulesync**](./09-ai-infrastructure.md): Configuración de herramientas de asistencia (Serena, Rulesync) y reglas unificadas para agentes.
-10. [**Getting Started & Setup**](./10-getting-started.md): Pasos iniciales para configurar el entorno de desarrollo.
+1.  [**Product Vision and Narrative**](./01-product-and-narrative.md): Pedagogical purpose, "The Monolith" lore, and the evolution of the hero Alarion.
+2.  [**UX and Navigation Flow**](./02-ux-and-flow.md): Quest Hub (Home), progress dashboard, and game viewport details.
+3.  [**Advanced Game Mechanics**](./03-game-mechanics.md): % Coordinate-based interaction engine, conditions system, and reactive world.
+4.  [**Dialogue System and Slides**](./04-dialogue-system.md): Slide deck composition and learning components.
+5.  [**Architecture and Code Standards**](./05-architecture-and-standards.md): Clean Architecture (4 layers), Dependency Injection, and `accessor` usage.
+6.  [**Tech Stack and QA**](./06-tech-stack-and-qa.md): Node 24, Lit, Web Awesome, TDD/BDD, and real browser validation.
+7.  [**Data Contract (Content)**](./07-data-contract.md): JSON/JS schemas to create new missions, chapters, and entities.
+8.  [**AI-Assisted Development**](./08-ai-assisted-development.md): Rulesync, Serena MCP, and specialized AI skill ecosystem.
+9.  [**Quick Start and Setup**](./09-getting-started.md): Initial steps to configure the development environment.
+10. [**Game Loop and Input**](./10-game-loop-and-input.md): Event-driven update model, controls, and touch support.
+11. [**Accessibility and i18n**](./11-accessibility-and-i18n.md): ARIA, keyboard navigation, contrast, i18n.
+12. [**Project Roadmap**](./12-roadmap.md): Current project status, completed milestones, and next steps.
+13. [**Architecture Decision Records (ADR)**](./adr/README.md): Formal record of architectural decisions and their justification.
+14. [**Performance and Reliability**](./14-performance-and-reliability.md): SLIs, SLOs, and runtime performance targets.
+15. [**Assets and Visual Style**](./15-assets-and-style.md): Aesthetic guidelines for pixel art, scenarios, and audio.
+16. [**Glossary of Terms**](./16-glossary.md): Key narrative, technical, and game term definitions.
+17. [**AI Orchestration Pipelines**](./17-ai-orchestration.md): Strategy for autonomous, multi-agent development via GitHub Issues and Actions.
 
 ---
-Este sistema de documentación garantiza que cualquier desarrollador pueda conocer completamente el juego y extenderlo siguiendo los estándares de "Jorge Casar Persona".
+
+This documentation system ensures that any developer can fully understand the game and extend it following "Jorge Casar Persona" standards.
