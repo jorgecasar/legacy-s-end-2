@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"author": "Jorge Casar",
 	"workspaces": [
-		"packages/**"
+		"packages/*"
 	],
 	"type": "module",
 	"scripts": {
@@ -23,6 +23,7 @@
 	"devDependencies": {
 		"@commitlint/cli": "^20.4.2",
 		"@commitlint/config-conventional": "^20.4.2",
+		"@legacys-end/ai-orchestration": "*",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
 		"oxfmt": "^0.34.0",

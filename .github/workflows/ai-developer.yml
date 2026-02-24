@@ -1,0 +1,41 @@
+name: AI Developer Agent
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  develop:
+    name: Autonomous Coding Agent
+    if: |
+      (github.event.action == 'labeled' && github.event.label.name == 'ready-for-dev') ||
+      (github.event.comment && github.event.sender.login == github.repository_owner && contains(github.event.comment.body, '/implement'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Autonomous Developer
+        uses: ./packages/ai-orchestration
+        with:
+          agent-role: "developer"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ai-api-key: ${{ secrets.AI_API_KEY }}

@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: "AI Orchestration"
+
+author: "jorgecasar"
+description: "Autonomously plans, implements, or reviews GitHub issues/PRs using AI."
+branding:
+  icon: "cpu"
+  color: "purple"
+inputs:
+  agent-role:
+    description: "The role of the AI agent to execute: planner, developer, or reviewer."
+    required: true
+  github-token:
+    description: "A GitHub token with access to issues and PRs."
+    required: true
+  ai-api-key:
+    description: "API key for the AI model."
+    required: true
+  planner-system-prompt:
+    description: "Custom system prompt for the AI Planner."
+    required: false
+  planner-user-prompt:
+    description: "Custom user prompt template for the AI Planner. Use {{title}}, {{body}}, and {{repo}} placeholders."
+    required: false
+  planner-response-template:
+    description: "Custom response template for the AI Planner."
+    required: false
+  developer-system-prompt:
+    description: "Custom system prompt for the AI Developer."
+    required: false
+  developer-user-prompt:
+    description: "Custom user prompt template for the AI Developer. Use {{context}} and {{repo}} placeholders."
+    required: false
+  reviewer-system-prompt:
+    description: "Custom system prompt for the AI Reviewer."
+    required: false
+  reviewer-user-prompt:
+    description: "Custom user prompt template for the AI Reviewer. Use {{diff}} and {{repo}} placeholders."
+    required: false
+runs:
+  using: "node20"
+  main: "dist/index.js"

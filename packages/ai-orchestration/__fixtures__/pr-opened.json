@@ -1,0 +1,17 @@
+{
+	"action": "opened",
+	"number": 42,
+	"pull_request": {
+		"number": 42,
+		"state": "open",
+		"title": "feat: add global scope quest",
+		"body": "Implemented the first quest."
+	},
+	"repository": {
+		"full_name": "jorgecasar/legacys-ends",
+		"owner": {
+			"login": "jorgecasar"
+		},
+		"name": "legacys-ends"
+	}
+}
