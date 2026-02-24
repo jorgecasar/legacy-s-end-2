@@ -56,13 +56,13 @@ npm install -D @lit/localize-tools
 
 ```json
 {
-	"sourceLocale": "en",
-	"targetLocales": ["es"],
-	"tsConfig": "jsconfig.json",
-	"output": {
-		"mode": "runtime",
-		"outputDir": "src/i18n/generated"
-	}
+  "sourceLocale": "en",
+  "targetLocales": ["es"],
+  "tsConfig": "jsconfig.json",
+  "output": {
+    "mode": "runtime",
+    "outputDir": "src/i18n/generated"
+  }
 }
 ```
 

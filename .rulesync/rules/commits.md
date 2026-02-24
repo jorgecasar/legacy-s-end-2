@@ -9,9 +9,11 @@ globs: [".git/**/*"]
 All commits in this project must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
 ## Format
+
 `<type>[optional scope]: <description>`
 
 ## Types
+
 - **feat**: A new feature.
 - **fix**: A bug fix.
 - **docs**: Documentation only changes.
@@ -25,6 +27,7 @@ All commits in this project must follow the [Conventional Commits](https://www.c
 - **revert**: Reverts a previous commit.
 
 ## Rules
+
 - Use lowercase for the type.
 - The description must start with a lowercase letter.
 - Do not end the description with a period.

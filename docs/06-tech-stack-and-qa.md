@@ -30,11 +30,11 @@ The project must be implemented strictly following **TDD** or **BDD**.
   import { moveHero } from "./move-hero.js";
 
   describe("UseCase: moveHero", () => {
-  	it("should increment X position by 2%", () => {
-  		const initialState = { x: 10, y: 10 };
-  		const result = moveHero(initialState, "RIGHT");
-  		expect(result.value.x).toBe(12);
-  	});
+    it("should increment X position by 2%", () => {
+      const initialState = { x: 10, y: 10 };
+      const result = moveHero(initialState, "RIGHT");
+      expect(result.value.x).toBe(12);
+    });
   });
   ```
 

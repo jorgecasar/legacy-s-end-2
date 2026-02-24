@@ -1,17 +1,17 @@
 {
-	"action": "opened",
-	"issue": {
-		"number": 1,
-		"title": "Add first Quest: Global Scope",
-		"body": "Implement the first quest following Clean Architecture: domain entities, use case, and UI component for the Global Scope chapter.",
-		"user": {
-			"login": "jorgecasar"
-		}
-	},
-	"repository": {
-		"full_name": "jorgecasar/legacys-ends",
-		"owner": {
-			"login": "jorgecasar"
-		}
-	}
+  "action": "opened",
+  "issue": {
+    "number": 1,
+    "title": "Add first Quest: Global Scope",
+    "body": "Implement the first quest following Clean Architecture: domain entities, use case, and UI component for the Global Scope chapter.",
+    "user": {
+      "login": "jorgecasar"
+    }
+  },
+  "repository": {
+    "full_name": "jorgecasar/legacys-ends",
+    "owner": {
+      "login": "jorgecasar"
+    }
+  }
 }

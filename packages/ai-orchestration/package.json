@@ -1,27 +1,27 @@
 {
-	"name": "@legacys-end/ai-orchestration",
-	"version": "1.0.0",
-	"description": "Standalone AI Orchestration Pipeline for GitHub Actions",
-	"author": "jorgecasar",
-	"bin": {
-		"ai-orchestration": "./src/index.js"
-	},
-	"type": "module",
-	"main": "dist/index.js",
-	"scripts": {
-		"postinstall": "npm run build",
-		"build": "ncc build src/index.js -o dist --license licenses.txt",
-		"test": "npm run test:ci && npm run test:integration",
-		"test:ci": "node --test __tests__/*.spec.js",
-		"test:integration": "node --test __tests__/*.integration.spec.js"
-	},
-	"dependencies": {
-		"@actions/core": "^3.0.0",
-		"@actions/github": "^9.0.0",
-		"js-yaml": "^4.1.1",
-		"octokit": "^5.0.5"
-	},
-	"devDependencies": {
-		"@vercel/ncc": "^0.38.4"
-	}
+  "name": "@legacys-end/ai-orchestration",
+  "version": "1.0.0",
+  "description": "Standalone AI Orchestration Pipeline for GitHub Actions",
+  "author": "jorgecasar",
+  "bin": {
+    "ai-orchestration": "./src/index.js"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "postinstall": "npm run build",
+    "build": "ncc build src/index.js -o dist --license licenses.txt",
+    "test": "npm run test:ci && npm run test:integration",
+    "test:ci": "node --test __tests__/*.spec.js",
+    "test:integration": "node --test __tests__/*.integration.spec.js"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0",
+    "js-yaml": "^4.1.1",
+    "octokit": "^5.0.5"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.4"
+  }
 }

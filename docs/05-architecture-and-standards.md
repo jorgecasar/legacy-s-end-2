@@ -46,8 +46,8 @@ The use of "signals" is prohibited in the **Domain** and **Use Cases** layers to
     ```javascript
     // src/domain/result.js
     export const Result = {
-    	success: (value) => ({ success: true, value, error: null }),
-    	failure: (error) => ({ success: false, value: null, error }),
+      success: (value) => ({ success: true, value, error: null }),
+      failure: (error) => ({ success: false, value: null, error }),
     };
     ```
 

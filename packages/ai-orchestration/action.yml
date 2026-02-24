@@ -7,34 +7,34 @@ branding:
   icon: "cpu"
   color: "purple"
 inputs:
-  agent-role:
+  agent_role:
     description: "The role of the AI agent to execute: planner, developer, or reviewer."
     required: true
-  github-token:
+  github_token:
     description: "A GitHub token with access to issues and PRs."
     required: true
-  ai-api-key:
+  ai_api_key:
     description: "API key for the AI model."
     required: true
-  planner-system-prompt:
+  planner_system_prompt:
     description: "Custom system prompt for the AI Planner."
     required: false
-  planner-user-prompt:
+  planner_user_prompt:
     description: "Custom user prompt template for the AI Planner. Use {{title}}, {{body}}, and {{repo}} placeholders."
     required: false
-  planner-response-template:
+  planner_response_template:
     description: "Custom response template for the AI Planner."
     required: false
-  developer-system-prompt:
+  developer_system_prompt:
     description: "Custom system prompt for the AI Developer."
     required: false
-  developer-user-prompt:
+  developer_user_prompt:
     description: "Custom user prompt template for the AI Developer. Use {{context}} and {{repo}} placeholders."
     required: false
-  reviewer-system-prompt:
+  reviewer_system_prompt:
     description: "Custom system prompt for the AI Reviewer."
     required: false
-  reviewer-user-prompt:
+  reviewer_user_prompt:
     description: "Custom user prompt template for the AI Reviewer. Use {{diff}} and {{repo}} placeholders."
     required: false
 runs:

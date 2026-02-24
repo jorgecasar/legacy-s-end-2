@@ -1,34 +1,36 @@
 {
-	"name": "@legacys-end/root",
-	"version": "1.0.0",
-	"private": true,
-	"description": "Legacy's End: A narrative game following Clean Architecture and modern standards.",
-	"keywords": [],
-	"license": "MIT",
-	"author": "Jorge Casar",
-	"workspaces": [
-		"packages/*"
-	],
-	"type": "module",
-	"scripts": {
-		"rulesync": "rulesync",
-		"serena": "uvx --from git+https://github.com/oraios/serena serena",
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix",
-		"lint:types": "tsc",
-		"format": "oxfmt",
-		"format:check": "oxfmt --check",
-		"prepare": "husky"
-	},
-	"devDependencies": {
-		"@commitlint/cli": "^20.4.2",
-		"@commitlint/config-conventional": "^20.4.2",
-		"@legacys-end/ai-orchestration": "*",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.2.7",
-		"oxfmt": "^0.34.0",
-		"oxlint": "^1.49.0",
-		"rulesync": "^7.6.3",
-		"typescript": "^5.9.3"
-	}
+  "name": "@legacys-end/root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Legacy's End: A narrative game following Clean Architecture and modern standards.",
+  "keywords": [],
+  "license": "MIT",
+  "author": "Jorge Casar",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "rulesync": "rulesync",
+    "serena": "uvx --from git+https://github.com/oraios/serena serena",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "lint:types": "tsc -p jsconfig.json",
+    "test": "npm test --workspaces --if-present",
+    "test:ci": "npm run test:ci --workspaces --if-present",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "@legacys-end/ai-orchestration": "*",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "rulesync": "^7.6.3",
+    "typescript": "^5.9.3"
+  }
 }

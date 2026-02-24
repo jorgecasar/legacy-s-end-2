@@ -11,22 +11,22 @@ steps:
   - name: Run AI Planner
     uses: ./packages/ai-orchestration
     with:
-      agent-role: "planner"
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-      ai-api-key: ${{ secrets.AI_API_KEY }}
+      agent_role: "planner"
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      ai_api_key: ${{ secrets.AI_API_KEY }}
 ```
 
 ## Customizable Prompts
 
 You can override the default prompts by providing optional inputs:
 
-- `planner-system-prompt`
-- `planner-user-prompt`
-- `planner-response-template`
-- `developer-system-prompt`
-- `developer-user-prompt`
-- `reviewer-system-prompt`
-- `reviewer-user-prompt`
+- `planner_system_prompt`
+- `planner_user_prompt`
+- `planner_response_template`
+- `developer_system_prompt`
+- `developer_user_prompt`
+- `reviewer_system_prompt`
+- `reviewer_user_prompt`
 
 ## Development
 
