@@ -1,10 +1,14 @@
 {
-	"name": "legacys-ends",
+	"name": "@legacys-end/root",
 	"version": "1.0.0",
+	"private": true,
 	"description": "Legacy's End: A narrative game following Clean Architecture and modern standards.",
 	"keywords": [],
 	"license": "MIT",
 	"author": "Jorge Casar",
+	"workspaces": [
+		"packages/**"
+	],
 	"type": "module",
 	"scripts": {
 		"rulesync": "rulesync",
