@@ -1,0 +1,17 @@
+{
+  "name": "@legacys-end/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Technical primitives for Legacy's End: Result Pattern and Errors.",
+  "keywords": [],
+  "license": "MIT",
+  "author": "Jorge Casar",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run"
+  }
+}

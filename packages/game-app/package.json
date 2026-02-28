@@ -1,0 +1,27 @@
+{
+  "name": "@legacys-end/game-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Composition Root for Legacy's End. Assembles all modules.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@legacys-end/content": "*",
+    "@legacys-end/core": "*",
+    "@legacys-end/domain": "*",
+    "@legacys-end/infrastructure": "*",
+    "@legacys-end/theme": "*",
+    "@legacys-end/ui": "*",
+    "@legacys-end/use-cases": "*",
+    "@lit-labs/signals": "^0.1.2",
+    "@lit/context": "^1.1.4",
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}

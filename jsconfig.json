@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "maxNodeModuleJsDepth": 0
   },
-  "include": ["packages/*/src/**/*.js"],
+  "include": ["packages/*/src/**/*.js", "packages/*/index.js"],
   "exclude": ["node_modules", "dist", ".rulesync", ".serena", ".agent", ".gemini"]
 }
