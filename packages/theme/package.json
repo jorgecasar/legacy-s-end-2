@@ -1,0 +1,11 @@
+{
+  "name": "@legacys-end/theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Visual system and styles for Legacy's End.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

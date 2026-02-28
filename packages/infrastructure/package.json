@@ -1,0 +1,20 @@
+{
+  "name": "@legacys-end/infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Infrastructure layer for Legacy's End: Adapters and services.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@legacys-end/core": "*",
+    "@legacys-end/domain": "*",
+    "@legacys-end/use-cases": "*",
+    "@lit-labs/signals": "^0.1.2"
+  }
+}

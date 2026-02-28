@@ -100,3 +100,6 @@ Thumbs.db
 .rulesync/rules/*.local.md
 rulesync.local.jsonc
 !.rulesync/.aiignore
+
+*storybook.log
+storybook-static

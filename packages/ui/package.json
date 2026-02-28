@@ -1,0 +1,22 @@
+{
+  "name": "@legacys-end/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UI layer for Legacy's End: Lit components and presentation logic.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@legacys-end/core": "*",
+    "@legacys-end/domain": "*",
+    "@legacys-end/use-cases": "*",
+    "@lit-labs/signals": "^0.1.2",
+    "@lit/context": "^1.1.4",
+    "lit": "^3.2.1"
+  }
+}
