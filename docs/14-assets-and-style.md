@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Visual style guide: pixel art aesthetic, color palette, typography, audio style and asset conventions"
+globs: ["packages/**/assets/**/*", "packages/**/styles/**/*", "packages/**/theme/**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when creating or reviewing visual assets, UI styling, color choices or audio assets"
+geminicli:
+  description: "Apply when creating or reviewing visual assets, UI styling, color choices or audio assets"
+---
+
 # 14 - Assets and Visual Style
 
 This document defines the aesthetic guidelines for the visual and sound assets of **Legacy's End**.

@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Tech stack and QA: Node 24, Lit, Web Awesome, TDD/BDD, Vitest, Playwright and linting"
+globs: ["**/*.js", "**/*.ts", "*.config.*", "package.json"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when setting up tools, configuring tests, or choosing libraries and frameworks"
+geminicli:
+  description: "Apply when setting up tools, configuring tests, or choosing libraries and frameworks"
+---
+
 # 06 - Tech Stack and QA
 
 > ℹ️ **Note on implementation status**: The tech stack described here is planned for game development. Dependencies will be incorporated as logic and UI development phases begin (see [Roadmap](./12-roadmap.md)).
@@ -13,22 +25,27 @@
 
 The project must be implemented strictly following **TDD** or **BDD**.
 
+> **Rule**: Everything that runs in the browser must be tested in a **real browser**. No `happy-dom` or `jsdom` simulations.
+
 ### 2.1 Test Runners
 
-- **`node:test`**: For Node-only packages without browser dependencies (e.g., `@legacys-end/ai-orchestration`).
-- **Vitest**: For game packages that depend on browser APIs, Lit, or Vite (e.g., `core`, `domain`, `use-cases`, `ui`, `feature-*`).
+| Package                                  | Runner                                    | Environment             |
+| :--------------------------------------- | :---------------------------------------- | :---------------------- | --- |
+| `ai-orchestration`                       | `node:test`                               | Node.js (GitHub Action) |
+| `domain`, `use-cases`, `ui`, `feature-*` | `vitest` + `@vitest/browser` + Playwright | Real Chromium           |     |
+| End-to-end flows                         | Playwright + Cucumber                     | Real Chromium           |
 
 ### 2.2 Validation Levels
 
-- **Unit Testing**: 100% coverage in the Use Cases and Domain layers.
-- **E2E Testing (Playwright)**: Mandatory validation in **real browsers** (Chromium, Firefox, WebKit).
+- **Unit/Component Testing**: 100% coverage in the Use Cases and Domain layers.
+- **E2E Testing (Playwright)**: Mandatory validation of full user flows in **real browsers**.
 - **Visual Regression**: Snapshot capture to ensure consistent hero background and outfit changes.
 
 ### 2.3 Testing Conventions
 
-- **Location**: Tests must be in a centralized `tests/` directory within each package.
-- **Naming**: Use `describe/it` patterns in natural language (Gherkin style for BDD if possible).
-- **Unit Test Example (Vitest)**:
+- **Location**: Tests must be co-located with the source file (`move-hero.js` → `move-hero.test.js`).
+- **Naming**: Use `describe/it` patterns in natural language (Gherkin style for BDD).
+- **Unit Test Example (`vitest` + `@vitest/browser`)**:
 
   ```javascript
   import { describe, it, expect } from "vitest";

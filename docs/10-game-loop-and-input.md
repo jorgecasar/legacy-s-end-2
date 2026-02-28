@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Game loop and input: event-driven update model, hero movement, controls and touch support"
+globs: ["packages/**/game-loop*", "packages/**/input*", "packages/**/hero*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when implementing the game loop, movement mechanics, keyboard/touch input or hero controls"
+geminicli:
+  description: "Apply when implementing the game loop, movement mechanics, keyboard/touch input or hero controls"
+---
+
 # 10 - Game Loop and Input
 
 > ℹ️ **Note on implementation status**: This document defines the planned engine behavior. Currently, there is no engine code implemented (see [Roadmap](./12-roadmap.md)).

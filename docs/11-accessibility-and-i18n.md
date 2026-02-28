@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Accessibility (ARIA, keyboard nav, contrast) and i18n: @lit/localize runtime mode, locale resolution flow, Translator API and synthetic locale modules"
+globs: ["**/*.js", "**/*.ts", "**/*.html", "*.xlf", "lit-localize.json"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when implementing i18n, language switching, accessibility features or the Translator API integration"
+geminicli:
+  description: "Apply when implementing i18n, language switching, accessibility features or the Translator API integration"
+---
+
 # 11 - Accessibility and i18n
 
 > ℹ️ **Note on implementation status**: These accessibility and i18n guidelines will be applied during the UI and Components development phase. Tools such as `@lit/localize` have not been installed yet (see [Roadmap](./12-roadmap.md)).

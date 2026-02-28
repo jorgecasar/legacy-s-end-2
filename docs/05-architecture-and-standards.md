@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Clean Architecture, monorepo package structure, DI with @lit/context, Signals and code standards"
+globs: ["**/*.js", "**/*.ts", "packages/**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when working on architecture decisions, package structure, dependency injection or code standards"
+geminicli:
+  description: "Apply when working on architecture decisions, package structure, dependency injection or code standards"
+---
+
 # 05 - Architecture and Code Standards
 
 ## 1. Modular Monorepo Architecture (Vertical Slices)

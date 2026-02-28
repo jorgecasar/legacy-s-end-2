@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Product vision, pedagogical purpose, game narrative and hero Alarion's evolution"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when working on product vision, narrative, game story or lore"
+geminicli:
+  description: "Apply when working on product vision, narrative, game story or lore"
+---
+
 # 01 - Product and Narrative
 
 **Legacy's End** is not just a game; it is a pedagogical tool designed to teach **High-Quality Software Engineering** (Clean Architecture, Web Components, Decoupling) through an immersive experience. Learning happens by narratively solving real technical problems.

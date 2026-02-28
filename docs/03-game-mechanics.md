@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Game mechanics: proximity engine, visibility conditions, rewards, skills and interaction requirements"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when implementing game mechanics, NPC interactions, skill/reward systems or visibility logic"
+geminicli:
+  description: "Apply when implementing game mechanics, NPC interactions, skill/reward systems or visibility logic"
+---
+
 # 03 - Advanced Game Mechanics
 
 ## 1. Interaction and Proximity Engine

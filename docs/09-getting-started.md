@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Getting started guide: monorepo setup, Node 24, pnpm workspaces and initial dev environment"
+globs: ["package.json", "pnpm-workspace.yaml", ".nvmrc", "*.config.*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when setting up the development environment or onboarding to the project"
+geminicli:
+  description: "Apply when setting up the development environment or onboarding to the project"
+---
+
 # 09 - Getting Started & Setup
 
 Welcome to **Legacy's End**. This document will guide you through setting up your development environment and understanding how the project's base infrastructure was built.

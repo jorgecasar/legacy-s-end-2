@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Project roadmap: Phase 0-4 milestones, current status and next implementation steps"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when planning next implementation steps, prioritizing work or checking project status"
+geminicli:
+  description: "Apply when planning next implementation steps, prioritizing work or checking project status"
+---
+
 # 12 - Project Roadmap
 
 This document details current progress and upcoming milestones in the development of **Legacy's End**.
@@ -14,39 +26,49 @@ The project is in the initial phase of tool and standards setup.
 - [x] Quality setup: **Oxlint**, **Oxfmt**, **Husky**, **Commitlint**.
 - [x] Base technical documentation (17 documents + 3 ADRs).
 
+### Pending Infrastructure 🔧
+
+- [ ] Set up **Storybook** at the root level, with glob discovery of `*.stories.*` from all packages.
+- [ ] Configure **`@vitest/browser`** with Playwright provider (real Chromium) for component-level TDD/BDD.
+- [ ] Configure **Playwright** root config for E2E / BDD with Cucumber.
+
+> For the full testing strategy, see [06 - Tech Stack and QA](./06-tech-stack-and-qa.md#2-quality-strategy-testing).
+
 ---
 
-## 🚀 Next Steps
+### Phase 1: Foundation & Homepage (Vertical Slice 1) 🏠
 
-### Phase 1: Core and Domain (Coming Soon) 🛠️
-
-- [ ] Implement the base `Result` entity for the Result Pattern in `@legacys-end/core`.
-- [ ] Define shared domain entities: `HeroState`, `Position`, `Reward` in `@legacys-end/domain`.
-- [ ] Implement pure business logic (collision detection, visibility evaluation).
-- [ ] Configure **Vitest** for unit testing.
-
-### Phase 2: Use Cases and Infrastructure (Planned) 🏗️
-
-- [ ] Implement use cases: `StartQuest`, `MoveHero`, `SaveProgress`.
-- [ ] Define ports/interfaces (`StoragePort`, `ContentProvider`).
-- [ ] Implement adapters (`LocalStorageAdapter`, `ContentAdapter`).
-- [ ] Set up `@legacys-end/content` with JSON + `.messages.js` structure (see [ADR 003](./adr/003-content-localization-strategy.md)).
-
-### Phase 3: UI and Components (Planned) 🎨
+**Goal**: Deliver a functional, visually appealing Quest Hub without waiting for the full game engine domain to be built.
 
 - [ ] Configure **Vite** and **Lit**.
 - [ ] Set up `@lit/context` for Dependency Injection.
-- [ ] Configure `@lit-labs/signals` for reactive state bridge.
 - [ ] Integrate **Web Awesome** in `@legacys-end/theme`.
-- [ ] Set up **Storybook** for component development.
-- [ ] Implement base components: `le-game-viewport`, `le-dialogue-overlay`, `le-quest-hub`.
-- [ ] Configure `@lit/localize` for i18n.
+- [ ] Implement Dumb Components: `<le-quest-card>` and `<le-quest-hub>` with their Storybook stories.
+- [ ] Build `ListAvailableQuests` Use Case with a mocked `ContentAdapter` to feed the Hub.
 
-### Phase 4: Content and Polish (Planned) ✨
+### Phase 2: First Playable Level (Vertical Slice 2) ⚔️
 
-- [ ] Create first quest content: "Alarion's Awakening" (JSON + messages).
-- [ ] Configure **Playwright** for E2E tests.
-- [ ] Implement audio system and accessibility.
+**Goal**: Make "Alarion's Awakening" playable from start to finish.
+
+- [ ] Implement Domain: `HeroState`, `Position`, `Result` pattern, and pure collision logic.
+- [ ] Implement pure UI: `<le-game-viewport>` and `<le-dialogue-overlay>`.
+- [ ] Implement Use Cases: `StartQuest`, `MoveHero`.
+- [ ] Set up `@legacys-end/content` and real `ContentAdapter` parsing JSON files.
+- [ ] Integrate `@lit-labs/signals` to bind the pure `HeroState` to the UI viewport dynamically.
+
+### Phase 3: Persistence, Polish & Navigation 💾
+
+**Goal**: Connect the Hub to the Game, allow saving progress, and support multiple languages.
+
+- [ ] Implement Use Case: `SaveProgress` and `LocalStorageAdapter`.
+- [ ] Create SPA Routing to transition between the Hub and Active Quests.
+- [ ] Configure `@lit/localize` and `.messages.js` structures for i18n (see ADR-003).
+- [ ] Configure **Playwright** for E2E testing the complete flow.
+
+### Phase 4: Chrome Built-in AI Integration 🤖
+
+**Goal**: Add next-generation API enhancements utilizing local on-device LLMs.
+
 - [ ] Integrate **Chrome Built-in AI** (see [doc 17](./17-built-in-ai.md)):
   - [ ] Capability detection and fallback strategy.
   - [ ] Voice commands via Web Speech API (`SpeechRecognition`).

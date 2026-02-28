@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Dialogue system: slide deck concept, Talk vs Codelab modes, slide types and completion logic"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when implementing the dialogue system, slide components, play modes or NPC deck logic"
+geminicli:
+  description: "Apply when implementing the dialogue system, slide components, play modes or NPC deck logic"
+---
+
 # 04 - Dialogue System and Slides
 
 ## 1. The "Slide Deck" Concept

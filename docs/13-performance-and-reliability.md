@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Performance targets, SLIs/SLOs and reliability strategy for Legacy's End"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when working on performance optimization, reliability or SLO tracking"
+geminicli:
+  description: "Apply when working on performance optimization, reliability or SLO tracking"
+---
+
 # 13 - Performance and Reliability
 
 > ℹ️ **Note on implementation status**: This document establishes the performance and reliability goals for the project. These will be monitored as we enter the implementation phases.

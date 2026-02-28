@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Chrome Built-in AI: voice commands (SpeechRecognition), NPC TTS (SpeechSynthesis), NPC dialogue (Prompt API) and auto-translation (Translator API)"
+globs: ["packages/**/infrastructure/**/*", "packages/**/adapters/**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when implementing Built-in AI features, voice controls, TTS, Prompt API or the Translator API"
+geminicli:
+  description: "Apply when implementing Built-in AI features, voice controls, TTS, Prompt API or the Translator API"
+---
+
 # 17 - Built-in AI (In-Game Intelligence)
 
 > ℹ️ **Note on implementation status**: This feature depends on Chrome's Built-in AI APIs, some of which are in origin trial. Implementation is planned for **Phase 4** (see [Roadmap](./12-roadmap.md)).

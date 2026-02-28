@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Data contract: HeroState/Skill/Reward schemas, content package structure, JSON+messages.js, slide types and visibility conditions"
+globs: ["packages/content/**/*", "packages/domain/**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when working on domain entities, content schemas, quest/chapter data, or the content package"
+geminicli:
+  description: "Apply when working on domain entities, content schemas, quest/chapter data, or the content package"
+---
+
 # 07 - Data Contract and Content Management
 
 ## 1. Domain Entities

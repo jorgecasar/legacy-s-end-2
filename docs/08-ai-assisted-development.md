@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "AI-assisted development workflow: Rulesync, Serena MCP, skills ecosystem and AI agent conventions"
+globs: ["rulesync.jsonc", ".rulesync/**/*", ".agent/**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when configuring AI tools, rulesync, Serena MCP or setting up agent skills"
+geminicli:
+  description: "Apply when configuring AI tools, rulesync, Serena MCP or setting up agent skills"
+---
+
 # 08 - AI-Assisted Development & Modular Architecture
 
 ## 1. AI Integration in the Monorepo

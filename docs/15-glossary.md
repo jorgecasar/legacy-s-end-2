@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "Glossary of key narrative, technical and game design terms used in Legacy's End"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when encountering unfamiliar project-specific terminology or needing term definitions"
+geminicli:
+  description: "Apply when encountering unfamiliar project-specific terminology or needing term definitions"
+---
+
 # 15 - Glossary of Terms
 
 This glossary defines key terms used in the development, narrative, and architecture of **Legacy's End** to ensure clear and consistent communication.

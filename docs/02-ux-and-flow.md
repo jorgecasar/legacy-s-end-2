@@ -1,3 +1,15 @@
+---
+root: false
+targets: ["*"]
+description: "UX and navigation flow: Quest Hub, game viewport, learning path and autosave"
+globs: ["**/*"]
+antigravity:
+  trigger: "model_decision"
+  description: "Apply when working on UI screens, navigation flow, Hub layout or progress persistence"
+geminicli:
+  description: "Apply when working on UI screens, navigation flow, Hub layout or progress persistence"
+---
+
 # 02 - UX and Navigation Flow
 
 This document details the visual structure, interface components, and logical navigation flow of **Legacy's End**.
