@@ -13,25 +13,31 @@ describe("Execution Validation: AI Reviewer (review-pr)", () => {
 
     const env = {
       ...process.env,
+      NODE_ENV: "test",
       GITHUB_ACTIONS: "true",
       GITHUB_EVENT_PATH: eventPath,
       GITHUB_REPOSITORY: "jorgecasar/legacys-ends",
       INPUT_AGENT_ROLE: "reviewer",
       INPUT_GITHUB_TOKEN: "fake-token",
-      INPUT_AI_API_KEY: "fake-key",
     };
 
-    try {
-      execSync(`node ${mainScript}`, { env, stdio: "pipe" });
-    } catch (error) {
-      const stdout = error.stdout?.toString() || "";
-      // It attempts to fetch a diff with octokit.rest.pulls.get
-      assert.ok(
-        stdout.includes("Bad credentials") ||
-          stdout.includes("HttpError") ||
-          stdout.includes("Not Found"),
-        "Should have attempted to call GitHub API. Actual stdout: " + stdout,
-      );
-    }
+    const stdout = execSync(`node ${mainScript}`, { env, stdio: "pipe" }).toString();
+
+    assert.ok(
+      stdout.includes("--- AI CALL SIMULATION (REVIEWER) ---"),
+      "Should have triggered reviewer simulation",
+    );
+    assert.ok(
+      stdout.includes("PR looks good according to Clean Architecture standards"),
+      "Should have produced simulated review",
+    );
+    assert.ok(
+      stdout.includes("ESTIMATED API COST: $0 USD"),
+      "Should report simulated cost in logs",
+    );
+    assert.ok(
+      stdout.includes("[COST REPORT SIMULATION] Updating table with: | Reviewer |"),
+      "Should simulate cost table update",
+    );
   });
 });
