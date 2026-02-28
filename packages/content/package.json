@@ -1,0 +1,11 @@
+{
+  "name": "@legacys-end/content",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game content and script for Legacy's End.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}
