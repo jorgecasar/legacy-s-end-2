@@ -23,6 +23,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@awesome.me/webawesome": "^3.2.1",
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
     "@legacys-end/ai-orchestration": "*",

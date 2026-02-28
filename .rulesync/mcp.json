@@ -1,34 +1,50 @@
 {
-  "mcpServers": {
-    "serena": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--context",
-        "ide-assistant",
-        "--enable-web-dashboard",
-        "false",
-        "--project",
-        "."
-      ],
-      "env": {}
-    },
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "env": {}
-    },
-
-    "github": {
-      "httpUrl": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer $GITHUB_MCP_PAT"
-      }
-    }
-  }
+	"mcpServers": {
+		"serena": {
+			"description": "Semantic code analysis and search (symbols, references, definitions)",
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena",
+				"start-mcp-server",
+				"--context",
+				"ide-assistant",
+				"--enable-web-dashboard",
+				"false",
+				"--project",
+				"."
+			],
+			"env": {}
+		},
+		"context7": {
+			"description": "Up-to-date library documentation search (Lit, Web Awesome, @lit/localize, etc.)",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@upstash/context7-mcp"],
+			"env": {}
+		},
+		"github": {
+			"description": "GitHub API: issues, PRs, milestones, dependencies and repository management",
+			"httpUrl": "https://api.githubcopilot.com/mcp/",
+			"headers": {
+				"Authorization": "Bearer $GITHUB_MCP_PAT"
+			}
+		},
+		"playwright": {
+			"description": "Browser automation via Playwright: navigate, click, type, snapshot, E2E test execution",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@playwright/mcp@latest"],
+			"env": {}
+		},
+		"chrome-devtools": {
+			"description": "Chrome DevTools bridge: inspect DOM/CSS, execute JS, record performance traces on live browser",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "chrome-devtools-mcp@latest"],
+			"env": {}
+		}
+	}
 }
