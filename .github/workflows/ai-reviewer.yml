@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize]
   pull_request_review_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: "PR number to review"
+        required: true
 
 permissions:
   contents: read
@@ -27,9 +32,15 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Generate Rulesync Rules
+        run: npx rulesync generate
+
       - name: Run AI Reviewer
         uses: ./packages/ai-orchestration
         with:
-          agent-role: "reviewer"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          ai-api-key: ${{ secrets.AI_API_KEY }}
+          agent_role: "reviewer"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          pull_number: ${{ inputs.pull_number }}
+          git_author_name: "Alarion"
+          git_author_email: "alarion[bot]@users.noreply.github.com"

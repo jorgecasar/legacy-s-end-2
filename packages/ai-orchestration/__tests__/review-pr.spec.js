@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, test } from "node:test";
-import { reviewPR } from "../src/review-pr/main.js";
+import { MockAIAdapter } from "../src/infrastructure/adapters/MockAIAdapter.js";
+import { reviewPR } from "../src/use-cases/review-pr/main.js";
 
 describe("CI Script: AI Reviewer", () => {
   test("should initialize review using configured prompts", async () => {
@@ -12,6 +13,8 @@ describe("CI Script: AI Reviewer", () => {
 
     const options = {
       token: "fake-token",
+      aiProvider: new MockAIAdapter(),
+      model: "mock-model",
       owner: "jorgecasar",
       repo: "legacys-ends",
       pullNumber: 789,
@@ -24,5 +27,38 @@ describe("CI Script: AI Reviewer", () => {
     assert.strictEqual(result.approved, true);
     assert.ok(result.systemPrompt.includes("Senior Architect"));
     assert.ok(result.userPrompt.includes("some code changes"));
+  });
+
+  test("should throw error if input tokens exceed maxInputTokens", async () => {
+    const options = {
+      token: "fake-token",
+      aiProvider: new MockAIAdapter(),
+      model: "mock-model",
+      owner: "jorgemmock",
+      repo: "demo",
+      pullNumber: 1,
+      diff: "A".repeat(1000), // ~250 tokens
+      maxInputTokens: 100,
+    };
+
+    await assert.rejects(async () => reviewPR(options, { Octokit: class {} }), {
+      message: /Input context too large/,
+    });
+  });
+
+  test("should respect maxOutputTokens in simulated usage", async () => {
+    const options = {
+      token: "fake-token",
+      aiProvider: new MockAIAdapter(),
+      model: "mock-model",
+      owner: "jorgemmock",
+      repo: "demo",
+      pullNumber: 1,
+      diff: "Diff",
+      maxOutputTokens: 50,
+    };
+
+    const result = await reviewPR(options, { Octokit: class {} });
+    assert.ok(result.usage.completion_tokens <= 50);
   });
 });
