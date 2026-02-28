@@ -17,10 +17,11 @@ Welcome to the official documentation for the comprehensive replication of **Leg
 11. [**Accessibility and i18n**](./11-accessibility-and-i18n.md): ARIA, keyboard navigation, contrast, i18n.
 12. [**Project Roadmap**](./12-roadmap.md): Current project status, completed milestones, and next steps.
 13. [**Architecture Decision Records (ADR)**](./adr/README.md): Formal record of architectural decisions and their justification.
-14. [**Performance and Reliability**](./14-performance-and-reliability.md): SLIs, SLOs, and runtime performance targets.
-15. [**Assets and Visual Style**](./15-assets-and-style.md): Aesthetic guidelines for pixel art, scenarios, and audio.
-16. [**Glossary of Terms**](./16-glossary.md): Key narrative, technical, and game term definitions.
-17. [**AI Orchestration Pipelines**](./17-ai-orchestration.md): Strategy for autonomous, multi-agent development via GitHub Issues and Actions.
+14. [**Performance and Reliability**](./13-performance-and-reliability.md): SLIs, SLOs, and runtime performance targets.
+15. [**Assets and Visual Style**](./14-assets-and-style.md): Aesthetic guidelines for pixel art, scenarios, and audio.
+16. [**Glossary of Terms**](./15-glossary.md): Key narrative, technical, and game term definitions.
+17. [**AI Orchestration Pipelines**](./16-ai-orchestration.md): Strategy for autonomous, multi-agent development via GitHub Issues and Actions.
+18. [**Built-in AI (In-Game)**](./17-built-in-ai.md): AI-powered NPCs and dynamic narrative generation using Chrome Built-in AI.
 
 ---
 

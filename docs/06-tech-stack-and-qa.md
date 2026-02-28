@@ -13,21 +13,26 @@
 
 The project must be implemented strictly following **TDD** or **BDD**.
 
-### 2.1 Validation Levels
+### 2.1 Test Runners
 
-- **Unit Testing (Vitest)**: 100% coverage in the Use Cases and Domain layers.
+- **`node:test`**: For Node-only packages without browser dependencies (e.g., `@legacys-end/ai-orchestration`).
+- **Vitest**: For game packages that depend on browser APIs, Lit, or Vite (e.g., `core`, `domain`, `use-cases`, `ui`, `feature-*`).
+
+### 2.2 Validation Levels
+
+- **Unit Testing**: 100% coverage in the Use Cases and Domain layers.
 - **E2E Testing (Playwright)**: Mandatory validation in **real browsers** (Chromium, Firefox, WebKit).
 - **Visual Regression**: Snapshot capture to ensure consistent hero background and outfit changes.
 
-### 2.2 Testing Conventions
+### 2.3 Testing Conventions
 
-- **Location**: Tests must live alongside the code they test (e.g., `move-hero.js` -> `move-hero.spec.js`).
+- **Location**: Tests must be in a centralized `tests/` directory within each package.
 - **Naming**: Use `describe/it` patterns in natural language (Gherkin style for BDD if possible).
 - **Unit Test Example (Vitest)**:
 
   ```javascript
   import { describe, it, expect } from "vitest";
-  import { moveHero } from "./move-hero.js";
+  import { moveHero } from "../src/move-hero.js";
 
   describe("UseCase: moveHero", () => {
     it("should increment X position by 2%", () => {

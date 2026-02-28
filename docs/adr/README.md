@@ -6,6 +6,8 @@ This directory contains the formal record of the architectural decisions made du
 
 - [ADR Template](./template.md)
 - [ADR 001: Web Components and Lit](./001-web-components-and-lit.md)
+- [ADR 002: Modular Monorepo Architecture](./002-modular-monorepo-architecture.md)
+- [ADR 003: Content Localization Strategy](./003-content-localization-strategy.md)
 
 ## What is an ADR?
 

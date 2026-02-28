@@ -1,150 +1,260 @@
-# 07 - Data Contract (Content)
+# 07 - Data Contract and Content Management
 
 ## 1. Domain Entities
 
 ### 1.1 HeroState
 
-Protagonist's state. It is the root entity that persists between sessions.
+The root entity that persists between sessions. It is the single source of truth for the player's progress.
 
 ```javascript
 /** @typedef {Object} HeroState */
 {
-  "id": "alarion",
-  "name": "Alarion",
-  "position": { "x": 10, "y": 50 },     // % Coordinates (0-100)
-  "outfit": "base",                       // Active outfit
-  "aura": null,                           // Visual effect (null = none)
-  "skills": [],                           // Skill[] — unlocked skills
-  "activeQuestId": "quest-scope-global",  // Ongoing mission ID (null = none)
-  "activeChapterId": "chapter-1",         // Current chapter ID
-  "completedInteractions": ["npc-1"]      // IDs of already completed interactions
+  id: "alarion",
+  name: "Alarion",
+  position: { x: 10, y: 50 },           // % Coordinates (0-100)
+  outfit: "base",                         // Active outfit/skin
+  aura: null,                             // Visual effect (null = none)
+  skills: [],                             // Skill[] — acquired architectural skills
+  rewards: [],                            // Reward[] — collected reward items
+  activeQuestId: "alarions-awakening",    // Current quest (null = none)
+  activeChapterId: "chap-01",            // Current chapter within quest
+  completedInteractions: ["npc-kael"],   // Entity IDs fully interacted with
+  completedQuests: [],                    // Quest IDs completed
+  playMode: "codelab"                     // "codelab" (default) | "talk"
 }
 ```
 
-### 1.2 Skill (Architectural Skill)
+### 1.2 Skill
 
-Engineering concept unlocked as a reward.
+An engineering concept unlocked as a reward. Skills serve as **knowledge keys** (see [doc 03 §4.1](./03-game-mechanics.md#41-skills-as-knowledge-keys)).
 
 ```javascript
 /** @typedef {Object} Skill */
 {
-  "id": "encapsulation-shield",
-  "name": "Encapsulation Shield",
-  "description": "You master the encapsulation principle...",
-  "icon": "shield-icon"                   // Asset icon reference
+  id: "encapsulation-shield",
+  name: "Encapsulation Shield",
+  description: "You master the encapsulation principle...",
+  icon: "shield-icon"                     // Asset icon reference
 }
 ```
 
-## 2. Quest Structure
+### 1.3 Reward
 
-```mermaid
-graph TD
-    Quest[Quest Metadata]
-    Quest --> Chapters[Chapter List]
-    Chapters --> C1[Chapter 1]
-    Chapters --> C2[Chapter 2]
-    Chapters --> CN[Chapter N]
-
-    C1 --> Entities1[Entities & NPCs]
-    C1 --> Backgrounds1[Backgrounds]
-    C1 --> Rewards1[Rewards]
-    C1 --> Exit1[Exit Zone]
-```
-
-To create a new mission, an object must be defined in `src/content/quests/` following this contract:
-
-### 2.1 Quest Metadata (`index.js`)
-
-Each mission is an autonomous object defining its own presentation information for the Hub:
+An object collected during gameplay that can grant effects or be exchanged with NPCs (see [doc 03 §4.2](./03-game-mechanics.md#42-rewards-as-exchange-items)).
 
 ```javascript
-/** @typedef {"locked"|"available"|"in_progress"|"completed"} QuestStatus */
+/** @typedef {Object} Reward */
 {
-  "id": "quest-scope-global",
-  "title": "The Global Scope Swamp",
-  "description": "Narrative and technical problem (Code Smell) explanation.",
-  "estimatedDuration": "15 min",
-  "badge": "Encapsulation Shield",               // Name of the Skill to be earned
-  "prerequisites": ["previous-quest-id"],        // Quests that must be "completed"
-  "chapters": ["chapter-1", "chapter-2"],        // Chapter IDs in order
-  "status": "available"                          // locked | available | in_progress | completed
-}
-```
-
-**Quest State Diagram:**
-
-```
-locked → available → in_progress → completed
-                   ↗ (abandonment)
-```
-
-### 2.2 Chapter Configuration (`chapters.js`)
-
-The schema allows orchestrating visual and sequential evolution:
-
-```javascript
-/** @typedef {Object} Chapter */
-{
-  "chapter-1": {
-    "startPos": { "x": 10, "y": 50 },           // Hero's starting position
-    "backgrounds": [
-      { "id": "corrupt", "style": "url(...)", "condition": "default" },
-      { "id": "healed", "style": "url(...)", "condition": "all_interactions_done" }
-    ],
-    "heroOverrides": {
-      "onEnter": { "outfit": "base" }           // Outfit upon starting the chapter
-    },
-    "entities": [
-      {
-        "id": "npc-1",
-        "type": "npc",
-        "position": { "x": 30, "y": 50 },
-        "visibility": "always",
-        "deck": [
-          { "type": "narration", "speaker": "Master Kael", "portrait": "kael.png", "text": "Welcome..." },
-          { "type": "code-comparison", "title": "Global vs Local Scope", "before": "var x = 1;", "after": "const x = 1;", "highlights": [1] },
-          { "type": "diagram", "title": "Dependency Injection", "imageUrl": "assets/diagrams/di.png", "alt": "DI Diagram" },
-          { "type": "insight", "icon": "💡", "category": "SOLID Principle", "text": "The dependency inversion principle..." }
-        ]
-      },
-      {
-        "id": "npc-2",
-        "type": "npc",
-        "position": { "x": 70, "y": 20 },
-        "visibility": "after:npc-1",             // Appears when npc-1 finishes
-        "deck": [...]
-      }
-    ],
-    "rewards": [
-      {
-        "id": "main-reward",
-        "position": { "x": 50, "y": 50 },
-        "visibility": "all_interactions_done",    // Only appears when everything is complete
-        "effects": {
-          "outfit": "advanced_armor",             // Outfit change (optional)
-          "skill": "encapsulation-shield",        // Unlocked skill (optional)
-          "aura": "clean-code-glow"               // Visual effect (optional)
-        }
-      }
-    ],
-    "exitZone": {
-      "x": 90, "y": 50, "width": 10, "height": 20,
-      "visibility": "reward_collected"            // Only active after collecting reward
-    }
+  id: "clean-code-rune",
+  position: { x: 50, y: 50 },           // Map position (visible after conditions met)
+  visibility: "all_interactions_done",    // When the reward appears
+  consumable: false,                      // true = consumed on exchange, false = permanent
+  effects: {
+    outfit: "advanced_armor",             // Outfit change (optional)
+    skill: "encapsulation-shield",        // Skill to unlock (optional)
+    aura: "clean-code-glow"              // Visual aura (optional)
   }
 }
 ```
 
-## 3. Slide Types (Full Schema)
+### 1.4 Save System (Persistence)
+
+The `HeroState` is the **only persisted entity**. It is saved automatically after every meaningful action (dialogue end, reward collected, chapter transition).
+
+- **Initial implementation**: `localStorage` via a `LocalStorageAdapter` implementing the `StoragePort`.
+- **Future**: When a user registration system is implemented, the adapter will be swapped for a `RemoteStorageAdapter` — the Use Cases and UI remain unchanged thanks to the port abstraction.
+- **Save key**: `legacys-end:hero-state`
+- **Format**: JSON serialization of `HeroState`.
+
+## 2. The Content Package (`@legacys-end/content`)
+
+The `@legacys-end/content` package acts as the "Script" of the game. It is a **data-only** package decoupled from the game engine logic.
+
+Content is split into two file types to separate structural data from translatable text (see [ADR 003](./adr/003-content-localization-strategy.md)):
+
+- **`.json`**: Pure data — mechanics, coordinates, conditions, entity structure. Validatable via JSON Schema.
+- **`.messages.js`**: Companion files with all user-facing strings wrapped in `msg()` from `@lit/localize`.
+
+### 1.1 Package Structure
+
+```text
+packages/content/
+├── quests/
+│   └── alarions-awakening/
+│       ├── quest.json              # Metadata, rewards, requirements
+│       ├── quest.messages.js       # Title, description (translatable)
+│       ├── chapters.json           # Chapter sequence, positions, entities
+│       └── chapters.messages.js    # Dialogues, narration, insight text
+├── package.json
+└── ...
+```
+
+## 3. Content Consumption Flow
+
+Content is never imported directly by UI components. The **Infrastructure layer** merges both sources into complete Domain Entities:
+
+1.  **Infrastructure**: `ContentAdapter` imports `.json` data and `.messages.js` texts, merges them into a single object.
+2.  **Use Cases**: Request content (e.g., `GetQuestById`) via the `ContentProvider` port.
+3.  **Domain**: Receives complete entities (e.g., `Quest` with both `id` and `title`).
+4.  **UI**: Renders the Domain Entities. When the locale changes, `msg()` values update and Lit re-renders automatically.
+
+## 4. JSON Schema Standards
+
+### 4.1 Quest Definition (`quest.json`)
+
+```json
+{
+  "id": "alarions-awakening",
+  "rewards": [{ "type": "skill", "id": "clean-code-aura" }],
+  "requirements": {
+    "completedQuests": []
+  },
+  "chapters": ["chap-01", "chap-02"]
+}
+```
+
+### 4.2 Quest Messages (`quest.messages.js`)
+
+```javascript
+import { msg } from "@lit/localize";
+
+export const questMessages = {
+  "alarions-awakening": {
+    title: msg("Alarion's Awakening"),
+    description: msg("The first step into the corrupted code..."),
+  },
+};
+```
+
+### 4.3 Chapter Structure (`chapters.json`)
+
+The JSON defines the **spatial and logical structure** of each chapter. Entities reference no slide content — only their ID, position, and visibility rules:
+
+```json
+{
+  "chapters": [
+    {
+      "id": "chap-01",
+      "background": "forest-corrupted",
+      "startPos": { "x": 10, "y": 20 },
+      "exitZone": { "x": 90, "y": 90, "radius": 5 },
+      "condition": "hasReward:clean-code-aura",
+      "entities": [
+        {
+          "id": "npc-kael",
+          "type": "npc",
+          "position": { "x": 30, "y": 50 },
+          "visibility": "always"
+        },
+        {
+          "id": "npc-guardian",
+          "type": "npc",
+          "position": { "x": 70, "y": 20 },
+          "visibility": "after:npc-kael",
+          "interactionRequirement": {
+            "type": "requireSkill",
+            "id": "encapsulation-shield"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 4.4 Chapter Messages (`chapters.messages.js`)
+
+The messages file defines the **full deck content** for each entity, organized by entity ID and play mode. When the player interacts with an NPC, the `ContentAdapter` resolves `entityDecks[entityId][activeMode]` to get the slide sequence:
+
+```javascript
+import { msg } from "@lit/localize";
+
+export const entityDecks = {
+  "npc-kael": {
+    talk: [
+      { type: "narration", speaker: msg("Master Kael"), text: msg("Welcome, Adept...") },
+      {
+        type: "code-comparison",
+        title: msg("Global vs Local Scope"),
+        before: "var x = 1;",
+        after: "const x = 1;",
+      },
+      {
+        type: "diagram",
+        title: msg("Scope Chain"),
+        imageUrl: "assets/diagrams/scope.png",
+        alt: msg("Scope chain diagram"),
+      },
+      {
+        type: "insight",
+        category: msg("Fundamentals"),
+        text: msg("Always prefer const over var..."),
+      },
+    ],
+    codelab: [
+      { type: "narration", speaker: msg("Master Kael"), text: msg("Welcome, Adept...") },
+      {
+        type: "refactor-challenge",
+        title: msg("Fix the Scope"),
+        brokenCode: "var x = 1;",
+        correctAnswer: "const x = 1;",
+      },
+      {
+        type: "terminal",
+        output: "ReferenceError: x is not defined",
+        question: msg("What caused this error?"),
+      },
+      {
+        type: "quiz",
+        question: msg("Which keyword prevents reassignment?"),
+        options: ["var", "let", "const"],
+        correctIndex: 2,
+      },
+      {
+        type: "insight",
+        category: msg("Fundamentals"),
+        text: msg("Always prefer const over var..."),
+      },
+    ],
+  },
+  "npc-guardian": {
+    talk: [
+      /* ... */
+    ],
+    codelab: [
+      /* ... */
+    ],
+  },
+};
+```
+
+## 6. Slide Types Reference
+
+### 6.1 Shared (Both Modes)
+
+| Type        | Mandatory Fields    | Optional Fields                     |
+| ----------- | ------------------- | ----------------------------------- |
+| `narration` | `text`, `speaker`   | `portrait`                          |
+| `insight`   | `text`, `category`  | `icon`                              |
+| `exchange`  | `prompt`, `accepts` | `onSuccess`, `onFail`, `consumable` |
+
+### 6.2 Talk Mode
 
 | Type              | Mandatory Fields           | Optional Fields                   |
 | ----------------- | -------------------------- | --------------------------------- |
-| `narration`       | `text`, `speaker`          | `portrait`                        |
 | `code-comparison` | `title`, `before`, `after` | `highlights` (lines to highlight) |
 | `diagram`         | `title`, `imageUrl`, `alt` | `caption`                         |
-| `insight`         | `text`, `category`         | `icon`                            |
 
-## 4. Visibility Conditions
+### 6.3 Codelab Mode
+
+| Type                 | Mandatory Fields                       | Optional Fields  |
+| -------------------- | -------------------------------------- | ---------------- |
+| `quiz`               | `question`, `options`, `correctIndex`  | `explanation`    |
+| `refactor-challenge` | `title`, `brokenCode`, `correctAnswer` | `hints`          |
+| `terminal`           | `output`, `question`                   | `expectedAnswer` |
+| `diff`               | `title`, `before`, `after`             | `explanation`    |
+
+## 7. Visibility Conditions
 
 | Predicate                 | Semantics                                               |
 | ------------------------- | ------------------------------------------------------- |
@@ -153,29 +263,11 @@ The schema allows orchestrating visual and sequential evolution:
 | `"sequential"`            | Appears according to order in the `entities` array      |
 | `"all_interactions_done"` | Visible when all mandatory interactions are completed   |
 | `"reward_collected"`      | Visible when the chapter reward has been collected      |
+| `"hasSkill:<skill_id>"`   | Visible only if the player has acquired the skill       |
+| `"hasReward:<reward_id>"` | Visible only if the player possesses the reward         |
 
-## 5. Content Creation Guide (Workflow)
+## 8. Maintenance & Scaling
 
-To add a new mission to the game:
-
-1.  **Create Folder**: Create a subfolder in `src/content/quests/[mission-name]/`.
-2.  **Define Metadata**: Create an `index.js` file exporting the Quest configuration.
-3.  **Define Chapters**: Create a `chapters.js` file with the array of chapters and their entities/decks.
-4.  **Prepare Assets**: Add backgrounds, portraits, and diagrams in the `assets/` subfolder:
-    - **Backgrounds**: PNG, resolution according to viewport (e.g., 1920×1080 for HD).
-    - **Portraits**: PNG with transparency, 128×128px minimum.
-    - **Sprites**: 32×32px with `image-rendering: pixelated` (see doc 06 §4).
-    - **Audio**: OGG/MP3 (with AAC fallback).
-5.  **Register in the Hub**: Ensure the infrastructure `ContentService` includes the new folder in its loading process.
-
-**Recommended file structure:**
-
-```
-src/content/quests/quest-scope-global/
-├── index.js          # Exports Quest metadata
-├── chapters.js       # Exports chapter logic
-└── assets/           # Images, audio, and diagrams for this mission
-    ├── backgrounds/
-    ├── portraits/
-    └── diagrams/
-```
+- **Versioning**: The content package is versioned independently to allow "Content Updates" without changing the core engine.
+- **Validation**: JSON Schema validation in CI/CD ensures structural correctness before merging.
+- **Localization**: `lit-localize extract` scans `.messages.js` files and generates XLIFF for translators.

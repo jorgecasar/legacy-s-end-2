@@ -1,4 +1,4 @@
-# 17 - AI Orchestration Pipelines
+# 16 - AI Orchestration Pipelines
 
 This document outlines the strategy for orchestrating an autonomous, multi-agent development workflow using GitHub Issues, Pull Requests, and GitHub Actions.
 

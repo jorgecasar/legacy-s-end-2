@@ -1,4 +1,4 @@
-# 15 - Assets and Visual Style
+# 14 - Assets and Visual Style
 
 This document defines the aesthetic guidelines for the visual and sound assets of **Legacy's End**.
 

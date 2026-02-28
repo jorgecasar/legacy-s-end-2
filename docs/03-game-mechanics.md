@@ -40,3 +40,33 @@ There is a strict dependency for finishing a level:
 2.  **Reward Appearance**: Only when interactions are fulfilled does the **Reward object appear visually** on the map.
 3.  **Collection**: The hero must collect the object. This may trigger an outfit or aura change.
 4.  **Exit Enabled**: The `ExitZone` (exit area) only activates and becomes visible **after obtaining the reward**.
+
+## 4. Skills & Rewards as Active Mechanics
+
+Skills and rewards are not passive collectibles — they are **gameplay keys** that unlock interactions and progression.
+
+### 4.1 Skills as Knowledge Keys
+
+A skill acquired in one quest can be **required** to interact with entities in later quests:
+
+- **Gated Interaction**: An NPC can require the player to possess a specific skill before revealing their deck. Without it, the NPC shows a rejection message (e.g., "You're not ready yet, seek the Master first").
+- **Quiz Advantage**: In Codelab mode, a `quiz` slide can offer additional answer options or hints if the player has a related skill.
+- **Progressive Dialogue**: An NPC's dialogue content can change based on which skills the player has acquired, providing deeper explanations for skilled players.
+
+### 4.2 Rewards as Exchange Items
+
+Rewards collected during gameplay can be **given to NPCs** to unlock new interactions:
+
+- **Exchange Interaction**: A new slide type (`exchange`) prompts the player to offer a specific reward. If the player has it, the NPC responds with new information or unlocks a path.
+- **Consumable vs Permanent**: Some rewards are consumed on exchange (one-time use keys), while others are permanent proofs of mastery that remain in the inventory.
+- **Chain Quests**: An NPC in Quest 3 may require a reward obtained in Quest 1, creating cross-quest dependencies and reinforcing that learning is cumulative.
+
+### 4.3 Interaction Requirements (Data Model)
+
+Each entity can define an optional `interactionRequirement` that the game evaluates before opening the deck:
+
+| Requirement Type | Condition                                 | Fail Behavior                           |
+| :--------------- | :---------------------------------------- | :-------------------------------------- |
+| `requireSkill`   | Player must have the specified skill ID   | Show rejection message                  |
+| `requireReward`  | Player must have the specified reward ID  | Show rejection message                  |
+| `exchangeReward` | Player must surrender a reward to proceed | Show request message, consume on accept |

@@ -1,4 +1,4 @@
-# 16 - Glossary of Terms
+# 15 - Glossary of Terms
 
 This glossary defines key terms used in the development, narrative, and architecture of **Legacy's End** to ensure clear and consistent communication.
 
@@ -22,10 +22,14 @@ This glossary defines key terms used in the development, narrative, and architec
 
 - **Clean Architecture**: The design pattern that divides the system into layers (Domain, Use Cases, Infrastructure, UI).
 - **Result Pattern**: A pattern where functions return an `{ success, value, error }` object instead of throwing exceptions.
-- **Composition Root**: The single place where all system dependencies are instantiated and assembled.
+- **Composition Root**: The single place where all system dependencies are instantiated and assembled (`@legacys-end/game-app`).
 - **Reactive Controller**: A Lit pattern for extracting logic from a component.
 - **Accessor**: The keyword for TC39 decorators used to define reactive class properties.
 - **Port**: An interface defined by the Use Cases layer describing what the business logic needs from infrastructure.
+- **Signal**: A reactive primitive (`@lit-labs/signals`) used in the Infrastructure layer to bridge pure domain data with the reactive UI.
+- **ContentAdapter**: An Infrastructure adapter that merges JSON data and `.messages.js` text files into complete Domain Entities.
+- **Lit Context** (`@lit/context`): The DI mechanism used by the Composition Root to provide Use Cases and Services to UI components.
+- **Content Package** (`@legacys-end/content`): A data-only package containing quest definitions (JSON) and translatable text (`.messages.js`).
 
 ## 4. AI Tools
 

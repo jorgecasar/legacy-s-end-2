@@ -102,7 +102,7 @@ Navigation is not free; it follows a **directed progression** business logic.
 
 ### 3.3 State Persistence (Autosave)
 
-- Every time a dialogue ends or a Reward is collected, the `QuestController` must invoke the `StorageService`.
+- Every time a dialogue ends or a Reward is collected, the corresponding **Use Case** invokes the **Storage port** (implemented by the Infrastructure layer) to persist progress.
 - **Persisted data**: Completed interactions (`completedInteractions[]`), hero position, collected rewards, current outfit/aura/skills.
 - **Restoration**: On reload, the player returns to the same chapter, with completed interactions hidden and the hero at the saved position.
 - This ensures that if the page refreshes, the user doesn't have to re-talk to NPCs they already "completed".
