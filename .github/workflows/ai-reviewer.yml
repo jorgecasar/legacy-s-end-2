@@ -2,17 +2,19 @@ name: AI Reviewer
 
 on:
   pull_request:
-    types: [opened, synchronize]
-  pull_request_review_comment:
-    types: [created]
-
-permissions:
-  contents: read
-  pull-requests: write
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: "PR number to review (optional for manual run)"
+        required: false
 
 jobs:
-  review:
-    name: Code Review (Architecture & Standards)
+  validate:
+    name: Check and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -27,9 +29,42 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Check
+        run: npm run check
+
+      - name: Run CI Script Tests (Node.js Test)
+        run: npm run test
+
+  review:
+    name: AI Architecture Review
+    needs: validate
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install AI Dependencies
+        run: npm install -g @google/gemini-cli
+
       - name: Run AI Reviewer
         uses: ./packages/ai-orchestration
         with:
-          agent-role: "reviewer"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          ai-api-key: ${{ secrets.AI_API_KEY }}
+          agent_role: "reviewer"
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          pull_number: ${{ github.event.pull_request.number || inputs.pull_number }}
+          git_author_name: "Alarion"
+          git_author_email: "alarion[bot]@users.noreply.github.com"

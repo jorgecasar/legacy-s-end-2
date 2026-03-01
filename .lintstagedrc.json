@@ -1,3 +1,7 @@
 {
-  "*.js": ["npm run lint"]
+  "*.js": ["npm run check:fix"],
+  "packages/ai-orchestration/src/**/*.js": [
+    "bash -c 'npm run build -w @legacys-end/ai-orchestration'",
+    "git add packages/ai-orchestration/dist/index.js"
+  ]
 }

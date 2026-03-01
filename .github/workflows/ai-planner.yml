@@ -2,7 +2,12 @@ name: AI Planner (Triage)
 
 on:
   issues:
-    types: [opened]
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to triage"
+        required: true
 
 permissions:
   issues: write
@@ -16,6 +21,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -25,9 +33,15 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Generate Rulesync Rules
+        run: npx rulesync generate
+
       - name: Generate Technical Plan
         uses: ./packages/ai-orchestration
         with:
-          agent-role: "planner"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          ai-api-key: ${{ secrets.AI_API_KEY }}
+          agent_role: "planner"
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          issue_number: ${{ inputs.issue_number }}
+          git_author_name: "Alarion"
+          git_author_email: "alarion[bot]@users.noreply.github.com"

@@ -14,30 +14,30 @@ describe("Execution Validation: AI Planner", () => {
 
     const env = {
       ...process.env,
+      NODE_ENV: "test",
       GITHUB_ACTIONS: "true",
       GITHUB_EVENT_PATH: eventPath,
       GITHUB_REPOSITORY: "jorgecasar/legacys-ends",
       INPUT_AGENT_ROLE: "planner",
-      INPUT_GITHUB_TOKEN: "fake-token",
-      INPUT_AI_API_KEY: "fake-key",
-      // Override Octokit internally or allow it to fail gracefully if it tries to hit the real API
-      // Since our ai-planner.js doesn't actually hit the API if it crashes, we'll just check for a 0 exit code
-      // But wait, ai-planner.js DOES try to hit the API: octokit.rest.issues.createComment
-      // So for a true integration test without hitting the API we either mock the network (e.g. nock)
-      // or we accept that a full E2E requires a real token.
-      // For now, let's just do a dry run by avoiding the network call in the script or checking if it throws a 401.
+      INPUT_GH_TOKEN: "fake-token",
+      INPUT_ISSUE_NUMBER: "123",
     };
 
-    try {
-      // This will throw because 'fake-token' is invalid, but we can catch it to verify it tried
-      execSync(`node ${mainScript}`, { env, stdio: "pipe" });
-    } catch (error) {
-      const stdout = error.stdout?.toString() || "";
-      // We expect a 401 Bad credentials error because it actually tried to call GitHub API
-      assert.ok(
-        stdout.includes("Bad credentials") || stdout.includes("HttpError"),
-        "Should have attempted to call GitHub API. Actual stdout: " + stdout,
-      );
-    }
+    const stdout = execSync(`node ${mainScript}`, { env, stdio: "pipe" }).toString();
+
+    assert.ok(
+      stdout.includes("--- AI SIMULATION (PLANNER)") ||
+        stdout.includes("--- AI EXECUTION (PLANNER)"),
+      "Should have triggered planner execution",
+    );
+    assert.ok(stdout.includes("AI Triage & Planning Report"), "Should have produced triage report");
+    assert.ok(
+      stdout.includes("ESTIMATED API COST: $0 USD"),
+      "Should report simulated cost in logs",
+    );
+    assert.ok(
+      stdout.includes("[COST REPORT SIMULATION] Updating table with plan details."),
+      "Should simulate cost table update",
+    );
   });
 });

@@ -35,8 +35,7 @@ This action is written in JavaScript and bundled using `@vercel/ncc`.
 ### Scripts
 
 - `npm run build`: Bundles the action into `dist/index.js`.
-- `npm run test:ci`: Runs the unit tests.
-- `npm run test:integration`: Runs the integration tests simulating a GitHub Action environment.
+- `npm run test`: Runs the unit and integration tests simulating a GitHub Action environment.
 - `npm run all`: Runs build and all tests.
 
 ## Standards

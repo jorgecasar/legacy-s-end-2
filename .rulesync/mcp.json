@@ -29,7 +29,7 @@
 			"description": "GitHub API: issues, PRs, milestones, dependencies and repository management",
 			"httpUrl": "https://api.githubcopilot.com/mcp/",
 			"headers": {
-				"Authorization": "Bearer $GITHUB_MCP_PAT"
+				"Authorization": "Bearer $GH_MCP_PAT"
 			}
 		},
 		"playwright": {

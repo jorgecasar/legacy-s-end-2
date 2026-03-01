@@ -11,8 +11,6 @@
 ## Testing
 
 - `npm run test`: Run all tests (CI and Integration) in `packages/ai-orchestration`.
-- `npm run test:ci`: Run unit tests in `packages/ai-orchestration`.
-- `npm run test:integration`: Run integration tests in `packages/ai-orchestration`.
 
 ## Git / Utilities
 

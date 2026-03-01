@@ -12,16 +12,21 @@
     "postinstall": "npm run build",
     "build": "ncc build src/index.js -o dist --license licenses.txt",
     "test": "npm run test:ci && npm run test:integration",
-    "test:ci": "node --test __tests__/*.spec.js",
-    "test:integration": "node --test __tests__/*.integration.spec.js"
+    "test:ci": "NODE_ENV=test node --test __tests__/*.spec.js",
+    "test:integration": "NODE_ENV=test node --test __tests__/*.integration.spec.js",
+    "test:coverage": "NODE_ENV=test c8 --reporter=text --reporter=html npm run test:ci"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@google/gemini-cli": "0.29.7",
     "js-yaml": "^4.1.1",
-    "octokit": "^5.0.5"
+    "octokit": "^5.0.5",
+    "openai": "^6.25.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.4"
+    "@vercel/ncc": "^0.38.4",
+    "c8": "^11.0.0"
   }
 }

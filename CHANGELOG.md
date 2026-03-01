@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resolved YAML syntax errors in external skills and refined documentation consistency.
 - Corrected `.gitignore` rules to properly exclude generated agent settings.
-- Added missing `test:ci` and `test` scripts to root `package.json` to fix CI failures.
+- Added missing `test` scripts to root `package.json` to fix CI failures.
 - Fixed `lint:types` configuration in `package.json` and `jsconfig.json` to correctly perform type checking on workspaces and skip `node_modules`.
 - Corrected `.lintstagedrc.json` by removing unsupported `oxfmt` task for Markdown files.
 - Fixed `ai-orchestration` integration tests by renaming inputs to use underscores, ensuring compatibility with environment variable naming restrictions in CI.
