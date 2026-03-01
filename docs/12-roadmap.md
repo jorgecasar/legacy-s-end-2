@@ -43,8 +43,8 @@ The project is in the initial phase of tool and standards setup.
 - [ ] Configure **Vite** and **Lit**.
 - [ ] Set up `@lit/context` for Dependency Injection.
 - [ ] Integrate **Web Awesome** in `@legacys-end/theme`.
-- [ ] Implement Dumb Components: `<le-quest-card>` and `<le-quest-hub>` with their Storybook stories.
-- [ ] Build `ListAvailableQuests` Use Case with a mocked `ContentAdapter` to feed the Hub.
+- [x] Implement Dumb Components: `<le-quest-card>` and `<le-quest-hub>` with their Storybook stories.
+- [x] Build `ListAvailableQuests` Use Case with a mocked `ContentAdapter` to feed the Hub.
 
 ### Phase 2: First Playable Level (Vertical Slice 2) ⚔️
 

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented `le-quest-card` component covering all 4 architectural layers (Domain, Use Cases, Infrastructure, UI).
+- Defined `Quest` entity and `QuestStatus` (Available, Locked, Completed) in `@legacys-end/feature-quest-hub`.
+- Implemented `ListAvailableQuests` use case following the Result Pattern.
+- Developed `StaticQuestAdapter` as an in-memory repository for quest data.
+- Created `le-quest-card` Lit component with TC39 decorators and encapsulated styles.
+- Added Storybook stories for all quest states.
 - Initialized npm project as native ESM.
 - Configured **AI Infrastructure** using **Rulesync** and **Serena** MCP for semantic code analysis.
 - Defined **Google Antigravity** and **Gemini CLI** as authorized agents with official and community skills.

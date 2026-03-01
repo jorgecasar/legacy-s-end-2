@@ -1,0 +1,16 @@
+{
+  "name": "@legacys-end/feature-quest-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test __tests__/*.spec.js",
+    "check": "oxfmt check src",
+    "format": "oxfmt format src"
+  },
+  "dependencies": {
+    "@awesome.me/webawesome": "^3.2.1",
+    "@lit/context": "^1.1.0",
+    "lit": "^3.1.2"
+  }
+}
