@@ -9,6 +9,9 @@ import Anthropic from "@anthropic-ai/sdk";
  * @implements {IAIProvider}
  */
 export class AnthropicAdapter {
+  /**
+   * @param {string} apiKey
+   */
   constructor(apiKey) {
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY is required.");
     this.anthropic = new Anthropic({ apiKey });

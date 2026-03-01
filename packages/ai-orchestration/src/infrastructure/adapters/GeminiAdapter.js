@@ -9,6 +9,9 @@ import { GoogleGenAI } from "@google/genai";
  * @implements {IAIProvider}
  */
 export class GeminiAdapter {
+  /**
+   * @param {string} apiKey
+   */
   constructor(apiKey) {
     if (!apiKey) throw new Error("GEMINI_API_KEY is required.");
     this.ai = new GoogleGenAI({ apiKey });
