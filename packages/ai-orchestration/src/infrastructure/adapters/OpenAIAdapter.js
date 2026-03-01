@@ -9,6 +9,9 @@ import OpenAI from "openai";
  * @implements {IAIProvider}
  */
 export class OpenAIAdapter {
+  /**
+   * @param {string} apiKey
+   */
   constructor(apiKey) {
     if (!apiKey) throw new Error("OPENAI_API_KEY is required.");
     this.openai = new OpenAI({ apiKey });
