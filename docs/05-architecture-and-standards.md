@@ -132,3 +132,7 @@ src/
 
 - **Decorators**: Always use `accessor` for decorated fields (e.g., `@state() accessor name = ""`).
 - **Result Pattern**: Mandatory for all logic layers: `{ success, value, error }`.
+
+### 5.3 UI Components
+
+- **Component Library**: Always prioritize using **Web Awesome** components for standard UI elements (buttons, inputs, dialogs, layout utilities like `wa-stack`, etc.) rather than building custom components from scratch. Custom `le-*` components should wrap or compose Web Awesome components whenever possible.
