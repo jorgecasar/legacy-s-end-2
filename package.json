@@ -31,6 +31,7 @@
     "@chromatic-com/storybook": "^5.0.1",
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
+    "@cucumber/cucumber": "^12.7.0",
     "@legacys-end/ai-orchestration": "*",
     "@storybook/addon-a11y": "^10.2.13",
     "@storybook/addon-docs": "^10.2.13",
