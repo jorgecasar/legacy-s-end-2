@@ -1,7 +1,5 @@
-export default {
-  default: {
-    paths: ["./**/*.feature"],
-    require: ["./**/*.steps.js"],
-    format: ["summary", "progress"],
-  },
+module.exports = {
+  paths: ["e2e/features/**/*.feature"],
+  require: ["e2e/steps/**/*.js"],
+  format: ["@cucumber/pretty"],
 };
