@@ -120,6 +120,26 @@ export class GitHubAdapter {
     return data;
   }
 
+  async createIssue(owner, repo, params) {
+    const { data } = await this.octokit.rest.issues.create({
+      owner,
+      repo,
+      ...params,
+    });
+    return data;
+  }
+
+  async addSubIssue(owner, repo, parentIssueNumber, subIssueId) {
+    // The sub-issues API might require a direct request if not in the standard Octokit rest yet
+    // API: POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues
+    await this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues", {
+      owner,
+      repo,
+      issue_number: parentIssueNumber,
+      sub_issue_id: subIssueId,
+    });
+  }
+
   async listPullRequests(owner, repo, params) {
     const { data } = await this.octokit.rest.pulls.list({
       owner,

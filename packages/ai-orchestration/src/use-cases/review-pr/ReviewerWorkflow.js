@@ -55,6 +55,11 @@ export async function ReviewerWorkflow({
     ciProvider.info(`[Reviewer] Fetching metadata for PR #${pullNumber}...`);
     const prMetadata = await gitProvider.getPullRequestMetadata(owner, repo, pullNumber);
 
+    if (prMetadata.state === "closed") {
+      ciProvider.info(`Reviewer skipped: PR #${pullNumber} is already closed.`);
+      return { success: true, value: { skipped: true, reason: "PR is closed" } };
+    }
+
     // Try to identify task number from branch (feat/issue-123) or PR body (closes #123)
     const branchMatch = prMetadata.head?.ref?.match(/issue-(\d+)/);
     const bodyMatch = prMetadata.body?.match(/(?:closes|fixes|resolves) #(\d+)/i);

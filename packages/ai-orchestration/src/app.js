@@ -155,7 +155,11 @@ export async function runOrchestrator(ciProvider, gitClient) {
     const workflows = {
       planner: (params) => PlannerWorkflow({ ...params, availableProviders }),
       developer: (params) =>
-        DeveloperWorkflow({ ...params, fileExecutor: new FileExecutor(process.cwd()) }),
+        DeveloperWorkflow({
+          ...params,
+          fileExecutor: new FileExecutor(process.cwd()),
+          privilegedGitProvider: ghMcpPat ? new GitHubAdapter(ghMcpPat) : null,
+        }),
       reviewer: ReviewerWorkflow,
     };
 

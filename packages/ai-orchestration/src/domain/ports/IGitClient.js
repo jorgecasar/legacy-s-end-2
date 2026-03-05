@@ -25,6 +25,25 @@ export class IGitClient {
   }
 
   /**
+   * Fetches updates from the remote repository.
+   * @param {string} [_remote]
+   * @param {string} [_branch]
+   * @returns {void}
+   */
+  fetch(_remote, _branch) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Performs a hard reset to a target reference.
+   * @param {string} _target
+   * @returns {void}
+   */
+  resetHard(_target) {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Checks out an existing branch or creates a new one.
    * @param {string} _branchName
    * @param {boolean} [_create=false]

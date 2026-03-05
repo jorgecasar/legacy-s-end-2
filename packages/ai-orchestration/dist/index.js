@@ -63441,6 +63441,15 @@ class GitCliAdapter {
     }
   }
 
+  fetch(remote = "origin", branch = "") {
+    const target = branch ? `${remote} ${branch}` : remote;
+    (0,external_node_child_process_namespaceObject.execSync)(`git fetch ${target}`, { stdio: "inherit" });
+  }
+
+  resetHard(target) {
+    (0,external_node_child_process_namespaceObject.execSync)(`git reset --hard ${target}`, { stdio: "inherit" });
+  }
+
   checkout(branchName, create = false) {
     if (create) {
       (0,external_node_child_process_namespaceObject.execSync)(`git checkout -b "${branchName}"`);
@@ -75905,6 +75914,26 @@ class GitHubAdapter {
     return data;
   }
 
+  async createIssue(owner, repo, params) {
+    const { data } = await this.octokit.rest.issues.create({
+      owner,
+      repo,
+      ...params,
+    });
+    return data;
+  }
+
+  async addSubIssue(owner, repo, parentIssueNumber, subIssueId) {
+    // The sub-issues API might require a direct request if not in the standard Octokit rest yet
+    // API: POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues
+    await this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues", {
+      owner,
+      repo,
+      issue_number: parentIssueNumber,
+      sub_issue_id: subIssueId,
+    });
+  }
+
   async listPullRequests(owner, repo, params) {
     const { data } = await this.octokit.rest.pulls.list({
       owner,
@@ -84852,6 +84881,16 @@ async function checkTaskReadiness(
   try {
     const issue = await gitProvider.getIssue(owner, repo, issueNumber);
 
+    if (issue.state === "closed") {
+      return {
+        success: true,
+        value: {
+          ready: false,
+          reason: `Issue #${issueNumber} is already closed. Skipping development.`,
+        },
+      };
+    }
+
     const body = issue.body || "";
     const blockerMatches = [...body.matchAll(/(?:depends on|blocked by)\s+#(\d+)/gi)];
     const filterBlockerIds = blockerMatches.map((m) => parseInt(m[1], 10));
@@ -84904,7 +84943,7 @@ async function checkTaskReadiness(
 }
 
 ;// CONCATENATED MODULE: ./src/prompts.json
-const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: (Optional) If a specific capability is needed, suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan using the following structure:\\n- **Approach**: Summarize the technical strategy (Domain-first, TDD, etc.).\\n- **Scope**: Define what is \'In\' and \'Out\' of this implementation.\\n- **Action Items**: A functional checklist organized by architectural layers (Domain, Use Case, Infra/UI).\\n\\nDECOMPOSITION & DDD RULES:\\n- **Identify Invariants**: Start by defining the business rules and state transitions.\\n- **Aggregate Logic**: Group related logic into Aggregates to ensure consistency.\\n- **Functional Atomicity**: Steps must be \'Verb-first\' and concrete, representing a functional unit.\\n- **Incremental Flow**: Ensure the plan progresses from Domain -> Use Cases -> Adapters.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report with an Approach, Scope, and technical checklist organized by architectural layers.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: critical`\\n- **Milestone**: `Phase 1: Core` (High Business Complexity)\\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` (Optional override)\\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: We will follow a Domain-Driven Design approach, defining the core entities and invariants before implementing the application logic.\\n\\n**Scope**:\\n- In: Core entity modeling, persistence adapter, and basic UI.\\n- Out: External API integrations (Spike required).\\n\\n### 🛠️ Technical Checklist\\n\\n#### 🏗️ Layer 1: Domain (Aggregates & Invariants)\\n- [ ] Task 1: Implement the `[EntityName]` Aggregate Root and identify its invariants.\\n- [ ] Task 2: Create immutable Value Objects for `[SpecificProperties]`.\\n\\n#### ⚙️ Layer 2: Use Cases (Application Logic)\\n- [ ] Task 3: Implement the `[UseCaseName]` service following the Result Pattern.\\n- [ ] Task 4: Add Unit Tests to ensure 100% coverage of business logic.\\n\\n#### 🎨 Layer 3: Infrastructure & UI\\n- [ ] Task 5: Implement the Repository adapter using the Infrastructure layer.\\n- [ ] Task 6: Build the Web Awesome component for `[FeatureName]`.\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"q":"You are an Autonomous Developer for the repository \'{{repo}}\'. You implement features and fix bugs while strictly adhering to the project\'s rules defined in documentation files at the root of the project and docs directory. Your primary mission is to follow the \'Core Technology Stack\' and \'Code Standards\' documented in the project without exception. Before creating any files, read the documentation and check the surrounding code structure to ensure your changes blend perfectly.","a":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. Ensure all code passes local linting and tests."},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
+const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: (Optional) If a specific capability is needed, suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan using the following structure:\\n- **Approach**: Summarize the technical strategy (Domain-first, TDD, etc.).\\n- **Scope**: Define what is \'In\' and \'Out\' of this implementation.\\n- **Action Items**: A functional checklist organized by architectural layers (Domain, Use Case, Infra/UI).\\n\\nCRITICAL: Each item in the Action Items checklist will be automatically converted into a native GitHub SUB-ISSUE. Ensure each task has a clear, actionable title (e.g., \'[Layer] Verb-first concise instruction\'). Avoid generic names like \'Task 1\'.\\n\\nDECOMPOSITION & DDD RULES:\\n- **Identify Invariants**: Start by defining the business rules and state transitions.\\n- **Aggregate Logic**: Group related logic into Aggregates to ensure consistency.\\n- **Functional Atomicity**: Steps must be \'Verb-first\' and concrete, representing a functional unit.\\n- **Incremental Flow**: Ensure the plan progresses from Domain -> Use Cases -> Adapters.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report. The checklist items should be descriptive as they will become independent sub-tasks.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: critical`\\n- **Milestone**: `Phase 1: Core` (High Business Complexity)\\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` (Optional override)\\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: We will follow a Domain-Driven Design approach, defining the core entities and invariants before implementing the application logic.\\n\\n**Scope**:\\n- In: Core entity modeling, persistence adapter, and basic UI.\\n- Out: External API integrations (Spike required).\\n\\n### 🛠️ Technical Checklist\\n\\n#### 🏗️ Layer 1: Domain\\n- [ ] [Domain] Implement the `[EntityName]` Aggregate Root and invariants\\n- [ ] [Domain] Create immutable Value Objects for `[Properties]`\\n\\n#### ⚙️ Layer 2: Use Cases\\n- [ ] [Use Case] Implement the `[UseCaseName]` service following the Result Pattern\\n- [ ] [Test] Add Unit Tests for 100% logic coverage\\n\\n#### 🎨 Layer 3: Infrastructure & UI\\n- [ ] [Infra] Implement the Repository adapter for `[EntityName]`\\n- [ ] [UI] Build the Web Awesome component for `[FeatureName]`\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"q":"You are an Autonomous Developer for the repository \'{{repo}}\'. You implement features and fix bugs while strictly adhering to the project\'s rules defined in documentation files at the root of the project and docs directory. Your primary mission is to follow the \'Core Technology Stack\' and \'Code Standards\' documented in the project without exception. Before creating any files, read the documentation and check the surrounding code structure to ensure your changes blend perfectly.","a":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. Ensure all code passes local linting and tests."},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
 ;// CONCATENATED MODULE: ./src/use-cases/plan-issue/main.js
 
 
@@ -84950,6 +84989,35 @@ function removePlannerMetadata(text) {
   }
 
   return cleanText.trim();
+}
+
+/**
+ * Parses the AI plan and creates native GitHub sub-issues.
+ */
+async function decomposePlanIntoSubIssues(gitProvider, { owner, repo, parentIssueNumber, plan }) {
+  // Regex to match tasks like "- [ ] Task 1: Title" or "- [ ] Title"
+  const taskRegex = /- \[ \] (?:Task \d+: )?(.+)/gi;
+  const matches = [...plan.matchAll(taskRegex)];
+
+  if (matches.length === 0) return [];
+
+  const subIssues = [];
+  for (const match of matches) {
+    const title = match[1].trim();
+    try {
+      const subIssue = await gitProvider.createIssue(owner, repo, {
+        title,
+        body: `Sub-task of #${parentIssueNumber}\n\nGenerated by AI Planner.`,
+        labels: ["type: sub-task"],
+      });
+
+      await gitProvider.addSubIssue(owner, repo, parentIssueNumber, subIssue.id);
+      subIssues.push({ number: subIssue.number, title });
+    } catch (err) {
+      console.error(`Failed to create sub-issue "${title}": ${err.message}`);
+    }
+  }
+  return subIssues;
 }
 
 /**
@@ -85048,6 +85116,23 @@ async function planIssue({
         : ""
     }`,
   );
+
+  // Decompose into sub-issues
+  onStatus({ type: "decomposition", message: "DECOMPOSING PLAN INTO SUB-TASKS..." });
+  const subIssues = await decomposePlanIntoSubIssues(gitProvider, {
+    owner,
+    repo,
+    parentIssueNumber: issueNumber,
+    plan,
+  });
+
+  if (subIssues.length > 0) {
+    const subIssueList = subIssues.map((s) => `#${s.number}`).join(", ");
+    onStatus({
+      type: "decomposition",
+      message: `Created ${subIssues.length} sub-tasks: ${subIssueList}`,
+    });
+  }
 
   // Apply Triage Actions (Labels & Milestone)
   onStatus({ type: "triage", message: "APPLYING TRIAGE ACTIONS..." });
@@ -85358,6 +85443,7 @@ async function implementIssue({
  * @param {number} params.maxOutputTokens
  * @param {boolean} params.simulationMode
  * @param {boolean} params.useMock
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} [params.privilegedGitProvider] - Privileged provider (PAT) for PR creation.
  * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
  */
 async function DeveloperWorkflow({
@@ -85374,6 +85460,7 @@ async function DeveloperWorkflow({
   maxOutputTokens,
   simulationMode,
   useMock,
+  privilegedGitProvider,
 }) {
   try {
     const manualIssueNumber = ciProvider.getInput("issue_number");
@@ -85555,28 +85642,42 @@ async function DeveloperWorkflow({
       const devBranchName = prBranch || `feat/issue-${issueNumber}`;
       gitClient.configAuthor(gitAuthorName, gitAuthorEmail);
 
+      ciProvider.info("Fetching latest main and refreshing state...");
+      // Ensure we have the latest main to rebase or branch from
+      try {
+        gitClient.fetch("origin", "main");
+      } catch (err) {
+        ciProvider.warning(`Git fetch failed: ${err.message}. Proceeding with local main.`);
+      }
+
       const branchExists = gitClient.branchExistsRemotely(devBranchName);
 
       if (branchExists) {
         ciProvider.info(
-          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on main...`,
+          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on origin/main...`,
         );
         gitClient.checkout(devBranchName, false, true); // force: true
-
-        const rebaseResult = gitClient.rebase("main");
+        const rebaseResult = gitClient.rebase("origin/main");
         if (rebaseResult.success) {
-          ciProvider.info("Rebase on main successful.");
+          ciProvider.info("Rebase on origin/main successful.");
         } else {
           ciProvider.warning(
             "Rebase failed (conflicts). Staying on branch as-is to preserve prior work.",
           );
           gitClient.abortRebase();
-          ciProvider.info(
-            `Continuing on "${devBranchName}" without rebasing. Conflicts with main will be resolved at PR merge.`,
-          );
         }
       } else {
-        ciProvider.info(`Branch "${devBranchName}" does not exist remotely. Working from main.`);
+        ciProvider.info(
+          `Branch "${devBranchName}" does not exist remotely. Creating from origin/main.`,
+        );
+        // Ensure we are on main and up to date before creating the new branch
+        gitClient.checkout("main");
+        try {
+          gitClient.resetHard("origin/main");
+        } catch {
+          /* ignore reset errors */
+        }
+        gitClient.checkout(devBranchName, true /* create */);
       }
     }
 
@@ -85700,7 +85801,11 @@ async function DeveloperWorkflow({
 
           if (verifySuccess) {
             ciProvider.info(`Creating PR for issue #${issueNumber}`);
-            await gitProvider.createPullRequest(
+
+            // Use privileged provider if available to trigger other workflows (like AI Reviewer)
+            const prProvider = privilegedGitProvider || gitProvider;
+
+            await prProvider.createPullRequest(
               owner,
               repo,
               commitMsg,
@@ -85784,13 +85889,20 @@ async function PlannerWorkflow({
 
     ciProvider.info(`[Debug] Resolved Issue Number: ${issueNumber}`);
 
-    // Safety check to only run if intended (explicit label or manual/dispatch)
-    const isTriageLabeled = payload.label?.name === "needs-triage";
+    // Safety check to only run if intended:
+    // 1. Explicit manual trigger (workflow_dispatch)
+    // 2. The 'needs-triage' label was just added
+    // 3. A new issue was opened (and it's not an AI-generated sub-task)
+    const isTriageLabeled = payload.action === "labeled" && payload.label?.name === "needs-triage";
     const isManual = eventName === "workflow_dispatch";
+    const isNewMaintainerIssue =
+      payload.action === "opened" &&
+      !payload.issue?.labels?.some((l) => l.name === "type: sub-task") &&
+      payload.issue?.user?.type !== "Bot";
 
-    if (!isTriageLabeled && !isManual && (!manualIssueNumber || manualIssueNumber === "")) {
+    if (!isTriageLabeled && !isManual && !isNewMaintainerIssue) {
       ciProvider.info(
-        "Planner skipped: Issue not labeled 'needs-triage' and not manually triggered.",
+        `Planner skipped: Event "${eventName}" with action "${payload.action}" does not meet triage criteria for maintainers or automation safeguards.`,
       );
       return { success: true, value: { skipped: true } };
     }
@@ -85805,12 +85917,19 @@ async function PlannerWorkflow({
     // Fetch issue details if it was a manual trigger (context might be empty)
     let issueTitle = payload.issue?.title || "";
     let issueBody = payload.issue?.body || "";
+    let issueState = payload.issue?.state || "";
 
     if (isManual && !issueTitle) {
       ciProvider.info(`Fetching details for issue #${issueNumber}...`);
       const issue = await gitProvider.getIssue(owner, repo, issueNumber);
       issueTitle = issue.title;
       issueBody = issue.body || "";
+      issueState = issue.state;
+    }
+
+    if (issueState === "closed") {
+      ciProvider.info(`Planner skipped: Issue #${issueNumber} is already closed.`);
+      return { success: true, value: { skipped: true, reason: "Issue is closed" } };
     }
 
     issueTitle = removePlannerMetadata(removeCostReport(issueTitle));
@@ -86012,6 +86131,11 @@ async function ReviewerWorkflow({
     // Fetch metadata to find the associated issue/task
     ciProvider.info(`[Reviewer] Fetching metadata for PR #${pullNumber}...`);
     const prMetadata = await gitProvider.getPullRequestMetadata(owner, repo, pullNumber);
+
+    if (prMetadata.state === "closed") {
+      ciProvider.info(`Reviewer skipped: PR #${pullNumber} is already closed.`);
+      return { success: true, value: { skipped: true, reason: "PR is closed" } };
+    }
 
     // Try to identify task number from branch (feat/issue-123) or PR body (closes #123)
     const branchMatch = prMetadata.head?.ref?.match(/issue-(\d+)/);
@@ -86282,7 +86406,11 @@ async function runOrchestrator(ciProvider, gitClient) {
     const workflows = {
       planner: (params) => PlannerWorkflow({ ...params, availableProviders }),
       developer: (params) =>
-        DeveloperWorkflow({ ...params, fileExecutor: new FileExecutor(process.cwd()) }),
+        DeveloperWorkflow({
+          ...params,
+          fileExecutor: new FileExecutor(process.cwd()),
+          privilegedGitProvider: ghMcpPat ? new GitHubAdapter(ghMcpPat) : null,
+        }),
       reviewer: ReviewerWorkflow,
     };
 

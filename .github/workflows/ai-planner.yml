@@ -2,7 +2,7 @@ name: AI Planner (Triage)
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -16,7 +16,13 @@ jobs:
   triage:
     name: Generate Technical Plan
     runs-on: ubuntu-latest
-    if: github.event.issue.pull_request == null
+    if: |
+      github.event.issue.pull_request == null &&
+      (
+        github.event_name == 'workflow_dispatch' || 
+        (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs-triage') ||
+        (github.event_name == 'issues' && github.event.action == 'opened' && !contains(github.event.issue.labels.*.name, 'type: sub-task') && github.event.issue.user.type != 'Bot')
+      )
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

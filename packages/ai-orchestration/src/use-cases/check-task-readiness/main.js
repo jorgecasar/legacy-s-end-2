@@ -8,6 +8,16 @@ export async function checkTaskReadiness(
   try {
     const issue = await gitProvider.getIssue(owner, repo, issueNumber);
 
+    if (issue.state === "closed") {
+      return {
+        success: true,
+        value: {
+          ready: false,
+          reason: `Issue #${issueNumber} is already closed. Skipping development.`,
+        },
+      };
+    }
+
     const body = issue.body || "";
     const blockerMatches = [...body.matchAll(/(?:depends on|blocked by)\s+#(\d+)/gi)];
     const filterBlockerIds = blockerMatches.map((m) => parseInt(m[1], 10));

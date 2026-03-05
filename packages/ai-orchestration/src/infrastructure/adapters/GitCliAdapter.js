@@ -25,6 +25,15 @@ export class GitCliAdapter {
     }
   }
 
+  fetch(remote = "origin", branch = "") {
+    const target = branch ? `${remote} ${branch}` : remote;
+    execSync(`git fetch ${target}`, { stdio: "inherit" });
+  }
+
+  resetHard(target) {
+    execSync(`git reset --hard ${target}`, { stdio: "inherit" });
+  }
+
   checkout(branchName, create = false) {
     if (create) {
       execSync(`git checkout -b "${branchName}"`);

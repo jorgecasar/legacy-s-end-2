@@ -22,6 +22,7 @@ import { implementIssue } from "./main.js";
  * @param {number} params.maxOutputTokens
  * @param {boolean} params.simulationMode
  * @param {boolean} params.useMock
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} [params.privilegedGitProvider] - Privileged provider (PAT) for PR creation.
  * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
  */
 export async function DeveloperWorkflow({
@@ -38,6 +39,7 @@ export async function DeveloperWorkflow({
   maxOutputTokens,
   simulationMode,
   useMock,
+  privilegedGitProvider,
 }) {
   try {
     const manualIssueNumber = ciProvider.getInput("issue_number");
@@ -219,28 +221,42 @@ export async function DeveloperWorkflow({
       const devBranchName = prBranch || `feat/issue-${issueNumber}`;
       gitClient.configAuthor(gitAuthorName, gitAuthorEmail);
 
+      ciProvider.info("Fetching latest main and refreshing state...");
+      // Ensure we have the latest main to rebase or branch from
+      try {
+        gitClient.fetch("origin", "main");
+      } catch (err) {
+        ciProvider.warning(`Git fetch failed: ${err.message}. Proceeding with local main.`);
+      }
+
       const branchExists = gitClient.branchExistsRemotely(devBranchName);
 
       if (branchExists) {
         ciProvider.info(
-          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on main...`,
+          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on origin/main...`,
         );
         gitClient.checkout(devBranchName, false, true); // force: true
-
-        const rebaseResult = gitClient.rebase("main");
+        const rebaseResult = gitClient.rebase("origin/main");
         if (rebaseResult.success) {
-          ciProvider.info("Rebase on main successful.");
+          ciProvider.info("Rebase on origin/main successful.");
         } else {
           ciProvider.warning(
             "Rebase failed (conflicts). Staying on branch as-is to preserve prior work.",
           );
           gitClient.abortRebase();
-          ciProvider.info(
-            `Continuing on "${devBranchName}" without rebasing. Conflicts with main will be resolved at PR merge.`,
-          );
         }
       } else {
-        ciProvider.info(`Branch "${devBranchName}" does not exist remotely. Working from main.`);
+        ciProvider.info(
+          `Branch "${devBranchName}" does not exist remotely. Creating from origin/main.`,
+        );
+        // Ensure we are on main and up to date before creating the new branch
+        gitClient.checkout("main");
+        try {
+          gitClient.resetHard("origin/main");
+        } catch {
+          /* ignore reset errors */
+        }
+        gitClient.checkout(devBranchName, true /* create */);
       }
     }
 
@@ -364,7 +380,11 @@ export async function DeveloperWorkflow({
 
           if (verifySuccess) {
             ciProvider.info(`Creating PR for issue #${issueNumber}`);
-            await gitProvider.createPullRequest(
+
+            // Use privileged provider if available to trigger other workflows (like AI Reviewer)
+            const prProvider = privilegedGitProvider || gitProvider;
+
+            await prProvider.createPullRequest(
               owner,
               repo,
               commitMsg,

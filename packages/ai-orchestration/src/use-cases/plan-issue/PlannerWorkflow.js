@@ -51,13 +51,20 @@ export async function PlannerWorkflow({
 
     ciProvider.info(`[Debug] Resolved Issue Number: ${issueNumber}`);
 
-    // Safety check to only run if intended (explicit label or manual/dispatch)
-    const isTriageLabeled = payload.label?.name === "needs-triage";
+    // Safety check to only run if intended:
+    // 1. Explicit manual trigger (workflow_dispatch)
+    // 2. The 'needs-triage' label was just added
+    // 3. A new issue was opened (and it's not an AI-generated sub-task)
+    const isTriageLabeled = payload.action === "labeled" && payload.label?.name === "needs-triage";
     const isManual = eventName === "workflow_dispatch";
+    const isNewMaintainerIssue =
+      payload.action === "opened" &&
+      !payload.issue?.labels?.some((l) => l.name === "type: sub-task") &&
+      payload.issue?.user?.type !== "Bot";
 
-    if (!isTriageLabeled && !isManual && (!manualIssueNumber || manualIssueNumber === "")) {
+    if (!isTriageLabeled && !isManual && !isNewMaintainerIssue) {
       ciProvider.info(
-        "Planner skipped: Issue not labeled 'needs-triage' and not manually triggered.",
+        `Planner skipped: Event "${eventName}" with action "${payload.action}" does not meet triage criteria for maintainers or automation safeguards.`,
       );
       return { success: true, value: { skipped: true } };
     }
@@ -72,12 +79,19 @@ export async function PlannerWorkflow({
     // Fetch issue details if it was a manual trigger (context might be empty)
     let issueTitle = payload.issue?.title || "";
     let issueBody = payload.issue?.body || "";
+    let issueState = payload.issue?.state || "";
 
     if (isManual && !issueTitle) {
       ciProvider.info(`Fetching details for issue #${issueNumber}...`);
       const issue = await gitProvider.getIssue(owner, repo, issueNumber);
       issueTitle = issue.title;
       issueBody = issue.body || "";
+      issueState = issue.state;
+    }
+
+    if (issueState === "closed") {
+      ciProvider.info(`Planner skipped: Issue #${issueNumber} is already closed.`);
+      return { success: true, value: { skipped: true, reason: "Issue is closed" } };
     }
 
     issueTitle = removePlannerMetadata(removeCostReport(issueTitle));
