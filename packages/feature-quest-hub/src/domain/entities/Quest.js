@@ -14,12 +14,18 @@ export class Quest {
   #status;
   /** @type {string} */
   #description;
+  /** @type {string} */
+  #image;
+  /** @type {number} */
+  #level;
 
-  constructor({ id, title, status = QuestStatus.LOCKED, description = "" }) {
+  constructor({ id, title, status = QuestStatus.LOCKED, description = "", image = "", level = 1 }) {
     this.#id = id;
     this.#title = title;
     this.#status = status;
     this.#description = description;
+    this.#image = image;
+    this.#level = level;
   }
 
   /**
@@ -28,7 +34,14 @@ export class Quest {
    * @param {object} params
    * @returns {{ success: boolean, value?: Quest, error?: string }}
    */
-  static create({ id, title, status = QuestStatus.LOCKED, description = "" }) {
+  static create({
+    id,
+    title,
+    status = QuestStatus.LOCKED,
+    description = "",
+    image = "",
+    level = 1,
+  }) {
     if (!id || typeof id !== "string") {
       return { success: false, error: "Quest must have a valid string ID." };
     }
@@ -40,7 +53,7 @@ export class Quest {
     }
 
     try {
-      const quest = new Quest({ id, title, status, description });
+      const quest = new Quest({ id, title, status, description, image, level });
       return { success: true, value: quest };
     } catch (error) {
       return { success: false, error: `Unexpected error creating Quest: ${error.message}` };
@@ -61,6 +74,14 @@ export class Quest {
 
   get description() {
     return this.#description;
+  }
+
+  get image() {
+    return this.#image;
+  }
+
+  get level() {
+    return this.#level;
   }
 
   /**

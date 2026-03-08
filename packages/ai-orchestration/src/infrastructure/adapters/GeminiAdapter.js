@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import cp from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -115,7 +115,7 @@ export class GeminiAdapter {
         );
       }
 
-      const rawOutput = execSync(command, {
+      const rawOutput = cp.execSync(command, {
         input: fullPrompt,
         env: {
           ...process.env,

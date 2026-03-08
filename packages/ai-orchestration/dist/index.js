@@ -63385,7 +63385,7 @@ class GeminiAdapter {
         );
       }
 
-      const rawOutput = (0,external_node_child_process_namespaceObject.execSync)(command, {
+      const rawOutput = external_node_child_process_namespaceObject.execSync(command, {
         input: fullPrompt,
         env: {
           ...process.env,
@@ -63421,18 +63421,18 @@ class GeminiAdapter {
  */
 
 /**
- * Adapter for local Git operations using `child_process.execSync`.
+ * Adapter for local Git operations using `child_process.child_process.execSync`.
  * @implements {IGitClient}
  */
 class GitCliAdapter {
   configAuthor(name, email) {
-    (0,external_node_child_process_namespaceObject.execSync)(`git config --global user.name "${name}"`);
-    (0,external_node_child_process_namespaceObject.execSync)(`git config --global user.email "${email}"`);
+    external_node_child_process_namespaceObject.execSync(`git config --global user.name "${name}"`);
+    external_node_child_process_namespaceObject.execSync(`git config --global user.email "${email}"`);
   }
 
   branchExistsRemotely(branchName) {
     try {
-      const remoteHeads = (0,external_node_child_process_namespaceObject.execSync)(`git ls-remote --heads origin "${branchName}"`)
+      const remoteHeads = external_node_child_process_namespaceObject.execSync(`git ls-remote --heads origin "${branchName}"`)
         .toString()
         .trim();
       return remoteHeads.length > 0;
@@ -63443,26 +63443,26 @@ class GitCliAdapter {
 
   fetch(remote = "origin", branch = "") {
     const target = branch ? `${remote} ${branch}` : remote;
-    (0,external_node_child_process_namespaceObject.execSync)(`git fetch ${target}`, { stdio: "inherit" });
+    external_node_child_process_namespaceObject.execSync(`git fetch ${target}`, { stdio: "inherit" });
   }
 
   resetHard(target) {
-    (0,external_node_child_process_namespaceObject.execSync)(`git reset --hard ${target}`, { stdio: "inherit" });
+    external_node_child_process_namespaceObject.execSync(`git reset --hard ${target}`, { stdio: "inherit" });
   }
 
   checkout(branchName, create = false) {
     if (create) {
-      (0,external_node_child_process_namespaceObject.execSync)(`git checkout -b "${branchName}"`);
+      external_node_child_process_namespaceObject.execSync(`git checkout -b "${branchName}"`);
     } else {
       try {
-        (0,external_node_child_process_namespaceObject.execSync)(`git checkout "${branchName}"`, { stdio: "inherit" });
+        external_node_child_process_namespaceObject.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
       } catch {
         // If checkout fails due to local changes, try to stash, checkout, and pop
         console.warn(`[GitCliAdapter] Checkout failed, attempting to stash local changes...`);
-        (0,external_node_child_process_namespaceObject.execSync)("git stash");
-        (0,external_node_child_process_namespaceObject.execSync)(`git checkout "${branchName}"`, { stdio: "inherit" });
+        external_node_child_process_namespaceObject.execSync("git stash");
+        external_node_child_process_namespaceObject.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
         try {
-          (0,external_node_child_process_namespaceObject.execSync)("git stash pop");
+          external_node_child_process_namespaceObject.execSync("git stash pop");
         } catch {
           console.warn(`[GitCliAdapter] Merge conflict after stash pop. Please resolve manually.`);
         }
@@ -63472,7 +63472,7 @@ class GitCliAdapter {
 
   rebase(targetBranch) {
     try {
-      (0,external_node_child_process_namespaceObject.execSync)(`git rebase ${targetBranch}`, { stdio: "inherit" });
+      external_node_child_process_namespaceObject.execSync(`git rebase ${targetBranch}`, { stdio: "inherit" });
       return { success: true, hasConflicts: false };
     } catch {
       return { success: false, hasConflicts: true };
@@ -63481,35 +63481,35 @@ class GitCliAdapter {
 
   abortRebase() {
     try {
-      (0,external_node_child_process_namespaceObject.execSync)("git rebase --abort", { stdio: "inherit" });
+      external_node_child_process_namespaceObject.execSync("git rebase --abort", { stdio: "inherit" });
     } catch {
       /* already aborted */
     }
   }
 
   getCurrentBranch() {
-    return (0,external_node_child_process_namespaceObject.execSync)("git branch --show-current").toString().trim();
+    return external_node_child_process_namespaceObject.execSync("git branch --show-current").toString().trim();
   }
 
   hasChanges() {
-    return (0,external_node_child_process_namespaceObject.execSync)("git status --porcelain").toString().trim().length > 0;
+    return external_node_child_process_namespaceObject.execSync("git status --porcelain").toString().trim().length > 0;
   }
 
   stageAll() {
-    (0,external_node_child_process_namespaceObject.execSync)("git add .");
+    external_node_child_process_namespaceObject.execSync("git add .");
   }
 
   squashOnto(targetBranch) {
-    (0,external_node_child_process_namespaceObject.execSync)(`git reset --soft ${targetBranch}`);
+    external_node_child_process_namespaceObject.execSync(`git reset --soft ${targetBranch}`);
   }
 
   commit(message, skipVerify = true) {
     const flag = skipVerify ? "--no-verify" : "";
-    (0,external_node_child_process_namespaceObject.execSync)(`git commit ${flag} -m "${message}"`);
+    external_node_child_process_namespaceObject.execSync(`git commit ${flag} -m "${message}"`);
   }
 
   pushForce(branchName) {
-    (0,external_node_child_process_namespaceObject.execSync)(`git push origin "${branchName}" --force`);
+    external_node_child_process_namespaceObject.execSync(`git push origin "${branchName}" --force`);
   }
 
   runVerification() {
@@ -63518,7 +63518,7 @@ class GitCliAdapter {
 
     const run = (command) => {
       try {
-        const result = (0,external_node_child_process_namespaceObject.execSync)(command, { stdio: "pipe", encoding: "utf-8" });
+        const result = external_node_child_process_namespaceObject.execSync(command, { stdio: "pipe", encoding: "utf-8" });
         output += `\n--- [SUCCESS] ${command} ---\n${result}`;
       } catch (err) {
         success = false;
@@ -75942,6 +75942,27 @@ class GitHubAdapter {
     });
     return data;
   }
+
+  async listIssues(owner, repo, params) {
+    const { data } = await this.octokit.rest.issues.listForRepo({
+      owner,
+      repo,
+      ...params,
+    });
+    return data;
+  }
+
+  async listSubIssues(owner, repo, parentIssueNumber) {
+    const { data } = await this.octokit.request(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+      {
+        owner,
+        repo,
+        issue_number: parentIssueNumber,
+      },
+    );
+    return data;
+  }
 }
 
 ;// CONCATENATED MODULE: ./src/infrastructure/adapters/MockAIAdapter.js
@@ -76008,6 +76029,15 @@ class MockGitCliAdapter {
   branchExistsRemotely(branchName) {
     this.commandsExecuted.push(`git ls-remote --heads origin "${branchName}"`);
     return this.branchExistsMock;
+  }
+
+  fetch(remote = "origin", branch = "") {
+    const target = branch ? `${remote} ${branch}` : remote;
+    this.commandsExecuted.push(`git fetch ${target}`);
+  }
+
+  resetHard(target) {
+    this.commandsExecuted.push(`git reset --hard ${target}`);
   }
 
   checkout(branchName, create = false, force = false) {
@@ -76085,7 +76115,7 @@ class MockGitHubAdapter {
     };
   }
 
-  async getIssue(owner, repo, issueNumber) {
+  async getIssue(_owner, _repo, issueNumber) {
     // Return a mocked issue that matches what tests or the selector might expect.
     return {
       number: issueNumber,
@@ -76110,7 +76140,7 @@ class MockGitHubAdapter {
     return "Mock Diff";
   }
 
-  async createComment(owner, repo, issueNumber, body) {
+  async createComment(_owner, _repo, issueNumber, body) {
     this.memory.comments.push({ issueNumber, body, user: { login: "mock-bot" } });
     // Simulate successful creation
   }
@@ -76151,6 +76181,17 @@ class MockGitHubAdapter {
       number: 999,
       html_url: `https://github.com/mock/mock/pull/999`,
     };
+  }
+
+  async createIssue(owner, repo, params) {
+    return {
+      number: 999,
+      title: params.title,
+    };
+  }
+
+  async addSubIssue(_owner, _repo, _parentIssueNumber, _subIssueId) {
+    // Simulated behavior
   }
 
   async listPullRequests(_owner, _repo, _params) {

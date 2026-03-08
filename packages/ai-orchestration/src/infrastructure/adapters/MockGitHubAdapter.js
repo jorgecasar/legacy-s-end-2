@@ -18,7 +18,7 @@ export class MockGitHubAdapter {
     };
   }
 
-  async getIssue(owner, repo, issueNumber) {
+  async getIssue(_owner, _repo, issueNumber) {
     // Return a mocked issue that matches what tests or the selector might expect.
     return {
       number: issueNumber,
@@ -43,7 +43,7 @@ export class MockGitHubAdapter {
     return "Mock Diff";
   }
 
-  async createComment(owner, repo, issueNumber, body) {
+  async createComment(_owner, _repo, issueNumber, body) {
     this.memory.comments.push({ issueNumber, body, user: { login: "mock-bot" } });
     // Simulate successful creation
   }
@@ -84,6 +84,17 @@ export class MockGitHubAdapter {
       number: 999,
       html_url: `https://github.com/mock/mock/pull/999`,
     };
+  }
+
+  async createIssue(owner, repo, params) {
+    return {
+      number: 999,
+      title: params.title,
+    };
+  }
+
+  async addSubIssue(_owner, _repo, _parentIssueNumber, _subIssueId) {
+    // Simulated behavior
   }
 
   async listPullRequests(_owner, _repo, _params) {

@@ -124,4 +124,159 @@ describe("Workflow: DeveloperWorkflow", () => {
     assert.strictEqual(result.success, true);
     assert.ok(!ciProvider.logs.info.some((m) => m.includes("Detected PR branch")));
   });
+
+  test("should handle missing issue number gracefully", async () => {
+    const ciProvider = new MockCIAdapter(
+      { gh_token: "fake-token" },
+      { payload: {}, owner: "jorgecasar", repo: "legacys-end-2" },
+    );
+    const result = await DeveloperWorkflow({
+      ciProvider,
+      gitProvider: new MockGitHubAdapter(),
+      aiProvider: new MockAIAdapter(),
+      gitClient: new MockGitCliAdapter(),
+      fileExecutor: { execute: async () => 0 },
+      model: "mock-model",
+      owner: "jorgecasar",
+      repo: "legacys-end-2",
+      payload: ciProvider.getEventContext().payload,
+      maxInputTokens: 200,
+      maxOutputTokens: 200,
+      simulationMode: true,
+      useMock: true,
+    });
+
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("Could not determine issue or PR number"));
+  });
+
+  test("should skip execution if task readiness returns not ready", async () => {
+    const ciProvider = new MockCIAdapter(
+      { gh_token: "fake-token" },
+      { payload: { issue: { number: 9 } }, owner: "jorgecasar", repo: "legacys-end-2" },
+    );
+
+    // Create a mock that returns a blocker in getIssue
+    const gitProvider = new MockGitHubAdapter();
+    gitProvider.getIssue = async () => ({
+      number: 9,
+      title: "Blocked Issue",
+      body: "- [ ] Blocked by #10",
+    });
+    // The blocker #10 is open
+    const originalGetIssue = gitProvider.getIssue;
+    gitProvider.getIssue = async (owner, repo, number) => {
+      if (number === 10) return { number: 10, state: "open" };
+      return originalGetIssue(owner, repo, number);
+    };
+
+    const result = await DeveloperWorkflow({
+      ciProvider,
+      gitProvider,
+      aiProvider: new MockAIAdapter(),
+      gitClient: new MockGitCliAdapter(),
+      fileExecutor: { execute: async () => 0 },
+      model: "mock-model",
+      owner: "jorgecasar",
+      repo: "legacys-end-2",
+      payload: ciProvider.getEventContext().payload,
+      maxInputTokens: 200,
+      maxOutputTokens: 200,
+      simulationMode: true,
+      useMock: true,
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.skipped, true);
+    assert.ok(result.value.reason.includes("Blocked by open issues"));
+  });
+
+  test("should create branch, commit, and open PR if changes detected", async () => {
+    const ciProvider = new MockCIAdapter(
+      { gh_token: "fake-token" },
+      { payload: { issue: { number: 11 } }, owner: "jorgecasar", repo: "legacys-end-2" },
+    );
+    const gitProvider = new MockGitHubAdapter();
+    gitProvider.getIssue = async () => ({ number: 11, title: "Feature Title", body: "" });
+
+    const gitClient = new MockGitCliAdapter();
+    // Force it to take the real git path (useMock = false)
+    // Make gitClient think it has changes
+    gitClient.hasChanges = () => true;
+    gitClient.runVerification = () => ({ success: true, output: "OK" });
+
+    let createdPR = false;
+    gitProvider.createPullRequest = async () => {
+      createdPR = true;
+    };
+
+    const result = await DeveloperWorkflow({
+      ciProvider,
+      gitProvider,
+      gitClient,
+      aiProvider: new MockAIAdapter(),
+      fileExecutor: { execute: async () => 1 }, // file changed
+      model: "mock-model",
+      owner: "jorgecasar",
+      repo: "legacys-end-2",
+      payload: ciProvider.getEventContext().payload,
+      maxInputTokens: 200,
+      maxOutputTokens: 200,
+      simulationMode: false,
+      useMock: false, // Triggers branch + commit logic
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.verifySuccess, true);
+    assert.strictEqual(createdPR, true);
+    assert.ok(ciProvider.logs.info.some((l) => l.includes("Changes detected")));
+  });
+
+  test("should loop feeding back errors to AI if verification fails", async () => {
+    const ciProvider = new MockCIAdapter(
+      { gh_token: "fake-token" },
+      { payload: { issue: { number: 12 } }, owner: "jorgecasar", repo: "legacys-end-2" },
+    );
+    const gitProvider = new MockGitHubAdapter();
+    gitProvider.getIssue = async () => ({ number: 12, title: "Loop Issue", body: "" });
+
+    const gitClient = new MockGitCliAdapter();
+    gitClient.hasChanges = () => true;
+
+    // Fail verification the first 2 times, succeed on the 3rd
+    let verificationCallCount = 0;
+    gitClient.runVerification = () => {
+      verificationCallCount++;
+      if (verificationCallCount < 3) return { success: false, output: "Lint Error" };
+      return { success: true, output: "OK" };
+    };
+
+    const result = await DeveloperWorkflow({
+      ciProvider,
+      gitProvider,
+      gitClient,
+      aiProvider: new MockAIAdapter(),
+      fileExecutor: { execute: async () => 0 },
+      model: "mock-model",
+      owner: "jorgecasar",
+      repo: "legacys-end-2",
+      payload: ciProvider.getEventContext().payload,
+      maxInputTokens: 500,
+      maxOutputTokens: 200,
+      simulationMode: true,
+      useMock: false, // Forces loop test logic
+    });
+
+    // Log full workflow output to debug verifySuccess state
+    if (!result.success || !result.value.verifySuccess) {
+      console.log("DeveloperWorkflow loop failed! CallCount:", verificationCallCount);
+      console.log("Logs:", ciProvider?.logs);
+      console.log("Result:", result);
+    }
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.verifySuccess, true);
+    assert.strictEqual(verificationCallCount, 3);
+    assert.ok(ciProvider.logs.warning.some((l) => l.includes("Verification failed")));
+    assert.ok(ciProvider.logs.info.some((l) => l.includes("Feeding errors back to AI")));
+  });
 });

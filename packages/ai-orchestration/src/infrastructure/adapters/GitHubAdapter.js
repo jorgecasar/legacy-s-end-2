@@ -148,4 +148,25 @@ export class GitHubAdapter {
     });
     return data;
   }
+
+  async listIssues(owner, repo, params) {
+    const { data } = await this.octokit.rest.issues.listForRepo({
+      owner,
+      repo,
+      ...params,
+    });
+    return data;
+  }
+
+  async listSubIssues(owner, repo, parentIssueNumber) {
+    const { data } = await this.octokit.request(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+      {
+        owner,
+        repo,
+        issue_number: parentIssueNumber,
+      },
+    );
+    return data;
+  }
 }

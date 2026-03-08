@@ -1,5 +1,7 @@
 import assert from "node:assert";
-import { describe, test } from "node:test";
+import child_process from "node:child_process";
+import fs from "node:fs";
+import { afterEach, beforeEach, describe, mock, test } from "node:test";
 import { GeminiAdapter } from "../src/infrastructure/adapters/GeminiAdapter.js";
 
 describe("Infrastructure: GeminiAdapter", () => {
@@ -67,6 +69,97 @@ Some random log line
       assert.strictEqual(result.text, "Only text");
       assert.strictEqual(result.usage.prompt_tokens, 10);
       assert.strictEqual(result.usage.completion_tokens, 3); // "Only text" is 9 chars / 4 = 3
+    });
+  });
+
+  describe("generateContent", () => {
+    let existsSyncMock;
+    let execSyncMock;
+
+    beforeEach(() => {
+      existsSyncMock = mock.method(fs, "existsSync");
+      execSyncMock = mock.method(child_process, "execSync");
+    });
+
+    afterEach(() => {
+      mock.restoreAll();
+    });
+
+    test("should execute gemini-cli via npx if local binary not found", async () => {
+      existsSyncMock.mock.mockImplementation(() => false);
+      execSyncMock.mock.mockImplementation(() => '{"response": "OK", "stats": {}}');
+
+      const result = await adapter.generateContent(
+        "gemini-2.0-flash",
+        "SysPrompt",
+        "UserPrompt",
+        100,
+      );
+
+      assert.strictEqual(execSyncMock.mock.calls.length, 1);
+      const command = execSyncMock.mock.calls[0].arguments[0];
+      assert.ok(command.startsWith("npx -y @google/gemini-cli@0.31.0"));
+      assert.ok(command.includes('-m "gemini-2.0-flash"'));
+
+      const options = execSyncMock.mock.calls[0].arguments[1];
+      assert.strictEqual(options.input, "SysPrompt\n\nUserPrompt");
+      assert.strictEqual(options.env.GEMINI_API_KEY, "fake-api-key");
+
+      assert.strictEqual(result.text, "OK");
+    });
+
+    test("should execute local binary if found", async () => {
+      existsSyncMock.mock.mockImplementation(() => true);
+      execSyncMock.mock.mockImplementation(() => '{"response": "Local OK"}');
+
+      const result = await adapter.generateContent("gemini-1.5-pro", "Sys", "User");
+
+      assert.strictEqual(execSyncMock.mock.calls.length, 1);
+      const command = execSyncMock.mock.calls[0].arguments[0];
+      assert.ok(!command.startsWith("npx"));
+      assert.ok(command.includes(".bin/gemini"));
+
+      assert.strictEqual(result.text, "Local OK");
+    });
+
+    test("should catch and throw formatted error if execution fails", async () => {
+      existsSyncMock.mock.mockImplementation(() => false);
+
+      const mockError = new Error("Command failed");
+      mockError.stdout = "Standard Out Error";
+      mockError.stderr = "Standard Err Error";
+
+      execSyncMock.mock.mockImplementation(() => {
+        throw mockError;
+      });
+
+      try {
+        await adapter.generateContent("gemini-1.5-pro", "Sys", "User");
+        assert.fail("Should have thrown an error");
+      } catch (err) {
+        assert.ok(err.message.includes("gemini-cli execution failed: Command failed"));
+        assert.ok(err.message.includes("STDOUT: Standard Out Error"));
+        assert.ok(err.message.includes("STDERR: Standard Err Error"));
+      }
+    });
+
+    test("should sanitize and pass GITHUB_TOKEN and GH_MCP_PAT in env", async () => {
+      const adapterWithTokens = new GeminiAdapter("api-key", {
+        githubToken: " token123 ",
+        ghMcpPat: " mcp456 ",
+      });
+
+      existsSyncMock.mock.mockImplementation(() => false);
+      execSyncMock.mock.mockImplementation(() => '{"response": "Tokens OK"}');
+
+      await adapterWithTokens.generateContent("model", "sys", "usr");
+
+      assert.strictEqual(execSyncMock.mock.calls.length, 1);
+      const env = execSyncMock.mock.calls[0].arguments[1].env;
+
+      assert.strictEqual(env.GITHUB_TOKEN, "token123");
+      assert.strictEqual(env.GH_TOKEN, "token123");
+      assert.strictEqual(env.GH_MCP_PAT, "mcp456");
     });
   });
 });

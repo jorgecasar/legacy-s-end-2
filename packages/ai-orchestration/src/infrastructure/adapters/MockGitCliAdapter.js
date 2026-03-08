@@ -25,6 +25,15 @@ export class MockGitCliAdapter {
     return this.branchExistsMock;
   }
 
+  fetch(remote = "origin", branch = "") {
+    const target = branch ? `${remote} ${branch}` : remote;
+    this.commandsExecuted.push(`git fetch ${target}`);
+  }
+
+  resetHard(target) {
+    this.commandsExecuted.push(`git reset --hard ${target}`);
+  }
+
   checkout(branchName, create = false, force = false) {
     const forceFlag = force ? "--force " : "";
     const flag = create ? "-b " : "";
