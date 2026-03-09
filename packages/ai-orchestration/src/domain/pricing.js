@@ -8,7 +8,7 @@ import { getModelPricing } from "./models.js";
  * Calculates the cost of an AI interaction.
  * @param {string} model - Specific model name from the registry
  * @param {object} usage - { prompt_tokens, completion_tokens }
- * @returns {{ input_cost: number, output_cost: number, total_cost: number, currency: string }}
+ * @returns {{ success: boolean, value?: { input_cost: number, output_cost: number, total_cost: number, currency: string }, error?: string }}
  */
 export function calculateCost(model, usage) {
   const prices = getModelPricing(model);
@@ -19,9 +19,12 @@ export function calculateCost(model, usage) {
   const outputCost = (completionTokens / 1000000) * prices.output;
 
   return {
-    input_cost: Number(inputCost.toFixed(6)),
-    output_cost: Number(outputCost.toFixed(6)),
-    total_cost: Number((inputCost + outputCost).toFixed(6)),
-    currency: "USD",
+    success: true,
+    value: {
+      input_cost: Number(inputCost.toFixed(6)),
+      output_cost: Number(outputCost.toFixed(6)),
+      total_cost: Number((inputCost + outputCost).toFixed(6)),
+      currency: "USD",
+    },
   };
 }

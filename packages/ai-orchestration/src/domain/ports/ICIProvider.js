@@ -59,4 +59,13 @@ export class ICIProvider {
   setFailed(_message) {
     throw new Error("Not implemented");
   }
+
+  /**
+   * Sets an output parameter for the CI environment.
+   * @param {string} _name
+   * @param {string} _value
+   */
+  setOutput(_name, _value) {
+    throw new Error("Not implemented");
+  }
 }

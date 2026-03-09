@@ -94,8 +94,8 @@ export async function PlannerWorkflow({
       return { success: true, value: { skipped: true, reason: "Issue is closed" } };
     }
 
-    issueTitle = removePlannerMetadata(removeCostReport(issueTitle));
-    issueBody = removePlannerMetadata(removeCostReport(issueBody));
+    issueTitle = removePlannerMetadata(removeCostReport(issueTitle).value).value;
+    issueBody = removePlannerMetadata(removeCostReport(issueBody).value).value;
 
     const customSystemPrompt = ciProvider.getInput("planner_system_prompt");
     const customUserPrompt = ciProvider.getInput("planner_user_prompt");
@@ -133,7 +133,8 @@ export async function PlannerWorkflow({
     }
 
     const { usage, plan } = result.value;
-    const costs = calculateCost(model, usage);
+    const costResult = calculateCost(model, usage);
+    const costs = costResult.value;
     ciProvider.info(
       `[Cost] AI Planner (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
     );

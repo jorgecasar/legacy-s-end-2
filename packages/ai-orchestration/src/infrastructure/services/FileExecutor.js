@@ -60,6 +60,7 @@ export class FileExecutor {
       getInput: () => "",
       getEventContext: () => ({ owner: "", repo: "", eventName: "", payload: {} }),
       setFailed: console.error,
+      setOutput: (_name, _value) => {},
     },
   ) {
     for (const change of changes) {
@@ -112,6 +113,7 @@ export class FileExecutor {
       getInput: () => "",
       getEventContext: () => ({ owner: "", repo: "", eventName: "", payload: {} }),
       setFailed: console.error,
+      setOutput: (_name, _value) => {},
     },
   ) {
     const changes = this.parseChanges(llmResponse);

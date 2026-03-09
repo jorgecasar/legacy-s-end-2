@@ -63,4 +63,8 @@ export class GitHubActionsAdapter {
   setFailed(message) {
     core.setFailed(message);
   }
+
+  setOutput(name, value) {
+    core.setOutput(name, value);
+  }
 }

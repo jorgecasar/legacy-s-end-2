@@ -100,4 +100,12 @@ export class MockGitHubAdapter {
   async listPullRequests(_owner, _repo, _params) {
     return [];
   }
+
+  async listIssues(_owner, _repo, _params) {
+    return [];
+  }
+
+  async listSubIssues(_owner, _repo, _parentIssueNumber) {
+    return [];
+  }
 }

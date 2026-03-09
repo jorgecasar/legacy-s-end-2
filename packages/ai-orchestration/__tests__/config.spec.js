@@ -83,9 +83,9 @@ describe("Infrastructure: Config", () => {
       assert.strictEqual(model, "gemini-2.0-flash");
     });
 
-    test("should return simulation if no keys match", () => {
+    test("should return null if no keys match", () => {
       const { model } = selectBestModel("developer", ["gpt-4o"], {});
-      assert.strictEqual(model, "simulation");
+      assert.strictEqual(model, null);
     });
   });
 });

@@ -152,4 +152,24 @@ export class IGitProvider {
   async listPullRequests(_owner, _repo, _params) {
     throw new Error("Not implemented");
   }
+
+  /**
+   * @param {string} _owner
+   * @param {string} _repo
+   * @param {object} _params
+   * @returns {Promise<any[]>}
+   */
+  async listIssues(_owner, _repo, _params) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * @param {string} _owner
+   * @param {string} _repo
+   * @param {number} _parentIssueNumber
+   * @returns {Promise<any[]>}
+   */
+  async listSubIssues(_owner, _repo, _parentIssueNumber) {
+    throw new Error("Not implemented");
+  }
 }

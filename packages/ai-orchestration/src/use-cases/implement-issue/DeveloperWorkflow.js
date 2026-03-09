@@ -48,8 +48,8 @@ export async function DeveloperWorkflow({
       : payload.issue?.number || payload.pull_request?.number;
 
     let context = payload.comment?.body || payload.issue?.body || "";
-    context = removeCostReport(context);
-    context = removePlannerMetadata(context);
+    context = removeCostReport(context).value;
+    context = removePlannerMetadata(context).value;
 
     let issueTitle = payload.issue?.title || "";
     let prBranch = null;
@@ -107,8 +107,8 @@ export async function DeveloperWorkflow({
             return !isAIReportResult;
           })
           .map((c) => {
-            let cleanBody = removeCostReport(c.body || "");
-            cleanBody = removePlannerMetadata(cleanBody);
+            let cleanBody = removeCostReport(c.body || "").value;
+            cleanBody = removePlannerMetadata(cleanBody).value;
 
             return cleanBody ? `[Comment by ${c.user?.login || "unknown"}]:\n${cleanBody}` : null;
           })
@@ -127,8 +127,8 @@ export async function DeveloperWorkflow({
                 const body = c.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body);
-                cleanBody = removePlannerMetadata(cleanBody);
+                let cleanBody = removeCostReport(body).value;
+                cleanBody = removePlannerMetadata(cleanBody).value;
                 return cleanBody
                   ? `[Review Comment on ${c.path} L${c.line} by ${c.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -148,8 +148,8 @@ export async function DeveloperWorkflow({
                 const body = r.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body);
-                cleanBody = removePlannerMetadata(cleanBody);
+                let cleanBody = removeCostReport(body).value;
+                cleanBody = removePlannerMetadata(cleanBody).value;
                 return cleanBody
                   ? `[Review Summary (${r.state}) by ${r.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -169,10 +169,27 @@ export async function DeveloperWorkflow({
       "\n\n---\n\n",
     );
 
-    let cleanIssueBody = removeCostReport(issue?.body || "");
-    cleanIssueBody = removePlannerMetadata(cleanIssueBody);
+    let cleanIssueBody = removeCostReport(issue?.body || "").value;
+    cleanIssueBody = removePlannerMetadata(cleanIssueBody).value;
 
-    context = `Issue Description:\n${cleanIssueBody}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
+    let parentContext = "";
+    const parentMatch = issue?.body?.match(/Sub-task of #(\d+)/i);
+    if (parentMatch) {
+      const parentId = parseInt(parentMatch[1], 10);
+      try {
+        ciProvider.info(
+          `[Developer] Detected sub-task. Bridging parent context from #${parentId}...`,
+        );
+        const parentIssue = await gitProvider.getIssue(owner, repo, parentId);
+        let cleanParentBody = removeCostReport(parentIssue.body || "").value;
+        cleanParentBody = removePlannerMetadata(cleanParentBody).value;
+        parentContext = `\n\n--- PARENT MASTER PLAN (#${parentId}) ---\n${cleanParentBody}\n`;
+      } catch (err) {
+        ciProvider.warning(`Failed to fetch parent issue #${parentId}: ${err.message}`);
+      }
+    }
+
+    context = `Issue Description:\n${cleanIssueBody}${parentContext}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
 
     if (!issueNumber) {
       return {
@@ -252,7 +269,7 @@ export async function DeveloperWorkflow({
         // Ensure we are on main and up to date before creating the new branch
         gitClient.checkout("main");
         try {
-          gitClient.resetHard("origin/main");
+          gitClient.resetHard("FETCH_HEAD");
         } catch {
           /* ignore reset errors */
         }
@@ -297,7 +314,8 @@ export async function DeveloperWorkflow({
       }
 
       const { usage, response } = result.value;
-      const costs = calculateCost(model, usage);
+      const costResult = calculateCost(model, usage);
+      const costs = costResult.value;
       ciProvider.info(
         `[Cost] AI Developer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
       );

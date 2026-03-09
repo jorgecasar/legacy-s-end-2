@@ -55,4 +55,8 @@ export class MockCIAdapter {
     console.error(`[ERROR] ${message}`);
     this.logs.failed.push(message);
   }
+
+  setOutput(name, value) {
+    this.logs.info.push(`[OUTPUT] ${name}=${value}`);
+  }
 }

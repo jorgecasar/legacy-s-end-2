@@ -93,8 +93,8 @@ export async function ReviewerWorkflow({
       .map((c) => {
         const isBot = c.user?.login?.includes("bot") || c.user?.type === "Bot";
         const author = isBot ? "AI/Bot" : c.user?.login || "unknown";
-        let cleanBody = removeCostReport(c.body || "");
-        cleanBody = removePlannerMetadata(cleanBody);
+        let cleanBody = removeCostReport(c.body || "").value;
+        cleanBody = removePlannerMetadata(cleanBody).value;
 
         const location = c.path ? ` on ${c.path} L${c.line}` : "";
         return `[${author}${location}]: ${cleanBody}`;
@@ -129,7 +129,8 @@ export async function ReviewerWorkflow({
     }
 
     const { usage, response } = result.value;
-    const costs = calculateCost(model, usage);
+    const costResult = calculateCost(model, usage);
+    const costs = costResult.value;
     ciProvider.info(
       `[Cost] AI Reviewer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
     );

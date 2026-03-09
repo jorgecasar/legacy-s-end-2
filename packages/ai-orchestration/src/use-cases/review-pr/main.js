@@ -53,7 +53,8 @@ export async function reviewPR({
   const response = generatedResponse.text;
   const usage = generatedResponse.usage;
 
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
 
   return {
     success: true,

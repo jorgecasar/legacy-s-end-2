@@ -5,10 +5,10 @@ export const REPORT_SIGNATURE = "<!-- ai-usage-report -->";
 /**
  * Removes the cost report block from a text string.
  * @param {string} text
- * @returns {string}
+ * @returns {{ success: boolean, value: string, error?: string }}
  */
 export function removeCostReport(text) {
-  if (!text) return "";
+  if (!text) return { success: true, value: "" };
 
   // 1. Surgical removal if markers exist
   const markerRegex = /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g;
@@ -26,7 +26,7 @@ export function removeCostReport(text) {
   // 4. Collapse consecutive newlines to a single one and trim
   cleanText = cleanText.replace(/\n{2,}/g, "\n");
 
-  return cleanText.trim();
+  return { success: true, value: cleanText.trim() };
 }
 
 /**
@@ -37,7 +37,8 @@ export async function trackCostReport(
   gitProvider,
   { owner, repo, issueNumber, agent, provider, usage, model },
 ) {
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
   const displayModel = model || provider;
   const newRow = `| ${agent} | ${displayModel} | ${usage.prompt_tokens || 0} | ${usage.completion_tokens || 0} | $${costs.total_cost.toFixed(6)} |`;
 

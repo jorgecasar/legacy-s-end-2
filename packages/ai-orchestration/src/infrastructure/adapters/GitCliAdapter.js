@@ -27,7 +27,8 @@ export class GitCliAdapter {
   }
 
   fetch(remote = "origin", branch = "") {
-    const target = branch ? `${remote} ${branch}` : remote;
+    // If branch is provided, fetch specifically that branch and update the local tracking ref
+    const target = branch ? `${remote} ${branch}:${remote}/${branch}` : remote;
     child_process.execSync(`git fetch ${target}`, { stdio: "inherit" });
   }
 

@@ -3,11 +3,14 @@ import { GeminiAdapter } from "./infrastructure/adapters/GeminiAdapter.js";
 import { GitCliAdapter } from "./infrastructure/adapters/GitCliAdapter.js";
 import { GitHubActionsAdapter } from "./infrastructure/adapters/GitHubActionsAdapter.js";
 import { GitHubAdapter } from "./infrastructure/adapters/GitHubAdapter.js";
+import { GitHubProjectAdapter } from "./infrastructure/adapters/GitHubProjectAdapter.js";
 import { MockAIAdapter } from "./infrastructure/adapters/MockAIAdapter.js";
 import { MockGitCliAdapter } from "./infrastructure/adapters/MockGitCliAdapter.js";
 import { MockGitHubAdapter } from "./infrastructure/adapters/MockGitHubAdapter.js";
+import { MockProjectManager } from "./infrastructure/adapters/MockProjectManager.js";
 import { OpenAIAdapter } from "./infrastructure/adapters/OpenAIAdapter.js";
 import {
+  branding,
   extractRecommendedModel,
   extractTaskComplexity,
   getAvailableModelProviders,
@@ -15,6 +18,7 @@ import {
 } from "./infrastructure/config.js";
 import { FileExecutor } from "./infrastructure/services/FileExecutor.js";
 import { DeveloperWorkflow } from "./use-cases/implement-issue/DeveloperWorkflow.js";
+import { OrchestratorWorkflow } from "./use-cases/orchestrate/OrchestratorWorkflow.js";
 import { PlannerWorkflow } from "./use-cases/plan-issue/PlannerWorkflow.js";
 import { ReviewerWorkflow } from "./use-cases/review-pr/ReviewerWorkflow.js";
 
@@ -28,6 +32,11 @@ export async function runOrchestrator(ciProvider, gitClient) {
   try {
     const role = ciProvider.getInput("agent_role", { required: true });
     const token = ciProvider.getInput("gh_token") || process.env.GITHUB_TOKEN;
+    const gitAuthorName = ciProvider.getInput("git_author_name");
+
+    if (gitAuthorName) {
+      branding.setName(gitAuthorName);
+    }
 
     if (!token) {
       throw new Error(
@@ -105,7 +114,7 @@ export async function runOrchestrator(ciProvider, gitClient) {
     }
 
     // Model Selection logic based on available keys & preferences (including recommendations)
-    const { model, provider } = selectBestModel(
+    const { provider, model } = selectBestModel(
       role.toLowerCase(),
       recommendedModel ? [recommendedModel] : null,
       {
@@ -119,10 +128,15 @@ export async function runOrchestrator(ciProvider, gitClient) {
     let aiProvider;
     let finalModel = model;
 
-    // Use simulation if explicitly requested, in test environment, or if no provider keys found
-    const useAiSimulation = isTest || simulationMode || provider === "mock";
+    const finalSimulationMode = isTest || simulationMode;
 
-    if (useAiSimulation) {
+    if (!provider && !finalSimulationMode) {
+      throw new Error(
+        "No API keys found for any supported models. Please provide a valid API key (GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY) or enable 'simulation_mode' in the workflow inputs.",
+      );
+    }
+
+    if (finalSimulationMode || provider === "mock") {
       finalModel = "simulation";
       ciProvider.info(`Using Mock AI Provider (${finalModel})...`);
       aiProvider = new MockAIAdapter();
@@ -130,7 +144,7 @@ export async function runOrchestrator(ciProvider, gitClient) {
       // Real AI Adapters
       if (provider === "gemini") {
         aiProvider = new GeminiAdapter(geminiKey, {
-          simulationMode,
+          simulationMode: finalSimulationMode,
           role: role.toLowerCase(),
           githubToken: token,
           ghMcpPat,
@@ -161,6 +175,19 @@ export async function runOrchestrator(ciProvider, gitClient) {
           privilegedGitProvider: ghMcpPat ? new GitHubAdapter(ghMcpPat) : null,
         }),
       reviewer: ReviewerWorkflow,
+      orchestrate: (params) => {
+        const pm =
+          isTest || finalSimulationMode
+            ? new MockProjectManager()
+            : new GitHubProjectAdapter(token);
+
+        return OrchestratorWorkflow({
+          ...params,
+          projectManager: pm,
+          projectId: ciProvider.getInput("project_id") || process.env.PROJECT_ID,
+          wipLimit: parseInt(ciProvider.getInput("wip_limit") || "5", 10),
+        });
+      },
     };
 
     const workflow = workflows[role.toLowerCase()];
@@ -182,7 +209,7 @@ export async function runOrchestrator(ciProvider, gitClient) {
       eventName,
       maxInputTokens,
       maxOutputTokens,
-      simulationMode,
+      simulationMode: finalSimulationMode,
       useMock: isTest,
     });
 

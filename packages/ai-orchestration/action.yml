@@ -43,6 +43,13 @@ inputs:
   pull_number:
     description: "Specific Pull Request number to act upon (required for manual trigger)."
     required: false
+  project_id:
+    description: "GitHub Project ID (required for 'orchestrate' role)."
+    required: false
+  wip_limit:
+    description: "Work In Progress limit for Kanban columns."
+    required: false
+    default: "5"
   planner_system_prompt:
     description: "Custom system prompt for the AI Planner."
     required: false
@@ -67,11 +74,9 @@ inputs:
   git_author_name:
     description: "Git author name for commits made by the AI agent."
     required: false
-    default: "github-actions[bot]"
   git_author_email:
     description: "Git author email for commits made by the AI agent."
     required: false
-    default: "github-actions[bot]@users.noreply.github.com"
 runs:
   using: "node20"
   main: "dist/index.js"

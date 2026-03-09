@@ -24,7 +24,7 @@
     "format": "oxfmt --no-error-on-unmatched-pattern",
     "format:check": "oxfmt --check --no-error-on-unmatched-pattern",
     "check": "npm run format:check && npm run lint && npm run test && npm run test:e2e && npm run test:bdd",
-    "check:fix": "npm run format && npm run lint:fix",
+    "check:fix": "npm run format && npm run lint:logic:fix",
     "prepare": "husky",
     "postinstall": "if [ \"$CI\" = \"true\" ]; then npx playwright install --with-deps chromium; fi",
     "storybook": "storybook dev -p 6006",

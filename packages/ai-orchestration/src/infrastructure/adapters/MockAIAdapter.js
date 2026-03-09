@@ -13,6 +13,8 @@ export class MockAIAdapter {
     let simulatedText = `Detailed implementation simulation for ${modelId}`;
     if (systemPrompt.includes("TRIAGE and PLAN")) {
       simulatedText = `🤖 **AI Triage & Planning Report**:\n\n### 📋 Triage\n- **Type**: \`type: task\`\n- **Priority**: \`priority: critical\`\n- **Milestone**: \`Phase 1: Core\`\n\n### 🎯 Plan Overview\n**Approach**: Domain-Driven Design.\n\n### 🛠️ Technical Checklist\n- [ ] Task 1: Complete simulation.\nIf approved, label this issue \`ready-for-dev\`.`;
+    } else if (systemPrompt.includes("Project Manager bot")) {
+      simulatedText = `{ "phase": "Phase 1", "priority": "P1" }`;
     } else if (systemPrompt.includes("Autonomous Developer")) {
       simulatedText = `Detailed implementation simulation for issue using ${modelId}`;
     } else if (systemPrompt.includes("reviewing a Pull Request")) {

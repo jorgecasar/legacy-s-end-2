@@ -57650,7 +57650,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 4731:
+/***/ 971:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 
@@ -63442,7 +63442,8 @@ class GitCliAdapter {
   }
 
   fetch(remote = "origin", branch = "") {
-    const target = branch ? `${remote} ${branch}` : remote;
+    // If branch is provided, fetch specifically that branch and update the local tracking ref
+    const target = branch ? `${remote} ${branch}:${remote}/${branch}` : remote;
     external_node_child_process_namespaceObject.execSync(`git fetch ${target}`, { stdio: "inherit" });
   }
 
@@ -63679,16 +63680,16 @@ function file_command_issueFileCommand(command, message) {
     if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
     }
-    if (!fs.existsSync(filePath)) {
+    if (!external_fs_namespaceObject.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
     }
-    fs.appendFileSync(filePath, `${toCommandValue(message)}${os.EOL}`, {
+    external_fs_namespaceObject.appendFileSync(filePath, `${utils_toCommandValue(message)}${external_os_namespaceObject.EOL}`, {
         encoding: 'utf8'
     });
 }
 function file_command_prepareKeyValueMessage(key, value) {
-    const delimiter = `ghadelimiter_${crypto.randomUUID()}`;
-    const convertedValue = toCommandValue(value);
+    const delimiter = `ghadelimiter_${external_crypto_namespaceObject.randomUUID()}`;
+    const convertedValue = utils_toCommandValue(value);
     // These should realistically never happen, but just in case someone finds a
     // way to exploit uuid generation let's not allow keys or values that contain
     // the delimiter.
@@ -63698,7 +63699,7 @@ function file_command_prepareKeyValueMessage(key, value) {
     if (convertedValue.includes(delimiter)) {
         throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
     }
-    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
+    return `${key}<<${delimiter}${external_os_namespaceObject.EOL}${convertedValue}${external_os_namespaceObject.EOL}${delimiter}`;
 }
 //# sourceMappingURL=file-command.js.map
 ;// CONCATENATED MODULE: external "path"
@@ -66320,10 +66321,10 @@ function getBooleanInput(name, options) {
 function setOutput(name, value) {
     const filePath = process.env['GITHUB_OUTPUT'] || '';
     if (filePath) {
-        return issueFileCommand('OUTPUT', prepareKeyValueMessage(name, value));
+        return file_command_issueFileCommand('OUTPUT', file_command_prepareKeyValueMessage(name, value));
     }
-    process.stdout.write(os.EOL);
-    issueCommand('set-output', { name }, toCommandValue(value));
+    process.stdout.write(external_os_namespaceObject.EOL);
+    command_issueCommand('set-output', { name }, utils_toCommandValue(value));
 }
 /**
  * Enables or disables the echoing of commands into stdout for the rest of the step.
@@ -70780,6 +70781,10 @@ class GitHubActionsAdapter {
 
   setFailed(message) {
     setFailed(message);
+  }
+
+  setOutput(name, value) {
+    setOutput(name, value);
   }
 }
 
@@ -75965,6 +75970,180 @@ class GitHubAdapter {
   }
 }
 
+;// CONCATENATED MODULE: ./src/infrastructure/adapters/GitHubProjectAdapter.js
+
+
+/**
+ * @typedef {import('../../domain/ports/IProjectManager.js').IProjectManager} IProjectManager
+ */
+
+/**
+ * Implementation of Project Manager for GitHub Projects (v2) using GraphQL.
+ * @implements {IProjectManager}
+ */
+class GitHubProjectAdapter {
+  constructor(token) {
+    this.octokit = new Octokit({ auth: token });
+  }
+
+  /**
+   * Fetches all items from a GitHub Project.
+   */
+  async getProjectItems(projectId) {
+    const query = `
+      query($projectId: ID!) {
+        node(id: $projectId) {
+          ... on ProjectV2 {
+            items(first: 100) {
+              nodes {
+                id
+                content {
+                  ... on Issue {
+                    number
+                    title
+                    state
+                  }
+                  ... on PullRequest {
+                    number
+                    title
+                    state
+                  }
+                }
+                fieldValues(first: 20) {
+                  nodes {
+                    ... on ProjectV2ItemFieldSingleSelectValue {
+                      name
+                      field {
+                        ... on ProjectV2SingleSelectField {
+                          name
+                        }
+                      }
+                    }
+                    ... on ProjectV2ItemFieldTextValue {
+                      text
+                      field {
+                        ... on ProjectV2Field {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await this.octokit.graphql(query, { projectId });
+    return response.node.items.nodes.map((node) => ({
+      id: node.id,
+      title: node.content?.title,
+      number: node.content?.number,
+      type: node.content?.__typename,
+      fields: node.fieldValues.nodes.reduce((acc, f) => {
+        const fieldName = f.field?.name;
+        if (fieldName) {
+          acc[fieldName] = f.name || f.text;
+        }
+        return acc;
+      }, {}),
+    }));
+  }
+
+  async addItemToProject(projectId, contentId) {
+    const mutation = `
+      mutation($projectId: ID!, $contentId: ID!) {
+        addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+          item { id }
+        }
+      }
+    `;
+    const response = await this.octokit.graphql(mutation, { projectId, contentId });
+    return response.addProjectV2ItemById.item.id;
+  }
+
+  async findItemByIssueNumber(projectId, issueNumber) {
+    // We reuse the list but filter for the number
+    const items = await this.getProjectItems(projectId);
+    return items.find((i) => i.number === issueNumber) || null;
+  }
+
+  /**
+   * Internal helper to find field and option IDs.
+   */
+  async _getFieldAndOptionIds(projectId, fieldName, optionName) {
+    const query = `
+      query($projectId: ID!) {
+        node(id: $projectId) {
+          ... on ProjectV2 {
+            fields(first: 50) {
+              nodes {
+                ... on ProjectV2SingleSelectField {
+                  id
+                  name
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await this.octokit.graphql(query, { projectId });
+    const field = response.node.fields.nodes.find((f) => f.name === fieldName);
+    if (!field) throw new Error(`Field "${fieldName}" not found in project.`);
+
+    const option = field.options.find((o) => o.name === optionName);
+    if (!option) throw new Error(`Option "${optionName}" not found for field "${fieldName}".`);
+
+    return { fieldId: field.id, optionId: option.id };
+  }
+
+  async updateItemStatus(projectId, itemId, statusName) {
+    const { fieldId, optionId } = await this._getFieldAndOptionIds(projectId, "Status", statusName);
+
+    const mutation = `
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId,
+          itemId: $itemId,
+          fieldId: $fieldId,
+          value: { singleSelectOptionId: $optionId }
+        }) {
+          projectV2Item { id }
+        }
+      }
+    `;
+
+    await this.octokit.graphql(mutation, { projectId, itemId, fieldId, optionId });
+  }
+
+  async updateCustomField(projectId, itemId, fieldName, value) {
+    const { fieldId, optionId } = await this._getFieldAndOptionIds(projectId, fieldName, value);
+
+    const mutation = `
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId,
+          itemId: $itemId,
+          fieldId: $fieldId,
+          value: { singleSelectOptionId: $optionId }
+        }) {
+          projectV2Item { id }
+        }
+      }
+    `;
+
+    await this.octokit.graphql(mutation, { projectId, itemId, fieldId, optionId });
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/infrastructure/adapters/MockAIAdapter.js
 /**
  * @typedef {import('../../domain/ports/IAIProvider.js').IAIProvider} IAIProvider
@@ -75981,6 +76160,8 @@ class MockAIAdapter {
     let simulatedText = `Detailed implementation simulation for ${modelId}`;
     if (systemPrompt.includes("TRIAGE and PLAN")) {
       simulatedText = `🤖 **AI Triage & Planning Report**:\n\n### 📋 Triage\n- **Type**: \`type: task\`\n- **Priority**: \`priority: critical\`\n- **Milestone**: \`Phase 1: Core\`\n\n### 🎯 Plan Overview\n**Approach**: Domain-Driven Design.\n\n### 🛠️ Technical Checklist\n- [ ] Task 1: Complete simulation.\nIf approved, label this issue \`ready-for-dev\`.`;
+    } else if (systemPrompt.includes("Project Manager bot")) {
+      simulatedText = `{ "phase": "Phase 1", "priority": "P1" }`;
     } else if (systemPrompt.includes("Autonomous Developer")) {
       simulatedText = `Detailed implementation simulation for issue using ${modelId}`;
     } else if (systemPrompt.includes("reviewing a Pull Request")) {
@@ -76196,6 +76377,121 @@ class MockGitHubAdapter {
 
   async listPullRequests(_owner, _repo, _params) {
     return [];
+  }
+
+  async listIssues(_owner, _repo, _params) {
+    return [];
+  }
+
+  async listSubIssues(_owner, _repo, _parentIssueNumber) {
+    return [];
+  }
+}
+
+;// CONCATENATED MODULE: ./src/domain/ports/IProjectManager.js
+/**
+ * Interface for Project Manager operations.
+ * @interface IProjectManager
+ */
+class IProjectManager {
+  /**
+   * Fetches all items from a project.
+   * @param {string} projectId
+   * @returns {Promise<Array<{ id: string, title?: string, number?: number, type?: string, fields: object }>>}
+   */
+  async getProjectItems(projectId) {
+    throw new Error(`Method not implemented. ${projectId}`);
+  }
+
+  /**
+   * Adds an item to a project.
+   * @param {string} projectId
+   * @param {string} contentId
+   * @returns {Promise<string>}
+   */
+  async addItemToProject(projectId, contentId) {
+    throw new Error(`Method not implemented. ${projectId} ${contentId}`);
+  }
+
+  /**
+   * Finds an item by its issue number.
+   * @param {string} projectId
+   * @param {number} issueNumber
+   * @returns {Promise<any|null>}
+   */
+  async findItemByIssueNumber(projectId, issueNumber) {
+    throw new Error(`Method not implemented. ${projectId} ${issueNumber}`);
+  }
+
+  /**
+   * Updates the status of an item.
+   * @param {string} projectId
+   * @param {string} itemId
+   * @param {string} statusName
+   * @returns {Promise<void>}
+   */
+  async updateItemStatus(projectId, itemId, statusName) {
+    throw new Error(`Method not implemented. ${projectId} ${itemId} ${statusName}`);
+  }
+
+  /**
+   * Updates a custom field of an item.
+   * @param {string} projectId
+   * @param {string} itemId
+   * @param {string} fieldName
+   * @param {string} value
+   * @returns {Promise<void>}
+   */
+  async updateCustomField(projectId, itemId, fieldName, value) {
+    throw new Error(`Method not implemented. ${projectId} ${itemId} ${fieldName} ${value}`);
+  }
+}
+
+;// CONCATENATED MODULE: ./src/infrastructure/adapters/MockProjectManager.js
+
+
+/**
+ * Mock implementation of Project Manager for simulation and testing.
+ * @implements {IProjectManager}
+ */
+class MockProjectManager extends IProjectManager {
+  constructor() {
+    super();
+    this.memory = {
+      items: [],
+    };
+  }
+
+  async getProjectItems(projectId) {
+    return this.memory.items;
+  }
+
+  async addItemToProject(projectId, contentId) {
+    const newItem = {
+      id: `mock-item-${Math.random().toString(36).substr(2, 9)}`,
+      contentId,
+      fields: { Status: "Backlog" },
+    };
+    this.memory.items.push(newItem);
+    return newItem.id;
+  }
+
+  async findItemByIssueNumber(projectId, issueNumber) {
+    return this.memory.items.find((i) => i.number === issueNumber) || null;
+  }
+
+  async updateItemStatus(projectId, itemId, statusName) {
+    const item = this.memory.items.find((i) => i.id === itemId);
+    if (item) {
+      item.fields.Status = statusName;
+    }
+  }
+
+  async updateCustomField(projectId, itemId, fieldName, value) {
+    const item = this.memory.items.find((i) => i.id === itemId);
+    if (item) {
+      item.fields[fieldName] = value;
+    }
   }
 }
 
@@ -84673,6 +84969,17 @@ function getProviderForModel(modelName) {
 
 
 /**
+ * Unified Branding for the AI Orchestrator.
+ */
+const branding = {
+  name: "AI", // Default
+  setName(newName) {
+    if (newName) this.name = newName;
+  },
+  getSignature: () => `Generated by ${branding.name} Orchestrator.`,
+};
+
+/**
  * Detect available model providers based on supplied API keys.
  * @param {{ gemini?: string, anthropic?: string, openai?: string }} keys
  * @returns {string[]}
@@ -84722,11 +85029,8 @@ function selectBestModel(role, customPreferences = null, keys = {}, complexity =
     }
   }
 
-  // Fallback to simulation if no keys found
-  console.log(
-    `[Config] No matching keys found for preferred models. Falling back to Simulation Mode.`,
-  );
-  return { model: "simulation", provider: "mock" };
+  // No keys found for any preferred models
+  return { model: null, provider: null };
 }
 
 /**
@@ -84818,6 +85122,7 @@ class FileExecutor {
       getInput: () => "",
       getEventContext: () => ({ owner: "", repo: "", eventName: "", payload: {} }),
       setFailed: console.error,
+      setOutput: (_name, _value) => {},
     },
   ) {
     for (const change of changes) {
@@ -84870,6 +85175,7 @@ class FileExecutor {
       getInput: () => "",
       getEventContext: () => ({ owner: "", repo: "", eventName: "", payload: {} }),
       setFailed: console.error,
+      setOutput: (_name, _value) => {},
     },
   ) {
     const changes = this.parseChanges(llmResponse);
@@ -84893,7 +85199,7 @@ class FileExecutor {
  * Calculates the cost of an AI interaction.
  * @param {string} model - Specific model name from the registry
  * @param {object} usage - { prompt_tokens, completion_tokens }
- * @returns {{ input_cost: number, output_cost: number, total_cost: number, currency: string }}
+ * @returns {{ success: boolean, value?: { input_cost: number, output_cost: number, total_cost: number, currency: string }, error?: string }}
  */
 function calculateCost(model, usage) {
   const prices = getModelPricing(model);
@@ -84904,10 +85210,13 @@ function calculateCost(model, usage) {
   const outputCost = (completionTokens / 1000000) * prices.output;
 
   return {
-    input_cost: Number(inputCost.toFixed(6)),
-    output_cost: Number(outputCost.toFixed(6)),
-    total_cost: Number((inputCost + outputCost).toFixed(6)),
-    currency: "USD",
+    success: true,
+    value: {
+      input_cost: Number(inputCost.toFixed(6)),
+      output_cost: Number(outputCost.toFixed(6)),
+      total_cost: Number((inputCost + outputCost).toFixed(6)),
+      currency: "USD",
+    },
   };
 }
 
@@ -84984,8 +85293,11 @@ async function checkTaskReadiness(
 }
 
 ;// CONCATENATED MODULE: ./src/prompts.json
-const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: (Optional) If a specific capability is needed, suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan using the following structure:\\n- **Approach**: Summarize the technical strategy (Domain-first, TDD, etc.).\\n- **Scope**: Define what is \'In\' and \'Out\' of this implementation.\\n- **Action Items**: A functional checklist organized by architectural layers (Domain, Use Case, Infra/UI).\\n\\nCRITICAL: Each item in the Action Items checklist will be automatically converted into a native GitHub SUB-ISSUE. Ensure each task has a clear, actionable title (e.g., \'[Layer] Verb-first concise instruction\'). Avoid generic names like \'Task 1\'.\\n\\nDECOMPOSITION & DDD RULES:\\n- **Identify Invariants**: Start by defining the business rules and state transitions.\\n- **Aggregate Logic**: Group related logic into Aggregates to ensure consistency.\\n- **Functional Atomicity**: Steps must be \'Verb-first\' and concrete, representing a functional unit.\\n- **Incremental Flow**: Ensure the plan progresses from Domain -> Use Cases -> Adapters.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report. The checklist items should be descriptive as they will become independent sub-tasks.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: critical`\\n- **Milestone**: `Phase 1: Core` (High Business Complexity)\\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` (Optional override)\\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: We will follow a Domain-Driven Design approach, defining the core entities and invariants before implementing the application logic.\\n\\n**Scope**:\\n- In: Core entity modeling, persistence adapter, and basic UI.\\n- Out: External API integrations (Spike required).\\n\\n### 🛠️ Technical Checklist\\n\\n#### 🏗️ Layer 1: Domain\\n- [ ] [Domain] Implement the `[EntityName]` Aggregate Root and invariants\\n- [ ] [Domain] Create immutable Value Objects for `[Properties]`\\n\\n#### ⚙️ Layer 2: Use Cases\\n- [ ] [Use Case] Implement the `[UseCaseName]` service following the Result Pattern\\n- [ ] [Test] Add Unit Tests for 100% logic coverage\\n\\n#### 🎨 Layer 3: Infrastructure & UI\\n- [ ] [Infra] Implement the Repository adapter for `[EntityName]`\\n- [ ] [UI] Build the Web Awesome component for `[FeatureName]`\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"q":"You are an Autonomous Developer for the repository \'{{repo}}\'. You implement features and fix bugs while strictly adhering to the project\'s rules defined in documentation files at the root of the project and docs directory. Your primary mission is to follow the \'Core Technology Stack\' and \'Code Standards\' documented in the project without exception. Before creating any files, read the documentation and check the surrounding code structure to ensure your changes blend perfectly.","a":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. Ensure all code passes local linting and tests."},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
+const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nPROJECT RULES & CONTEXT:\\n{{project_rules}}\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: Suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan. \\n\\nCRITICAL CONTEXT AWARENESS:\\nBefore creating tasks, review existing code. DO NOT create tasks to define or implement entities, value objects, or use-cases that ALREADY EXIST in the codebase. Only plan for NEW components or MODIFICATIONS to existing ones.\\n\\nDECOMPOSITION & DDD RULES:\\n- **Cohesive Grouping**: Avoid excessive granularity. Group related layers into single actionable tasks if they represent a single logical feature (e.g., \'[Logic] Implement Domain & Use Case for X\', \'[UI] Build Component & BDD acceptance tests for Y\').\\n- **Functional Atomicity**: Steps must be concrete \'Verb-first\' instructions.\\n- **Clean Architecture Flow**: Ensure the plan respects the dependency rule (Domain -> Use Case -> Infrastructure).\\n\\nEach item in the Action Items checklist will be automatically converted into a native GitHub SUB-ISSUE. Ensure titles are concise and actionable.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report. Ensure that EACH item in the Technical Checklist is descriptive and includes specific technical instructions (libraries, patterns, or file paths) as they will become independent sub-tasks.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: standard`\\n- **Milestone**: `Phase 2` \\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` \\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: [Briefly describe the strategy, e.g., extending the domain to support X].\\n\\n**Scope**:\\n- In: [List key additions]\\n- Out: [List exclusions]\\n\\n### 🛠️ Technical Checklist\\n\\n- [ ] [Logic] Implement the `[Component]` domain logic (Use Case X, Entity Y) ensuring adherence to Pattern Z\\n- [ ] [Infra/UI] Build the `[Component]` UI using Lit and Web Awesome, including BDD acceptance tests\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"qU":"You are an Autonomous Developer for the repository \'{{repo}}\'. You strictly adhere to the project standards and architecture described below:\\n\\n{{project_rules}}\\n\\nBefore creating any files, check the surrounding code structure to ensure your changes blend perfectly. You must produce clean, documented code that follows the established standards in the project root.\\n\\nAll file modifications MUST be wrapped in a `<file_changes>` block. Each modification must use the following XML structure:\\n\\n<file_changes>\\n  <file path=\\"path/to/file.ext\\" operation=\\"create|update|delete\\">\\n    <content>\\n      [FULL FILE CONTENT]\\n    </content>\\n  </file>\\n</file_changes>\\n\\nNEVER use markdown diffs or partial code blocks for file changes. ALWAYS provide the full file content for \'create\' and \'update\' operations.","aI":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. Ensure all code passes local linting and tests.","Cw":"I have implemented the requested changes.\\n\\n<file_changes>\\n  <file path=\\"src/example.js\\" operation=\\"create\\">\\n    <content>\\nimport { something } from \\"./utils.js\\";\\n\\nexport const example = () => something();\\n    </content>\\n  </file>\\n</file_changes>"},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
 ;// CONCATENATED MODULE: ./src/use-cases/plan-issue/main.js
+
+
+
 
 
 
@@ -84993,10 +85305,10 @@ const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a 
 /**
  * Removes AI usage metadata and the Triage section generated by the planner.
  * @param {string} text
- * @returns {string}
+ * @returns {{ success: boolean, value: string, error?: string }}
  */
 function removePlannerMetadata(text) {
-  if (!text) return "";
+  if (!text) return { success: true, value: "" };
   let cleanText = text.replace(/<!-- ai-usage:.*?-->/gi, "");
 
   // Explicit Marker Removal (Priority)
@@ -85029,26 +85341,52 @@ function removePlannerMetadata(text) {
     });
   }
 
-  return cleanText.trim();
+  return { success: true, value: cleanText.trim() };
 }
 
 /**
  * Parses the AI plan and creates native GitHub sub-issues.
  */
 async function decomposePlanIntoSubIssues(gitProvider, { owner, repo, parentIssueNumber, plan }) {
-  // Regex to match tasks like "- [ ] Task 1: Title" or "- [ ] Title"
-  const taskRegex = /- \[ \] (?:Task \d+: )?(.+)/gi;
-  const matches = [...plan.matchAll(taskRegex)];
+  // Extract the Technical Checklist section
+  const checklistSectionMatch = plan.match(
+    /### 🛠️ Technical Checklist([\s\S]*?)(?=If approved|###|$)/i,
+  );
+  if (!checklistSectionMatch) return [];
 
-  if (matches.length === 0) return [];
+  const checklistText = checklistSectionMatch[1];
+
+  // Split by checklist items "- [ ]" but keep the delimiters to extract blocks
+  const taskBlocks = checklistText.split(/- \[ \] /g).slice(1);
+
+  if (taskBlocks.length === 0) return [];
+
+  // Extract shared context for all sub-tasks
+  let sharedContext = "";
+  const overviewMatch = plan.match(/### 🎯 Plan Overview([\s\S]*?)(?=###|If approved)/i);
+  if (overviewMatch?.[1]?.trim()) {
+    sharedContext += `### 🎯 Plan Overview\n${overviewMatch[1].trim()}\n\n`;
+  }
+
+  const scopeMatch = plan.match(/### Scope([\s\S]*?)(?=###|If approved)/i);
+  if (scopeMatch?.[1]?.trim()) {
+    sharedContext += `### Scope\n${scopeMatch[1].trim()}\n\n`;
+  }
 
   const subIssues = [];
-  for (const match of matches) {
-    const title = match[1].trim();
+  for (const block of taskBlocks) {
+    const lines = block.trim().split("\n");
+    const title = lines[0].replace(/^(?:Task \d+: )?/i, "").trim();
+    const detailedBody = lines.slice(1).join("\n").trim();
+
+    const body = `Sub-task of #${parentIssueNumber}\n\n${sharedContext}${
+      detailedBody ? `### 📝 Details\n${detailedBody}\n\n` : ""
+    }--- \n${branding.getSignature()}`;
+
     try {
       const subIssue = await gitProvider.createIssue(owner, repo, {
         title,
-        body: `Sub-task of #${parentIssueNumber}\n\nGenerated by AI Planner.`,
+        body,
         labels: ["type: sub-task"],
       });
 
@@ -85098,7 +85436,39 @@ async function planIssue({
     )
     .join("\n");
 
-  const systemPrompt = system.replace("{{repo}}", repo).replace("{{model_registry}}", modelContext);
+  // Rule Discovery
+  let projectRules = "Follow standard Clean Architecture and project conventions.";
+  const rulePaths = [
+    ".agent/RULES.md",
+    "RULES.md",
+    "GEMINI.md",
+    ".serena/memories/serena-workflow.md",
+  ];
+  for (const rulePath of rulePaths) {
+    const fullPath = external_node_path_namespaceObject.resolve(process.cwd(), rulePath);
+    if (external_node_fs_namespaceObject.existsSync(fullPath)) {
+      projectRules = external_node_fs_namespaceObject.readFileSync(fullPath, "utf-8");
+      break;
+    }
+  }
+
+  // RECURSION GUARD: If it's already a sub-task, don't decompose further unless triaged as spike/split
+  if (issueBody.includes(`Sub-task of #`)) {
+    const isDecompositionRequested =
+      issueBody.toLowerCase().includes("spike") || issueBody.toLowerCase().includes("split");
+    if (!isDecompositionRequested) {
+      onStatus({
+        type: "guard",
+        message: "Detected sub-task. Skipping redundant decomposition to prevent infinite loops.",
+      });
+      // Still need to perform triage actions
+    }
+  }
+
+  const systemPrompt = system
+    .replace("{{repo}}", repo)
+    .replace("{{model_registry}}", modelContext)
+    .replace("{{project_rules}}", projectRules);
 
   let userPrompt = userTemplate.replace("{{title}}", issueTitle).replace("{{body}}", issueBody);
 
@@ -85130,9 +85500,10 @@ async function planIssue({
 
   // Simulated Blocker Detection logic (Triage)
   const blockerMatch = issueBody.match(/(?:depends on|blocked by) #(\d+)/i);
-  const blockers = blockerMatch ? [parseInt(blockerMatch[1])] : [];
+  const blockers = blockerMatch ? [parseInt(blockerMatch[1], 10)] : [];
 
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
 
   // Surgical Context Cleaning: Ensure triage part is correctly prioritized for removal
   let planWithMarkers = plan;
@@ -85159,7 +85530,10 @@ async function planIssue({
   );
 
   // Decompose into sub-issues
-  onStatus({ type: "decomposition", message: "DECOMPOSING PLAN INTO SUB-TASKS..." });
+  onStatus({
+    type: "decomposition",
+    message: "DECOMPOSING PLAN INTO SUB-TASKS...",
+  });
   const subIssues = await decomposePlanIntoSubIssues(gitProvider, {
     owner,
     repo,
@@ -85255,10 +85629,10 @@ const REPORT_SIGNATURE = "<!-- ai-usage-report -->";
 /**
  * Removes the cost report block from a text string.
  * @param {string} text
- * @returns {string}
+ * @returns {{ success: boolean, value: string, error?: string }}
  */
 function removeCostReport(text) {
-  if (!text) return "";
+  if (!text) return { success: true, value: "" };
 
   // 1. Surgical removal if markers exist
   const markerRegex = /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g;
@@ -85276,7 +85650,7 @@ function removeCostReport(text) {
   // 4. Collapse consecutive newlines to a single one and trim
   cleanText = cleanText.replace(/\n{2,}/g, "\n");
 
-  return cleanText.trim();
+  return { success: true, value: cleanText.trim() };
 }
 
 /**
@@ -85287,7 +85661,8 @@ async function trackCostReport(
   gitProvider,
   { owner, repo, issueNumber, agent, provider, usage, model },
 ) {
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
   const displayModel = model || provider;
   const newRow = `| ${agent} | ${displayModel} | ${usage.prompt_tokens || 0} | ${usage.completion_tokens || 0} | $${costs.total_cost.toFixed(6)} |`;
 
@@ -85401,6 +85776,8 @@ async function trackCostReport(
 
 
 
+
+
 /**
  * AI Developer logic to implement a task.
  */
@@ -85416,11 +85793,32 @@ async function implementIssue({
   maxOutputTokens = 200000,
   onStart = (_args) => {},
 }) {
-  const system = customSystemPrompt || prompts_namespaceObject.PD.q;
-  const userTemplate = customUserPrompt || prompts_namespaceObject.PD.a;
+  const system = customSystemPrompt || prompts_namespaceObject.PD.qU;
+  const userTemplate = customUserPrompt || prompts_namespaceObject.PD.aI;
 
-  const systemPrompt = system.replace("{{repo}}", repo);
-  const userPrompt = userTemplate.replace("{{context}}", context);
+  // Rule Discovery
+  let projectRules = "Follow standard Clean Architecture and project conventions.";
+  const rulePaths = [
+    ".agent/RULES.md",
+    "RULES.md",
+    "GEMINI.md",
+    ".serena/memories/serena-workflow.md",
+  ];
+  for (const rulePath of rulePaths) {
+    const fullPath = external_node_path_namespaceObject.resolve(process.cwd(), rulePath);
+    if (external_node_fs_namespaceObject.existsSync(fullPath)) {
+      projectRules = external_node_fs_namespaceObject.readFileSync(fullPath, "utf-8");
+      break;
+    }
+  }
+
+  const systemPrompt = system.replace("{{repo}}", repo).replace("{{project_rules}}", projectRules);
+  let userPrompt = userTemplate.replace("{{context}}", context);
+
+  // Ensure AI follows the response structure with markers
+  if (prompts_namespaceObject.PD.Cw) {
+    userPrompt += `\n\n### RESPONSE STRUCTURE (STRICT):\n${prompts_namespaceObject.PD.Cw}`;
+  }
 
   onStart({ systemPrompt, userPrompt });
 
@@ -85444,7 +85842,8 @@ async function implementIssue({
   const response = generatedResponse.text;
   const usage = generatedResponse.usage;
 
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
 
   return {
     success: true,
@@ -85510,8 +85909,8 @@ async function DeveloperWorkflow({
       : payload.issue?.number || payload.pull_request?.number;
 
     let context = payload.comment?.body || payload.issue?.body || "";
-    context = removeCostReport(context);
-    context = removePlannerMetadata(context);
+    context = removeCostReport(context).value;
+    context = removePlannerMetadata(context).value;
 
     let issueTitle = payload.issue?.title || "";
     let prBranch = null;
@@ -85569,8 +85968,8 @@ async function DeveloperWorkflow({
             return !isAIReportResult;
           })
           .map((c) => {
-            let cleanBody = removeCostReport(c.body || "");
-            cleanBody = removePlannerMetadata(cleanBody);
+            let cleanBody = removeCostReport(c.body || "").value;
+            cleanBody = removePlannerMetadata(cleanBody).value;
 
             return cleanBody ? `[Comment by ${c.user?.login || "unknown"}]:\n${cleanBody}` : null;
           })
@@ -85589,8 +85988,8 @@ async function DeveloperWorkflow({
                 const body = c.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body);
-                cleanBody = removePlannerMetadata(cleanBody);
+                let cleanBody = removeCostReport(body).value;
+                cleanBody = removePlannerMetadata(cleanBody).value;
                 return cleanBody
                   ? `[Review Comment on ${c.path} L${c.line} by ${c.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -85610,8 +86009,8 @@ async function DeveloperWorkflow({
                 const body = r.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body);
-                cleanBody = removePlannerMetadata(cleanBody);
+                let cleanBody = removeCostReport(body).value;
+                cleanBody = removePlannerMetadata(cleanBody).value;
                 return cleanBody
                   ? `[Review Summary (${r.state}) by ${r.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -85631,10 +86030,27 @@ async function DeveloperWorkflow({
       "\n\n---\n\n",
     );
 
-    let cleanIssueBody = removeCostReport(issue?.body || "");
-    cleanIssueBody = removePlannerMetadata(cleanIssueBody);
+    let cleanIssueBody = removeCostReport(issue?.body || "").value;
+    cleanIssueBody = removePlannerMetadata(cleanIssueBody).value;
 
-    context = `Issue Description:\n${cleanIssueBody}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
+    let parentContext = "";
+    const parentMatch = issue?.body?.match(/Sub-task of #(\d+)/i);
+    if (parentMatch) {
+      const parentId = parseInt(parentMatch[1], 10);
+      try {
+        ciProvider.info(
+          `[Developer] Detected sub-task. Bridging parent context from #${parentId}...`,
+        );
+        const parentIssue = await gitProvider.getIssue(owner, repo, parentId);
+        let cleanParentBody = removeCostReport(parentIssue.body || "").value;
+        cleanParentBody = removePlannerMetadata(cleanParentBody).value;
+        parentContext = `\n\n--- PARENT MASTER PLAN (#${parentId}) ---\n${cleanParentBody}\n`;
+      } catch (err) {
+        ciProvider.warning(`Failed to fetch parent issue #${parentId}: ${err.message}`);
+      }
+    }
+
+    context = `Issue Description:\n${cleanIssueBody}${parentContext}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
 
     if (!issueNumber) {
       return {
@@ -85714,7 +86130,7 @@ async function DeveloperWorkflow({
         // Ensure we are on main and up to date before creating the new branch
         gitClient.checkout("main");
         try {
-          gitClient.resetHard("origin/main");
+          gitClient.resetHard("FETCH_HEAD");
         } catch {
           /* ignore reset errors */
         }
@@ -85759,7 +86175,8 @@ async function DeveloperWorkflow({
       }
 
       const { usage, response } = result.value;
-      const costs = calculateCost(model, usage);
+      const costResult = calculateCost(model, usage);
+      const costs = costResult.value;
       ciProvider.info(
         `[Cost] AI Developer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
       );
@@ -85876,6 +86293,424 @@ async function DeveloperWorkflow({
   }
 }
 
+;// CONCATENATED MODULE: ./src/use-cases/batch-triage/main.js
+/**
+ * Use Case: Triage all open issues that are not yet in the Project Board.
+ * @param {object} params
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
+ * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
+ * @param {string} params.model
+ * @param {string} params.owner
+ * @param {string} params.repo
+ * @param {string} params.projectId
+ * @param {(status: {message: string, [key: string]: any}) => void} [params.onStatus]
+ */
+async function batchTriage({
+  gitProvider,
+  projectManager,
+  aiProvider,
+  model,
+  owner,
+  repo,
+  projectId,
+  onStatus = () => {},
+}) {
+  try {
+    // 1. Fetch all open issues
+    onStatus({ message: "Fetching all open issues from repository..." });
+    const allIssues = await gitProvider.listIssues(owner, repo, { state: "open" });
+
+    // 2. Fetch current project items to identify what's missing
+    onStatus({ message: "Fetching current project board items..." });
+    const projectItems = await projectManager.getProjectItems(projectId);
+    const existingIssueNumbers = new Set(projectItems.map((i) => i.number));
+
+    const untriagedIssues = allIssues.filter((i) => !existingIssueNumbers.has(i.number));
+
+    if (untriagedIssues.length === 0) {
+      return { success: true, value: { count: 0, message: "Backlog is already fully triaged." } };
+    }
+
+    onStatus({ message: `Found ${untriagedIssues.length} issues to triage.` });
+
+    let triagedCount = 0;
+    for (const issue of untriagedIssues) {
+      onStatus({ message: `Triaging issue #${issue.number}: ${issue.title}...` });
+
+      // 3. Ask AI for Triage (Phase & Priority)
+      const prompt = `Analyze this GitHub issue and suggest a Phase (Phase 1, Phase 2, Phase 3, Phase 4) and a Priority (P0, P1, P2) based on its title and body.
+      
+      Issue #${issue.number}: ${issue.title}
+      Body: ${issue.body || "No description provided."}
+      
+      Respond only with a JSON object: { "phase": "Phase X", "priority": "PY" }`;
+
+      const aiResponse = await aiProvider.generateContent(
+        model,
+        "You are a Project Manager bot. Analyze issues for triage.",
+        prompt,
+      );
+
+      try {
+        const match = aiResponse.text.match(/\{.*\}/s);
+        if (!match) {
+          throw new Error("AI response did not contain a valid JSON block.");
+        }
+        const triage = JSON.parse(match[0]);
+
+        // 4. Add to Project Board
+        const itemId = await projectManager.addItemToProject(projectId, issue.node_id);
+
+        // 5. Update Custom Fields
+        await projectManager.updateCustomField(projectId, itemId, "Phase", triage.phase);
+        await projectManager.updateCustomField(projectId, itemId, "Priority", triage.priority);
+        // Set initial status to Backlog
+        await projectManager.updateItemStatus(projectId, itemId, "Backlog");
+
+        triagedCount++;
+      } catch (err) {
+        console.error(`Failed to triage issue #${issue.number}: ${err.message}`);
+      }
+    }
+
+    return {
+      success: true,
+      value: { count: triagedCount, message: `Successfully triaged ${triagedCount} issues.` },
+    };
+  } catch (error) {
+    return { success: false, error: `Batch triage failed: ${error.message}` };
+  }
+}
+
+;// CONCATENATED MODULE: ./src/domain/entities/ProjectTask.js
+/**
+ * Domain Entity representing a task within a Project Board.
+ */
+class ProjectTask {
+  constructor(data) {
+    const { id, number, title, status, phase, priority, type = "Issue", fields } = data;
+    this.id = id;
+    this.number = number;
+    this.title = title;
+    this.status = status || fields?.Status || "";
+    this.phase = phase || fields?.Phase || "";
+    this.priority = priority || fields?.Priority || "";
+    this.type = type;
+  }
+
+  /**
+   * Determines if the task is currently active (being worked on or reviewed).
+   */
+  isActive() {
+    return ["In progress", "In review"].includes(this.status);
+  }
+
+  /**
+   * Determines if the task is ready to be picked up.
+   */
+  isSelectable() {
+    return this.status === "Ready";
+  }
+
+  /**
+   * Calculates a numeric priority score for sorting.
+   * Lower score = Higher priority.
+   */
+  getPriorityScore() {
+    const phaseMap = { "Phase 1": 1, "Phase 2": 2, "Phase 3": 3, "Phase 4": 4 };
+    const priorityMap = { P0: 0, P1: 1, P2: 2 };
+
+    // If phase is missing, it's untriaged, put it at the end (very high score)
+    const phaseScore = phaseMap[this.phase] || 100;
+
+    // Priority score: P0 (0) should be lower than P1 (1)
+    const priorityScore = priorityMap[this.priority] ?? 10;
+
+    // Phase is the primary tie-breaker, then priority.
+    // Phase 1 P0 = 1 * 1000 + 0 = 1000
+    // Phase 1 P1 = 1 * 1000 + 1 = 1001
+    // Untriaged = 100 * 1000 + 10 = 100010
+    return phaseScore * 1000 + priorityScore;
+  }
+}
+
+;// CONCATENATED MODULE: ./src/domain/entities/Project.js
+
+
+/**
+ * Aggregate Root representing a Project Board.
+ */
+class Project {
+  constructor({ id, tasks = [], wipLimit = 5 }) {
+    this.id = id;
+    this.tasks = tasks.map((t) => (t instanceof ProjectTask ? t : new ProjectTask(t)));
+    this.wipLimit = wipLimit; // Default limit per active column
+  }
+
+  /**
+   * Returns the count of tasks in a specific column.
+   */
+  getColumnCount(status) {
+    return this.tasks.filter((t) => t.status === status).length;
+  }
+
+  /**
+   * Returns true if a specific column has capacity.
+   */
+  hasColumnCapacity(status) {
+    return this.getColumnCount(status) < this.wipLimit;
+  }
+
+  /**
+   * Implements the core Right-to-Left selection algorithm with per-column WIP guards.
+   */
+  selectNextTask() {
+    // 1. Priority: Review (Closing work is top priority)
+    const reviewTasks = this.tasks
+      .filter((t) => t.status === "In review")
+      .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
+
+    // We prioritize tasks that are already in review regardless of the column capacity,
+    // because addressing feedback helps move items to 'Done'.
+    if (reviewTasks.length > 0) {
+      return reviewTasks[0];
+    }
+
+    // 2. Priority: Ready tasks (Phase > Priority) -> Transition to 'In progress'
+    // Check if 'In progress' column has capacity before selecting a new task.
+    if (this.hasColumnCapacity("In progress")) {
+      const readyTasks = this.tasks
+        .filter((t) => t.isSelectable())
+        .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
+
+      return readyTasks[0] || null;
+    }
+
+    return null;
+  }
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/select-next-task/main.js
+
+
+/**
+ * Use Case: Select the most appropriate next task based on Kanban priority.
+ *
+ * @param {object} dependencies
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} dependencies.projectManager
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} dependencies.gitProvider
+ * @param {string} dependencies.owner
+ * @param {string} dependencies.repo
+ * @param {string} dependencies.projectId
+ * @param {number} [dependencies.wipLimit=5]
+ * @param {(status: {message: string, [key: string]: any}) => void} [dependencies.onStatus]
+ * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
+ */
+async function selectNextTask({
+  projectManager,
+  gitProvider,
+  owner,
+  repo,
+  projectId,
+  wipLimit = 5,
+  onStatus = () => {},
+}) {
+  if (!owner || !repo || !projectManager) {
+    return { success: false, error: "Missing required dependencies for task selection." };
+  }
+  try {
+    // 1. Fetch current board state
+    onStatus({ message: "Fetching current project board items..." });
+    const rawItems = await projectManager.getProjectItems(projectId);
+
+    // 2. Auto-Unblock Analysis: Check sub-tasks for Blocked items
+    const updatedRawItems = [];
+    for (const item of rawItems) {
+      if (item.fields.Status === "Blocked" && item.number) {
+        try {
+          onStatus({ message: `Analyzing dependencies for blocked task #${item.number}...` });
+          const subIssues = await gitProvider.listSubIssues(owner, repo, item.number);
+
+          if (subIssues.length > 0 && subIssues.every((s) => s.state === "closed")) {
+            onStatus({ message: `All sub-tasks for #${item.number} are closed. Unblocking...` });
+            await projectManager.updateItemStatus(projectId, item.id, "Ready");
+            // Create a new item object with updated status to maintain immutability
+            updatedRawItems.push({
+              ...item,
+              fields: { ...item.fields, Status: "Ready" },
+            });
+            continue;
+          }
+        } catch (err) {
+          console.error(`Failed to analyze dependencies for #${item.number}: ${err.message}`);
+        }
+      }
+      updatedRawItems.push(item);
+    }
+
+    // 3. Hydrate Domain Entity
+    const project = new Project({
+      id: projectId,
+      tasks: updatedRawItems,
+      wipLimit,
+    });
+
+    // 4. Execute Selection Logic (Right-to-Left)
+    const selectedTask = project.selectNextTask();
+
+    // 5. Identify External Blockers (Blocked status with no sub-tasks or dependencies)
+    const externallyBlocked = updatedRawItems.filter(
+      (i) => i.fields.Status === "Blocked" && i.type === "Issue",
+    );
+
+    if (!selectedTask) {
+      let reason = "No selectable tasks found in the 'Ready' or 'In review' columns.";
+
+      if (!project.hasColumnCapacity("In review")) {
+        reason =
+          "WIP Limit reached for 'In review' column. Finish reviews before processing more feedback.";
+      } else if (!project.hasColumnCapacity("In progress")) {
+        reason =
+          "WIP Limit reached for 'In progress' column. Finish current tasks before starting new ones.";
+      }
+
+      return {
+        success: true,
+        value: {
+          selected: false,
+          externallyBlocked,
+          reason,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      value: {
+        selected: true,
+        task: selectedTask,
+        externallyBlocked,
+        inProgressWIP: project.getColumnCount("In progress"),
+        inReviewWIP: project.getColumnCount("In review"),
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to select next task: ${error.message}`,
+    };
+  }
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/orchestrate/OrchestratorWorkflow.js
+
+
+
+/**
+ * Use Case: Master Orchestrator Workflow
+ * Unifies Batch Triage and Task Selection.
+ *
+ * @param {object} params
+ * @param {import('../../domain/ports/ICIProvider.js').ICIProvider} params.ciProvider
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
+ * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
+ * @param {string} params.model
+ * @param {string} params.owner
+ * @param {string} params.repo
+ * @param {string} params.projectId
+ * @param {boolean} [params.simulationMode]
+ * @param {number} [params.wipLimit=5]
+ * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
+ */
+async function OrchestratorWorkflow({
+  ciProvider,
+  gitProvider,
+  projectManager,
+  aiProvider,
+  model,
+  owner,
+  repo,
+  projectId,
+  simulationMode,
+  wipLimit = 5,
+}) {
+  const isSimulation = simulationMode;
+
+  if (!projectId) {
+    if (isSimulation) {
+      projectId = "SIMULATION_PROJECT_ID";
+      ciProvider.info("[Simulation] Using dummy projectId for dry-run.");
+    } else {
+      return {
+        success: false,
+        error:
+          "Missing projectId for Orchestrator workflow. Please provide 'project_id' input or set PROJECT_ID environment variable.",
+      };
+    }
+  }
+
+  try {
+    ciProvider.info("--- AI ORCHESTRATOR: Phase 1 - Batch Triage ---");
+    const triageResult = await batchTriage({
+      gitProvider,
+      projectManager,
+      aiProvider,
+      model,
+      owner,
+      repo,
+      projectId,
+      onStatus: (st) => ciProvider.info(st.message),
+    });
+
+    if (!triageResult.success) {
+      ciProvider.warning(`Batch Triage failed: ${triageResult.error}`);
+    } else {
+      ciProvider.info(triageResult.value.message);
+    }
+
+    ciProvider.info("\n--- AI ORCHESTRATOR: Phase 2 - Task Selection ---");
+    const selectionResult = await selectNextTask({
+      projectManager,
+      gitProvider,
+      owner,
+      repo,
+      projectId,
+      wipLimit,
+      onStatus: (st) => ciProvider.info(st.message),
+    });
+
+    if (!selectionResult.success) {
+      return selectionResult;
+    }
+
+    const { selected, task, reason, externallyBlocked } = selectionResult.value;
+
+    if (selected) {
+      ciProvider.info(`🎯 Selected Next Task: #${task.number} - ${task.title}`);
+      ciProvider.info(
+        `   Priority Score: ${task.getPriorityScore()} (Phase: ${task.phase}, Priority: ${task.priority})`,
+      );
+      ciProvider.setOutput("selected_task_number", task.number.toString());
+      ciProvider.setOutput("selected_task_id", task.id);
+    } else {
+      ciProvider.info(`⏸️ No task selected. Reason: ${reason}`);
+    }
+
+    if (externallyBlocked && externallyBlocked.length > 0) {
+      ciProvider.info(`\n🚧 Externally Blocked Tasks: ${externallyBlocked.length}`);
+      for (const item of externallyBlocked) {
+        ciProvider.info(`   - #${item.number}: ${item.title}`);
+      }
+    }
+
+    return { success: true, value: selectionResult.value };
+  } catch (error) {
+    return { success: false, error: `Orchestrator workflow failed: ${error.message}` };
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/use-cases/plan-issue/PlannerWorkflow.js
 
 
@@ -85973,8 +86808,8 @@ async function PlannerWorkflow({
       return { success: true, value: { skipped: true, reason: "Issue is closed" } };
     }
 
-    issueTitle = removePlannerMetadata(removeCostReport(issueTitle));
-    issueBody = removePlannerMetadata(removeCostReport(issueBody));
+    issueTitle = removePlannerMetadata(removeCostReport(issueTitle).value).value;
+    issueBody = removePlannerMetadata(removeCostReport(issueBody).value).value;
 
     const customSystemPrompt = ciProvider.getInput("planner_system_prompt");
     const customUserPrompt = ciProvider.getInput("planner_user_prompt");
@@ -86012,7 +86847,8 @@ async function PlannerWorkflow({
     }
 
     const { usage, plan } = result.value;
-    const costs = calculateCost(model, usage);
+    const costResult = calculateCost(model, usage);
+    const costs = costResult.value;
     ciProvider.info(
       `[Cost] AI Planner (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
     );
@@ -86100,7 +86936,8 @@ async function reviewPR({
   const response = generatedResponse.text;
   const usage = generatedResponse.usage;
 
-  const costs = calculateCost(model, usage);
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
 
   return {
     success: true,
@@ -86211,8 +87048,8 @@ async function ReviewerWorkflow({
       .map((c) => {
         const isBot = c.user?.login?.includes("bot") || c.user?.type === "Bot";
         const author = isBot ? "AI/Bot" : c.user?.login || "unknown";
-        let cleanBody = removeCostReport(c.body || "");
-        cleanBody = removePlannerMetadata(cleanBody);
+        let cleanBody = removeCostReport(c.body || "").value;
+        cleanBody = removePlannerMetadata(cleanBody).value;
 
         const location = c.path ? ` on ${c.path} L${c.line}` : "";
         return `[${author}${location}]: ${cleanBody}`;
@@ -86247,7 +87084,8 @@ async function ReviewerWorkflow({
     }
 
     const { usage, response } = result.value;
-    const costs = calculateCost(model, usage);
+    const costResult = calculateCost(model, usage);
+    const costs = costResult.value;
     ciProvider.info(
       `[Cost] AI Reviewer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
     );
@@ -86310,6 +87148,9 @@ async function ReviewerWorkflow({
 
 
 
+
+
+
 /**
  * Main orchestrator logic, decoupled from specific CI or Git CLI implementations.
  *
@@ -86320,6 +87161,11 @@ async function runOrchestrator(ciProvider, gitClient) {
   try {
     const role = ciProvider.getInput("agent_role", { required: true });
     const token = ciProvider.getInput("gh_token") || process.env.GITHUB_TOKEN;
+    const gitAuthorName = ciProvider.getInput("git_author_name");
+
+    if (gitAuthorName) {
+      branding.setName(gitAuthorName);
+    }
 
     if (!token) {
       throw new Error(
@@ -86397,7 +87243,7 @@ async function runOrchestrator(ciProvider, gitClient) {
     }
 
     // Model Selection logic based on available keys & preferences (including recommendations)
-    const { model, provider } = selectBestModel(
+    const { provider, model } = selectBestModel(
       role.toLowerCase(),
       recommendedModel ? [recommendedModel] : null,
       {
@@ -86411,10 +87257,15 @@ async function runOrchestrator(ciProvider, gitClient) {
     let aiProvider;
     let finalModel = model;
 
-    // Use simulation if explicitly requested, in test environment, or if no provider keys found
-    const useAiSimulation = isTest || simulationMode || provider === "mock";
+    const finalSimulationMode = isTest || simulationMode;
 
-    if (useAiSimulation) {
+    if (!provider && !finalSimulationMode) {
+      throw new Error(
+        "No API keys found for any supported models. Please provide a valid API key (GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY) or enable 'simulation_mode' in the workflow inputs.",
+      );
+    }
+
+    if (finalSimulationMode || provider === "mock") {
       finalModel = "simulation";
       ciProvider.info(`Using Mock AI Provider (${finalModel})...`);
       aiProvider = new MockAIAdapter();
@@ -86422,7 +87273,7 @@ async function runOrchestrator(ciProvider, gitClient) {
       // Real AI Adapters
       if (provider === "gemini") {
         aiProvider = new GeminiAdapter(geminiKey, {
-          simulationMode,
+          simulationMode: finalSimulationMode,
           role: role.toLowerCase(),
           githubToken: token,
           ghMcpPat,
@@ -86453,6 +87304,19 @@ async function runOrchestrator(ciProvider, gitClient) {
           privilegedGitProvider: ghMcpPat ? new GitHubAdapter(ghMcpPat) : null,
         }),
       reviewer: ReviewerWorkflow,
+      orchestrate: (params) => {
+        const pm =
+          isTest || finalSimulationMode
+            ? new MockProjectManager()
+            : new GitHubProjectAdapter(token);
+
+        return OrchestratorWorkflow({
+          ...params,
+          projectManager: pm,
+          projectId: ciProvider.getInput("project_id") || process.env.PROJECT_ID,
+          wipLimit: parseInt(ciProvider.getInput("wip_limit") || "5", 10),
+        });
+      },
     };
 
     const workflow = workflows[role.toLowerCase()];
@@ -86474,7 +87338,7 @@ async function runOrchestrator(ciProvider, gitClient) {
       eventName,
       maxInputTokens,
       maxOutputTokens,
-      simulationMode,
+      simulationMode: finalSimulationMode,
       useMock: isTest,
     });
 
@@ -86512,7 +87376,7 @@ async function main() {
 /***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
-/* harmony import */ var _app_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(4731);
+/* harmony import */ var _app_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(971);
 
 
 await (0,_app_js__WEBPACK_IMPORTED_MODULE_0__/* .main */ .i)();

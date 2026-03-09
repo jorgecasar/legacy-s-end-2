@@ -220,8 +220,8 @@ describe("Workflow: DeveloperWorkflow", () => {
       owner: "jorgecasar",
       repo: "legacys-end-2",
       payload: ciProvider.getEventContext().payload,
-      maxInputTokens: 200,
-      maxOutputTokens: 200,
+      maxInputTokens: 20000,
+      maxOutputTokens: 20000,
       simulationMode: false,
       useMock: false, // Triggers branch + commit logic
     });
@@ -261,8 +261,8 @@ describe("Workflow: DeveloperWorkflow", () => {
       owner: "jorgecasar",
       repo: "legacys-end-2",
       payload: ciProvider.getEventContext().payload,
-      maxInputTokens: 500,
-      maxOutputTokens: 200,
+      maxInputTokens: 20000,
+      maxOutputTokens: 20000,
       simulationMode: true,
       useMock: false, // Forces loop test logic
     });
