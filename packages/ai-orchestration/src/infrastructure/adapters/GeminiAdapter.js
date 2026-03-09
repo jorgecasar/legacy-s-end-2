@@ -157,8 +157,20 @@ export class GeminiAdapter {
         );
       }
 
+      // In interactive mode, we MUST pass the prompt via file because stdin is used by the TUI
+      let promptArgValue = "";
+      let tempPromptPath = null;
+
+      if (this.interactive) {
+        tempPromptPath = path.join(process.cwd(), `.gemini_prompt_${Date.now()}.txt`);
+        fs.writeFileSync(tempPromptPath, fullPrompt);
+        promptArgValue = tempPromptPath;
+        // Update args to point to the file
+        const pIdx = args.indexOf("-i");
+        if (pIdx !== -1) args[pIdx + 1] = promptArgValue;
+      }
+
       // If interactive is true, we use inherit for all stdio so the user can see/interact with the TUI
-      // Note: stdout will not be captured, so parseUsage will fallback to estimation
       const stdio = this.interactive
         ? ["inherit", "inherit", "inherit"]
         : ["pipe", "pipe", this.debug ? "inherit" : "pipe"];
@@ -177,6 +189,11 @@ export class GeminiAdapter {
         stdio,
         encoding: "utf-8",
       });
+
+      // Cleanup temp prompt file
+      if (tempPromptPath && fs.existsSync(tempPromptPath)) {
+        fs.unlinkSync(tempPromptPath);
+      }
 
       if (result.error) {
         throw result.error;

@@ -135,4 +135,30 @@ describe("Infrastructure: GeminiAdapter", () => {
     const stdio = spawnMock.mock.calls[0].arguments[2].stdio;
     assert.strictEqual(stdio[2], "inherit");
   });
+
+  test("should pass prompt via temporary file in interactive mode", async () => {
+    const adapter = new GeminiAdapter(apiKey, { interactive: true });
+
+    // Mock fs tools
+    const writeMock = mock.method(fs, "writeFileSync", () => {});
+    const unlinkMock = mock.method(fs, "unlinkSync", () => {});
+    const existsMock = mock.method(fs, "existsSync", () => true);
+
+    const spawnMock = mock.method(cp, "spawnSync", () => ({
+      status: 0,
+      stdout: "",
+    }));
+
+    await adapter.generateContent("m1", "sys", "user");
+
+    // Verify file creation and cleanup
+    assert.strictEqual(writeMock.mock.callCount(), 1);
+    assert.strictEqual(unlinkMock.mock.callCount(), 1);
+
+    // Verify args point to the file
+    const args = spawnMock.mock.calls[0].arguments[1];
+    const pIdx = args.indexOf("-i");
+    assert.ok(pIdx !== -1);
+    assert.ok(args[pIdx + 1].includes(".gemini_prompt_"));
+  });
 });
