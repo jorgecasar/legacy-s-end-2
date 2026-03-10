@@ -46,7 +46,12 @@ describe("Workflow: OrchestratorWorkflow", () => {
   });
 
   test("should handle missing projectId", async () => {
-    const result = await OrchestratorWorkflow({ projectId: null });
+    const ciProvider = {
+      info: mock.fn(),
+      warning: mock.fn(),
+      setOutput: mock.fn(),
+    };
+    const result = await OrchestratorWorkflow({ ciProvider, projectId: null });
     assert.strictEqual(result.success, false);
     assert.ok(result.error.includes("Missing projectId"));
   });

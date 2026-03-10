@@ -16,9 +16,10 @@ To maximize the efficiency of **Serena** and other AI agents, follow these proce
 ## 2. Coding Task Lifecycle
 
 - **Action**: Implement changes using the available semantic tools (Serena/CLI).
-- **Validation**: After any change, the agent must run:
-  1. **Linting**: To ensure syntactic correctness.
-  2. **Tests**: To ensure functional correctness.
+- **Validation**: After any change, the agent MUST run:
+  1. **Formatting**: Run `npm run format` (oxfmt) to ensure stylistic consistency.
+  2. **Linting**: Run `npm run lint` (oxlint) to ensure syntactic and type correctness.
+  3. **Tests**: Run `npm run test` or relevant test suite (BDD/E2E) to ensure functional correctness.
 - **Reflection**: The agent MUST inspect the output of the validation step (logs, errors, diffs). If something fails, it must use the feedback to refine the solution without being asked.
 
 ## 3. Code for AI Readability

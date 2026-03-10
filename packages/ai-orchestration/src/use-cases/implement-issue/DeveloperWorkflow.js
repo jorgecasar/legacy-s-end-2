@@ -1,8 +1,7 @@
 import { calculateCost } from "../../domain/pricing.js";
 import { checkTaskReadiness } from "../check-task-readiness/main.js";
-import { removePlannerMetadata } from "../plan-issue/main.js";
-import { isAIReport } from "../shared/ContextFilters.js";
-import { removeCostReport } from "../track-cost-report/main.js";
+import { cleanCommentBody, isAIReport } from "../shared/ContextFilters.js";
+import { trackCostReport } from "../track-cost-report/main.js";
 import { implementIssue } from "./main.js";
 
 /**
@@ -48,8 +47,7 @@ export async function DeveloperWorkflow({
       : payload.issue?.number || payload.pull_request?.number;
 
     let context = payload.comment?.body || payload.issue?.body || "";
-    context = removeCostReport(context).value;
-    context = removePlannerMetadata(context).value;
+    context = cleanCommentBody(context);
 
     let issueTitle = payload.issue?.title || "";
     let prBranch = null;
@@ -103,13 +101,10 @@ export async function DeveloperWorkflow({
           .filter((c) => {
             const body = c.body || "";
             // Skip bot reports to reduce context noise (by signature, independent of username)
-            const isAIReportResult = isAIReport(body);
-            return !isAIReportResult;
+            return !isAIReport(body);
           })
           .map((c) => {
-            let cleanBody = removeCostReport(c.body || "").value;
-            cleanBody = removePlannerMetadata(cleanBody).value;
-
+            const cleanBody = cleanCommentBody(c.body || "");
             return cleanBody ? `[Comment by ${c.user?.login || "unknown"}]:\n${cleanBody}` : null;
           })
           .filter(Boolean);
@@ -127,8 +122,7 @@ export async function DeveloperWorkflow({
                 const body = c.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body).value;
-                cleanBody = removePlannerMetadata(cleanBody).value;
+                const cleanBody = cleanCommentBody(body);
                 return cleanBody
                   ? `[Review Comment on ${c.path} L${c.line} by ${c.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -148,8 +142,7 @@ export async function DeveloperWorkflow({
                 const body = r.body || "";
                 if (isAIReport(body)) return null;
 
-                let cleanBody = removeCostReport(body).value;
-                cleanBody = removePlannerMetadata(cleanBody).value;
+                const cleanBody = cleanCommentBody(body);
                 return cleanBody
                   ? `[Review Summary (${r.state}) by ${r.user?.login || "unknown"}]:\n${cleanBody}`
                   : null;
@@ -169,8 +162,7 @@ export async function DeveloperWorkflow({
       "\n\n---\n\n",
     );
 
-    let cleanIssueBody = removeCostReport(issue?.body || "").value;
-    cleanIssueBody = removePlannerMetadata(cleanIssueBody).value;
+    const cleanIssueBody = cleanCommentBody(issue?.body || "");
 
     let parentContext = "";
     const parentMatch = issue?.body?.match(/Sub-task of #(\d+)/i);
@@ -181,8 +173,7 @@ export async function DeveloperWorkflow({
           `[Developer] Detected sub-task. Bridging parent context from #${parentId}...`,
         );
         const parentIssue = await gitProvider.getIssue(owner, repo, parentId);
-        let cleanParentBody = removeCostReport(parentIssue.body || "").value;
-        cleanParentBody = removePlannerMetadata(cleanParentBody).value;
+        const cleanParentBody = cleanCommentBody(parentIssue.body || "");
         parentContext = `\n\n--- PARENT MASTER PLAN (#${parentId}) ---\n${cleanParentBody}\n`;
       } catch (err) {
         ciProvider.warning(`Failed to fetch parent issue #${parentId}: ${err.message}`);
@@ -246,9 +237,10 @@ export async function DeveloperWorkflow({
         ciProvider.warning(`Git fetch failed: ${err.message}. Proceeding with local main.`);
       }
 
-      const branchExists = gitClient.branchExistsRemotely(devBranchName);
+      const branchExistsRemote = gitClient.branchExistsRemotely(devBranchName);
+      const branchExistsLocal = gitClient.branchExistsLocally(devBranchName);
 
-      if (branchExists) {
+      if (branchExistsRemote) {
         ciProvider.info(
           `Branch "${devBranchName}" exists remotely. Checking out and rebasing on origin/main...`,
         );
@@ -262,10 +254,13 @@ export async function DeveloperWorkflow({
           );
           gitClient.abortRebase();
         }
-      } else {
+      } else if (branchExistsLocal) {
         ciProvider.info(
-          `Branch "${devBranchName}" does not exist remotely. Creating from origin/main.`,
+          `Branch "${devBranchName}" exists locally but not remotely. Checking out...`,
         );
+        gitClient.checkout(devBranchName, false, true);
+      } else {
+        ciProvider.info(`Branch "${devBranchName}" does not exist. Creating from origin/main.`);
         // Ensure we are on main and up to date before creating the new branch
         gitClient.checkout("main");
         try {
@@ -325,6 +320,18 @@ export async function DeveloperWorkflow({
       ciProvider.info(`ESTIMATED API COST: $${costs.total_cost} ${costs.currency}`);
       ciProvider.info("---------------------------------------");
 
+      if (!simulationMode && !useMock) {
+        await trackCostReport(gitProvider, {
+          owner,
+          repo,
+          issueNumber,
+          agent: "AI Developer",
+          provider: "gemini", // assuming gemini for now based on context
+          model,
+          usage,
+        });
+      }
+
       // Execute file changes autonomously
       ciProvider.info("[FileExecutor] Searching for file changes in AI response...");
       const changesCount = await fileExecutor.execute(response, ciProvider);
@@ -362,9 +369,7 @@ export async function DeveloperWorkflow({
         if (gitClient.hasChanges()) {
           ciProvider.info("Changes detected. Proceeding to commit...");
 
-          const branchName = verifySuccess
-            ? `feat/issue-${issueNumber}`
-            : `feat/ai-backup-issue-${issueNumber}`;
+          const branchName = prBranch || `feat/issue-${issueNumber}`;
 
           // Commit message: describe work done + reference the issue
           const safeTitle = issueTitle
@@ -373,11 +378,12 @@ export async function DeveloperWorkflow({
                 .replace(/[^a-z0-9 ]/g, "")
                 .trim()
             : `implement issue #${issueNumber}`;
+
           const commitMsg = verifySuccess
             ? `feat: ${safeTitle} (#${issueNumber})`
-            : `chore(ai): backup broken code for #${issueNumber} [skip ci]`;
+            : `chore(ai): backup failing code for #${issueNumber} [skip ci]`;
 
-          // Create or switch to branch only if not already on it
+          // Ensure we are on the task branch
           const currentBranch = gitClient.getCurrentBranch();
           if (currentBranch !== branchName) {
             gitClient.checkout(branchName, true /* create */);
@@ -388,10 +394,10 @@ export async function DeveloperWorkflow({
           // Squash all branch commits into a single commit
           try {
             gitClient.squashOnto("main");
-            gitClient.commit(commitMsg);
+            gitClient.commit(commitMsg, true /* skipVerify */);
           } catch {
-            // Fallback: normal commit if squash fails (e.g., no common ancestor)
-            gitClient.commit(commitMsg);
+            // Fallback: normal commit if squash fails
+            gitClient.commit(commitMsg, true /* skipVerify */);
           }
 
           gitClient.pushForce(branchName);
@@ -412,7 +418,9 @@ export async function DeveloperWorkflow({
             );
             ciProvider.info(`Successfully created Pull Request for issue #${issueNumber}`);
           } else {
-            ciProvider.info(`Pipeline failed. Work saved to fallback branch: ${branchName}`);
+            ciProvider.info(
+              `Verification failed. Code pushed to branch ${branchName} for manual review.`,
+            );
           }
         } else {
           ciProvider.info("No changes to verify or commit.");

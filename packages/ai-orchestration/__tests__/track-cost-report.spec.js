@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { describe, it, test } from "node:test";
+import { describe, it, mock, test } from "node:test";
 import { MockGitHubAdapter } from "../src/infrastructure/adapters/MockGitHubAdapter.js";
 import {
   REPORT_SIGNATURE,
@@ -42,6 +42,8 @@ describe("removeCostReport", () => {
 });
 
 describe("trackCostReport", () => {
+  mock.method(console, "error", () => {});
+  mock.method(console, "log", () => {});
   let mockGitProvider;
   const mockContext = {
     owner: "test-owner",

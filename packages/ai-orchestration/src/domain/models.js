@@ -98,6 +98,7 @@ export const DEFAULT_PREFERENCES = {
   planner: ["gemini-2.0-flash", "gemini-1.5-pro", "claude-3-5-sonnet-latest"],
   developer: ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"],
   reviewer: ["gemini-2.0-flash", "gemini-1.5-pro", "gpt-4o-mini"],
+  orchestrate: ["gemini-2.0-flash", "gemini-1.5-pro", "claude-3-5-sonnet-latest"],
 };
 
 /** Model preferences based on task complexity for the developer role. */

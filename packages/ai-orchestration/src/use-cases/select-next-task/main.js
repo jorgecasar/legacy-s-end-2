@@ -28,7 +28,7 @@ export async function selectNextTask({
   try {
     // 1. Fetch current board state
     onStatus({ message: "Fetching current project board items..." });
-    const rawItems = await projectManager.getProjectItems(projectId);
+    const rawItems = await projectManager.getProjectItems(projectId, owner);
 
     // 2. Auto-Unblock Analysis: Check sub-tasks for Blocked items
     const updatedRawItems = [];
@@ -40,7 +40,7 @@ export async function selectNextTask({
 
           if (subIssues.length > 0 && subIssues.every((s) => s.state === "closed")) {
             onStatus({ message: `All sub-tasks for #${item.number} are closed. Unblocking...` });
-            await projectManager.updateItemStatus(projectId, item.id, "Ready");
+            await projectManager.updateItemStatus(projectId, item.id, "Ready", owner);
             // Create a new item object with updated status to maintain immutability
             updatedRawItems.push({
               ...item,

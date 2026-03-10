@@ -9,8 +9,8 @@ import { MockGitCliAdapter } from "./infrastructure/adapters/MockGitCliAdapter.j
 import { MockGitHubAdapter } from "./infrastructure/adapters/MockGitHubAdapter.js";
 import { MockProjectManager } from "./infrastructure/adapters/MockProjectManager.js";
 import { OpenAIAdapter } from "./infrastructure/adapters/OpenAIAdapter.js";
+import { branding } from "./domain/branding.js";
 import {
-  branding,
   extractRecommendedModel,
   extractTaskComplexity,
   getAvailableModelProviders,
@@ -45,8 +45,31 @@ export async function runOrchestrator(ciProvider, gitClient) {
     }
 
     const eventContext = ciProvider.getEventContext();
-    const { owner, repo } = eventContext;
+    let { owner, repo } = eventContext;
     const { payload, eventName } = eventContext;
+
+    // isTest is strictly for the automated test suite (NODE_ENV=test)
+    const isTest = process.env.NODE_ENV === "test";
+
+    // Local Auto-detection fallback if we still have default placeholders
+    if ((owner === "owner" || !owner) && !isTest) {
+      try {
+        const remoteUrl = gitClient.getRemoteUrl();
+        if (remoteUrl) {
+          // Parse SSH or HTTPS urls:
+          // git@github.com:jorgecasar/legacy-s-end-2.git
+          // https://github.com/jorgecasar/legacy-s-end-2.git
+          const match = remoteUrl.match(/[:/]([^/]+)\/([^/.]+)(\.git)?$/);
+          if (match) {
+            owner = match[1];
+            repo = match[2];
+            ciProvider.info(`[Config] Auto-detected repository from git remote: ${owner}/${repo}`);
+          }
+        }
+      } catch (_err) {
+        // Ignore detection errors
+      }
+    }
 
     // Detect available keys from inputs first, then env vars
     const geminiKey = ciProvider.getInput("gemini_api_key") || process.env.GEMINI_API_KEY;
@@ -54,17 +77,33 @@ export async function runOrchestrator(ciProvider, gitClient) {
     const openaiKey = ciProvider.getInput("openai_api_key") || process.env.OPENAI_API_KEY;
     const ghMcpPat = ciProvider.getInput("gh_mcp_pat") || process.env.GH_MCP_PAT;
 
+    if (!isTest) {
+      const detected = [];
+      if (geminiKey) detected.push("Gemini");
+      if (anthropicKey) detected.push("Anthropic");
+      if (openaiKey) detected.push("OpenAI");
+      if (detected.length > 0) {
+        ciProvider.info(`[Config] Detected API Keys for: ${detected.join(", ")}`);
+      } else {
+        ciProvider.warning("[Config] No API Keys detected in environment or inputs.");
+      }
+    }
+
     const maxInputTokens = parseInt(ciProvider.getInput("max_input_tokens") || "200000", 10);
     const maxOutputTokens = parseInt(ciProvider.getInput("max_output_tokens") || "200000", 10);
 
     // Check for explicit simulation mode input
     const simulationMode = ciProvider.getInput("simulation_mode") === "true";
+    const debugMode = ciProvider.getInput("debug") === "true";
+    const interactiveMode = ciProvider.getInput("interactive") === "true";
 
-    // isTest is strictly for the automated test suite (NODE_ENV=test)
-    const isTest = process.env.NODE_ENV === "test";
-
-    ciProvider.info(`[Config] NODE_ENV: ${process.env.NODE_ENV || "not set"}`);
-    ciProvider.info(`[Config] isTest: ${isTest}`);
+    if (!isTest) {
+      ciProvider.info(`[Config] Target Repository: ${owner}/${repo}`);
+      ciProvider.info(`[Config] NODE_ENV: ${process.env.NODE_ENV || "not set"}`);
+      ciProvider.info(`[Config] isTest: ${isTest}`);
+      if (debugMode) ciProvider.info("[Config] Debug mode enabled.");
+      if (interactiveMode) ciProvider.info("[Config] Interactive mode enabled (TUI).");
+    }
 
     let gitProvider;
     if (isTest) {
@@ -148,6 +187,8 @@ export async function runOrchestrator(ciProvider, gitClient) {
           role: role.toLowerCase(),
           githubToken: token,
           ghMcpPat,
+          debug: debugMode,
+          interactive: interactiveMode,
         });
       } else if (provider === "anthropic") {
         aiProvider = new AnthropicAdapter(anthropicKey);
@@ -181,10 +222,19 @@ export async function runOrchestrator(ciProvider, gitClient) {
             ? new MockProjectManager()
             : new GitHubProjectAdapter(token);
 
+        const inputProjectId = ciProvider.getInput("project_id");
+        const envProjectId = process.env.PROJECT_ID;
+        const finalProjectId = inputProjectId || envProjectId;
+
+        if (inputProjectId) ciProvider.info("[Config] Using projectId from input.");
+        else if (envProjectId)
+          ciProvider.info("[Config] Using projectId from environment variable.");
+        else ciProvider.warning("[Config] No projectId detected in inputs or environment.");
+
         return OrchestratorWorkflow({
           ...params,
           projectManager: pm,
-          projectId: ciProvider.getInput("project_id") || process.env.PROJECT_ID,
+          projectId: finalProjectId,
           wipLimit: parseInt(ciProvider.getInput("wip_limit") || "5", 10),
         });
       },

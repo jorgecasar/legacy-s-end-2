@@ -12,7 +12,7 @@
     "postinstall": "npm run build",
     "build": "ncc build src/index.js -o dist --license licenses.txt",
     "test": "npm run test:ci && npm run test:integration",
-    "test:ci": "NODE_ENV=test node --test __tests__/*.spec.js",
+    "test:ci": "NODE_ENV=test && GH_TOKEN=test node --test __tests__/*.spec.js",
     "test:integration": "NODE_ENV=test node --test __tests__/*.integration.spec.js",
     "test:coverage": "NODE_ENV=test c8 --reporter=text --reporter=html npm run test:ci"
   },

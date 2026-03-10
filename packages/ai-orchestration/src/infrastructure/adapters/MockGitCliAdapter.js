@@ -25,6 +25,11 @@ export class MockGitCliAdapter {
     return this.branchExistsMock;
   }
 
+  branchExistsLocally(branchName) {
+    this.commandsExecuted.push(`git rev-parse --verify "${branchName}"`);
+    return this.branchExistsMock;
+  }
+
   fetch(remote = "origin", branch = "") {
     const target = branch ? `${remote} ${branch}` : remote;
     this.commandsExecuted.push(`git fetch ${target}`);
@@ -76,7 +81,11 @@ export class MockGitCliAdapter {
   }
 
   pushForce(branchName) {
-    this.commandsExecuted.push(`git push origin "${branchName}" --force`);
+    this.commandsExecuted.push(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(_remote = "origin") {
+    return "https://github.com/owner/repo.git";
   }
 
   runVerification() {

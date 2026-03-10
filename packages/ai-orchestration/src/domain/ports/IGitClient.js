@@ -1,17 +1,23 @@
 /**
- * Port interface for local Git CLI operations.
- * This decouples the orchestrator from direct `child_process.execSync` calls.
- *
- * @interface
+ * Interface for Git CLI operations.
+ * @interface IGitClient
  */
 export class IGitClient {
   /**
-   * Configures the local git author for commits.
+   * Configures git user.
    * @param {string} _name
    * @param {string} _email
-   * @returns {void}
    */
   configAuthor(_name, _email) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Checks if a branch exists locally.
+   * @param {string} _branchName
+   * @returns {boolean}
+   */
+  branchExistsLocally(_branchName) {
     throw new Error("Not implemented");
   }
 
@@ -25,37 +31,34 @@ export class IGitClient {
   }
 
   /**
-   * Fetches updates from the remote repository.
+   * Fetches from remote.
    * @param {string} [_remote]
    * @param {string} [_branch]
-   * @returns {void}
    */
   fetch(_remote, _branch) {
     throw new Error("Not implemented");
   }
 
   /**
-   * Performs a hard reset to a target reference.
+   * Hard reset to target.
    * @param {string} _target
-   * @returns {void}
    */
   resetHard(_target) {
     throw new Error("Not implemented");
   }
 
   /**
-   * Checks out an existing branch or creates a new one.
+   * Checkout branch.
    * @param {string} _branchName
-   * @param {boolean} [_create=false]
-   * @param {boolean} [_force=false]
-   * @returns {void}
+   * @param {boolean} [_create]
+   * @param {boolean} [_force]
    */
-  checkout(_branchName, _create = false, _force = false) {
+  checkout(_branchName, _create, _force) {
     throw new Error("Not implemented");
   }
 
   /**
-   * Rebases the current branch onto a target branch.
+   * Rebase current branch onto target.
    * @param {string} _targetBranch
    * @returns {{ success: boolean, hasConflicts: boolean }}
    */
@@ -64,15 +67,14 @@ export class IGitClient {
   }
 
   /**
-   * Aborts an ongoing rebase operation.
-   * @returns {void}
+   * Aborts current rebase.
    */
   abortRebase() {
     throw new Error("Not implemented");
   }
 
   /**
-   * Gets the name of the currently checked out branch.
+   * Gets current branch name.
    * @returns {string}
    */
   getCurrentBranch() {
@@ -80,7 +82,7 @@ export class IGitClient {
   }
 
   /**
-   * Checks if there are any uncommitted changes in the working tree.
+   * Checks if there are unstaged or uncommitted changes.
    * @returns {boolean}
    */
   hasChanges() {
@@ -88,17 +90,15 @@ export class IGitClient {
   }
 
   /**
-   * Stages all changes in the working tree.
-   * @returns {void}
+   * Stages all changes.
    */
   stageAll() {
     throw new Error("Not implemented");
   }
 
   /**
-   * Soft resets the current branch to a target, squashing history.
+   * Soft resets onto target branch to squash.
    * @param {string} _targetBranch
-   * @returns {void}
    */
   squashOnto(_targetBranch) {
     throw new Error("Not implemented");
@@ -107,20 +107,27 @@ export class IGitClient {
   /**
    * Commits staged changes.
    * @param {string} _message
-   * @param {boolean} [_skipVerify=true]
-   * @returns {void}
+   * @param {boolean} [_skipVerify]
    */
-  commit(_message, _skipVerify = true) {
+  commit(_message, _skipVerify) {
     throw new Error("Not implemented");
   }
 
   /**
-   * Force pushes the current branch to the remote.
+   * Force pushes current branch.
    * @param {string} _branchName
-   * @returns {void}
    */
   pushForce(_branchName) {
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Gets the URL of a git remote.
+   * @param {string} [_remote]
+   * @returns {string|null}
+   */
+  getRemoteUrl(_remote) {
+    throw new Error("Method not implemented.");
   }
 
   /**
@@ -128,6 +135,6 @@ export class IGitClient {
    * @returns {{ success: boolean, output: string }} Results and combined output.
    */
   runVerification() {
-    throw new Error("Not implemented");
+    throw new Error("Method not implemented.");
   }
 }

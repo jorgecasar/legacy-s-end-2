@@ -32,6 +32,8 @@ export async function OrchestratorWorkflow({
 }) {
   const isSimulation = simulationMode;
 
+  ciProvider.info(`[Debug] Received projectId: "${projectId}"`);
+
   if (!projectId) {
     if (isSimulation) {
       projectId = "SIMULATION_PROJECT_ID";
@@ -86,6 +88,19 @@ export async function OrchestratorWorkflow({
       ciProvider.info(
         `   Priority Score: ${task.getPriorityScore()} (Phase: ${task.phase}, Priority: ${task.priority})`,
       );
+
+      // Transition to In Progress if not already there
+      if (task.status !== "In progress" && !isSimulation) {
+        try {
+          ciProvider.info(`🔄 Transitioning task #${task.number} to 'In progress'...`);
+          await projectManager.updateItemStatus(projectId, task.id, "In progress", owner);
+        } catch (err) {
+          ciProvider.warning(`Failed to update task status to 'In progress': ${err.message}`);
+        }
+      } else if (isSimulation) {
+        ciProvider.info(`[Simulation] Would transition task #${task.number} to 'In progress'.`);
+      }
+
       ciProvider.setOutput("selected_task_number", task.number.toString());
       ciProvider.setOutput("selected_task_id", task.id);
     } else {

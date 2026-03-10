@@ -26,6 +26,15 @@ export class GitCliAdapter {
     }
   }
 
+  branchExistsLocally(branchName) {
+    try {
+      child_process.execSync(`git rev-parse --verify "${branchName}"`, { stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   fetch(remote = "origin", branch = "") {
     // If branch is provided, fetch specifically that branch and update the local tracking ref
     const target = branch ? `${remote} ${branch}:${remote}/${branch}` : remote;
@@ -95,7 +104,15 @@ export class GitCliAdapter {
   }
 
   pushForce(branchName) {
-    child_process.execSync(`git push origin "${branchName}" --force`);
+    child_process.execSync(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(remote = "origin") {
+    try {
+      return child_process.execSync(`git remote get-url ${remote}`).toString().trim();
+    } catch {
+      return null;
+    }
   }
 
   runVerification() {

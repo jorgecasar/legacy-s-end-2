@@ -97,7 +97,7 @@ describe("MockGitCliAdapter", () => {
 
   it("should simulate pushForce", () => {
     adapter.pushForce("main");
-    assert.ok(adapter.commandsExecuted[0] === 'git push origin "main" --force');
+    assert.ok(adapter.commandsExecuted[0] === 'git push origin "main" --force --no-verify');
   });
 
   it("should simulate runVerification", () => {

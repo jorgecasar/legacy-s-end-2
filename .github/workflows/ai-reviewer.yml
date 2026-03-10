@@ -11,6 +11,10 @@ on:
       pull_number:
         description: "PR number to review (optional for manual run)"
         required: false
+      debug:
+        description: "Enable debug mode (stream logs)"
+        type: boolean
+        default: false
 
 jobs:
   validate:
@@ -66,5 +70,6 @@ jobs:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           pull_number: ${{ github.event.pull_request.number || inputs.pull_number }}
+          debug: ${{ github.event.inputs.debug || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"

@@ -14,6 +14,7 @@ describe("Execution Validation: AI Reviewer (review-pr)", () => {
     const env = {
       ...process.env,
       NODE_ENV: "test",
+      SILENCE_LOGS: "false",
       GITHUB_ACTIONS: "true",
       GITHUB_EVENT_PATH: eventPath,
       GITHUB_REPOSITORY: "jorgecasar/legacys-ends",

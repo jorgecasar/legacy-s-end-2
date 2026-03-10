@@ -76,6 +76,7 @@ describe("UseCase: selectNextTask", () => {
       owner: "owner",
       repo: "repo",
       projectId: "proj1",
+      onStatus: () => {},
     });
 
     assert.strictEqual(result.success, true);
@@ -98,6 +99,7 @@ describe("UseCase: selectNextTask", () => {
       owner: "owner",
       repo: "repo",
       projectId: "proj1",
+      onStatus: () => {},
     });
 
     assert.strictEqual(result.success, true);
@@ -122,6 +124,7 @@ describe("UseCase: selectNextTask", () => {
       repo: "repo",
       projectId: "proj1",
       wipLimit: 1,
+      onStatus: () => {},
     });
 
     assert.strictEqual(result.success, true);
@@ -146,6 +149,7 @@ describe("UseCase: selectNextTask", () => {
       owner: "o",
       repo: "r",
       projectId: "p1",
+      onStatus: () => {},
     });
     assert.strictEqual(result.success, false);
     assert.ok(result.error.includes("API Failure"));

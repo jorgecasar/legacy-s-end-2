@@ -3,8 +3,8 @@
   "hooks": {
     "postToolUse": [
       {
-        "matcher": "Write|Edit",
-        "command": ".rulesync/hooks/format.sh"
+        "matcher": ".*(write_file|replace|replace_symbol_body|insert_after_symbol|insert_before_symbol).*",
+        "command": ".rulesync/hooks/format.sh {{file_path}}"
       }
     ]
   }

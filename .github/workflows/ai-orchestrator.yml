@@ -10,6 +10,14 @@ on:
         description: "Run in simulation mode (dry run)"
         type: boolean
         default: false
+      debug:
+        description: "Enable debug mode (stream logs)"
+        type: boolean
+        default: false
+      interactive:
+        description: "Enable interactive mode (TUI)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -41,10 +49,12 @@ jobs:
         uses: ./packages/ai-orchestration
         with:
           agent_role: "orchestrate"
-          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.GH_MCP_PAT || secrets.GITHUB_TOKEN }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           project_id: ${{ vars.PROJECT_ID }}
           simulation_mode: ${{ github.event.inputs.simulation_mode || 'false' }}
+          debug: ${{ github.event.inputs.debug || 'false' }}
+          interactive: ${{ github.event.inputs.interactive || 'false' }}
           wip_limit: "5"
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
@@ -73,8 +83,10 @@ jobs:
         uses: ./packages/ai-orchestration
         with:
           agent_role: "developer"
-          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.GH_MCP_PAT || secrets.GITHUB_TOKEN }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           issue_number: ${{ needs.orchestrate.outputs.selected_task_number }}
+          debug: ${{ github.event.inputs.debug || 'false' }}
+          interactive: ${{ github.event.inputs.interactive || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
