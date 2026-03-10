@@ -57333,6 +57333,13 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer"
 
 /***/ }),
 
+/***/ 1421:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
+
+/***/ }),
+
 /***/ 7540:
 /***/ ((module) => {
 
@@ -57650,7 +57657,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 971:
+/***/ 2997:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 
@@ -63261,8 +63268,8 @@ class AnthropicAdapter {
   }
 }
 
-;// CONCATENATED MODULE: external "node:child_process"
-const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
+// EXTERNAL MODULE: external "node:child_process"
+var external_node_child_process_ = __nccwpck_require__(1421);
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
 ;// CONCATENATED MODULE: external "node:path"
@@ -63290,6 +63297,8 @@ class GeminiAdapter {
    * @param {string} [options.role]
    * @param {string} [options.githubToken]
    * @param {string} [options.ghMcpPat]
+   * @param {boolean} [options.debug]
+   * @param {boolean} [options.interactive]
    */
   constructor(apiKey, options = {}) {
     if (!apiKey) throw new Error("GEMINI_API_KEY is required.");
@@ -63298,7 +63307,10 @@ class GeminiAdapter {
     this.role = options.role || "";
     this.githubToken = options.githubToken || "";
     this.ghMcpPat = options.ghMcpPat || "";
+    this.debug = options.debug || false;
+    this.interactive = options.interactive || false;
   }
+
   /**
    * Parses the raw CLI output to extract the response text and token usage.
    * @param {string} rawOutput - The raw stdout from gemini-cli
@@ -63306,6 +63318,12 @@ class GeminiAdapter {
    * @returns {{ text: string, usage: { prompt_tokens: number, completion_tokens: number, total_tokens: number } }}
    */
   parseUsage(rawOutput, promptLength = 0) {
+    if (!rawOutput) {
+      return {
+        text: "",
+        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      };
+    }
     let text = rawOutput;
     let usage = {
       prompt_tokens: 0,
@@ -63331,7 +63349,10 @@ class GeminiAdapter {
         }
       }
     } catch (parseErr) {
-      console.warn(`[GeminiAdapter] Failed to parse JSON usage data: ${parseErr.message}`);
+      // In debug mode, we might have mixed output, so we don't warn unless it's a real failure
+      if (!this.debug) {
+        console.warn(`[GeminiAdapter] Failed to parse JSON usage data: ${parseErr.message}`);
+      }
     }
 
     // Fallback to estimation if usage is still 0 but we have text
@@ -63356,7 +63377,24 @@ class GeminiAdapter {
 
     try {
       // Find local binary, fallback to pinned npx
-      let cliPath = "npx -y @google/gemini-cli@0.31.0";
+      let executable = "npx";
+      let args = [
+        "-y",
+        "@google/gemini-cli@0.31.0",
+        this.interactive ? "-i" : "-p",
+        "",
+        "-m",
+        modelId,
+        "--approval-mode",
+        approvalMode,
+        "--output-format",
+        "json",
+        "--max-steps",
+        "15",
+        "--disable-tools",
+        "run_shell_command",
+      ];
+
       const possiblePaths = [
         external_node_path_namespaceObject.join(process.cwd(), "node_modules", ".bin", "gemini"),
         external_node_path_namespaceObject.join(process.cwd(), "packages", "ai-orchestration", "node_modules", ".bin", "gemini"),
@@ -63364,13 +63402,28 @@ class GeminiAdapter {
 
       for (const p of possiblePaths) {
         if (external_node_fs_namespaceObject.existsSync(p)) {
-          cliPath = p;
+          executable = p;
+          args = [
+            this.interactive ? "-i" : "-p",
+            "",
+            "-m",
+            modelId,
+            "--approval-mode",
+            approvalMode,
+            "--output-format",
+            "json",
+          ];
           break;
         }
       }
 
-      const command = `${cliPath} -p "" -m "${modelId}" --approval-mode ${approvalMode} --output-format json`;
-      console.log(`[GeminiAdapter] Running: ${command} (${fullPrompt.length} chars input)`);
+      console.log(
+        `[GeminiAdapter] Running: ${executable} ${args.join(" ")} (${fullPrompt.length} chars input)`,
+      );
+
+      if (this.debug) {
+        console.log("[GeminiAdapter] Debug mode enabled. Streaming CLI logs to stderr...");
+      }
 
       const startTime = Date.now();
 
@@ -63385,30 +63438,44 @@ class GeminiAdapter {
         );
       }
 
-      const rawOutput = external_node_child_process_namespaceObject.execSync(command, {
-        input: fullPrompt,
+      // If interactive is true, we use inherit for all stdio so the user can see/interact with the TUI
+      // Note: stdout will not be captured, so parseUsage will fallback to estimation
+      /** @type {import('child_process').StdioOptions} */
+      const stdio = this.interactive
+        ? "inherit"
+        : ["pipe", "pipe", this.debug ? "inherit" : "pipe"];
+
+      const result = external_node_child_process_.spawnSync(executable, args, {
+        input: this.interactive ? undefined : fullPrompt,
         env: {
           ...process.env,
           GEMINI_API_KEY: sanitizedApiKey,
           GITHUB_TOKEN: sanitizedGithubToken,
-          GH_TOKEN: sanitizedGithubToken, // Fallback for some MCP servers
-          GH_MCP_PAT: sanitizedGhMcpPat, // Required for GitHub MCP server
+          GH_TOKEN: sanitizedGithubToken,
+          GH_MCP_PAT: sanitizedGhMcpPat,
         },
-
-        encoding: "utf-8",
         maxBuffer: 50 * 1024 * 1024,
         timeout: 900000,
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio,
+        encoding: "utf-8",
       });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        throw new Error(
+          `gemini-cli exited with code ${result.status}\nSTDOUT: ${result.stdout || "captured in TUI"}\nSTDERR: ${result.stderr || ""}`,
+        );
+      }
 
       const duration = (Date.now() - startTime) / 1000;
       console.log(`[GeminiAdapter] Completed in ${duration.toFixed(2)}s.`);
 
-      return this.parseUsage(rawOutput, fullPrompt.length);
+      return this.parseUsage(result.stdout, fullPrompt.length);
     } catch (err) {
-      throw new Error(
-        `gemini-cli execution failed: ${err.message}\nSTDOUT: ${err.stdout}\nSTDERR: ${err.stderr}`,
-      );
+      throw new Error(`gemini-cli execution failed: ${err.message}`);
     }
   }
 }
@@ -63421,18 +63488,18 @@ class GeminiAdapter {
  */
 
 /**
- * Adapter for local Git operations using `child_process.child_process.execSync`.
+ * Adapter for local Git operations using `child_process.execSync`.
  * @implements {IGitClient}
  */
 class GitCliAdapter {
   configAuthor(name, email) {
-    external_node_child_process_namespaceObject.execSync(`git config --global user.name "${name}"`);
-    external_node_child_process_namespaceObject.execSync(`git config --global user.email "${email}"`);
+    external_node_child_process_.execSync(`git config --global user.name "${name}"`);
+    external_node_child_process_.execSync(`git config --global user.email "${email}"`);
   }
 
   branchExistsRemotely(branchName) {
     try {
-      const remoteHeads = external_node_child_process_namespaceObject.execSync(`git ls-remote --heads origin "${branchName}"`)
+      const remoteHeads = external_node_child_process_.execSync(`git ls-remote --heads origin "${branchName}"`)
         .toString()
         .trim();
       return remoteHeads.length > 0;
@@ -63442,30 +63509,46 @@ class GitCliAdapter {
   }
 
   fetch(remote = "origin", branch = "") {
-    // If branch is provided, fetch specifically that branch and update the local tracking ref
     const target = branch ? `${remote} ${branch}:${remote}/${branch}` : remote;
-    external_node_child_process_namespaceObject.execSync(`git fetch ${target}`, { stdio: "inherit" });
+    external_node_child_process_.execSync(`git fetch ${target}`, { stdio: "inherit" });
   }
 
   resetHard(target) {
-    external_node_child_process_namespaceObject.execSync(`git reset --hard ${target}`, { stdio: "inherit" });
+    external_node_child_process_.execSync(`git reset --hard ${target}`, { stdio: "inherit" });
   }
 
   checkout(branchName, create = false) {
+    // Safety check: prevent creating local branches named origin/*
+    if (create && branchName.startsWith("origin/")) {
+      throw new Error(
+        `Invalid branch name: "${branchName}". Local branches should not start with "origin/".`,
+      );
+    }
+
     if (create) {
-      external_node_child_process_namespaceObject.execSync(`git checkout -b "${branchName}"`);
+      external_node_child_process_.execSync(`git checkout -b "${branchName}"`);
     } else {
       try {
-        external_node_child_process_namespaceObject.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+        external_node_child_process_.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
       } catch {
         // If checkout fails due to local changes, try to stash, checkout, and pop
-        console.warn(`[GitCliAdapter] Checkout failed, attempting to stash local changes...`);
-        external_node_child_process_namespaceObject.execSync("git stash");
-        external_node_child_process_namespaceObject.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+        console.warn(
+          `[GitCliAdapter] Checkout failed for "${branchName}", attempting to stash local changes...`,
+        );
         try {
-          external_node_child_process_namespaceObject.execSync("git stash pop");
-        } catch {
-          console.warn(`[GitCliAdapter] Merge conflict after stash pop. Please resolve manually.`);
+          external_node_child_process_.execSync("git stash");
+          external_node_child_process_.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+          try {
+            external_node_child_process_.execSync("git stash pop");
+          } catch {
+            console.warn(
+              `[GitCliAdapter] Merge conflict after stash pop. Please resolve manually.`,
+            );
+          }
+        } catch (stashErr) {
+          throw new Error(
+            `Checkout failed for "${branchName}" even after stash attempt: ${stashErr.message}`,
+          );
         }
       }
     }
@@ -63473,7 +63556,7 @@ class GitCliAdapter {
 
   rebase(targetBranch) {
     try {
-      external_node_child_process_namespaceObject.execSync(`git rebase ${targetBranch}`, { stdio: "inherit" });
+      external_node_child_process_.execSync(`git rebase ${targetBranch}`, { stdio: "inherit" });
       return { success: true, hasConflicts: false };
     } catch {
       return { success: false, hasConflicts: true };
@@ -63482,35 +63565,43 @@ class GitCliAdapter {
 
   abortRebase() {
     try {
-      external_node_child_process_namespaceObject.execSync("git rebase --abort", { stdio: "inherit" });
+      external_node_child_process_.execSync("git rebase --abort", { stdio: "inherit" });
     } catch {
       /* already aborted */
     }
   }
 
   getCurrentBranch() {
-    return external_node_child_process_namespaceObject.execSync("git branch --show-current").toString().trim();
+    return external_node_child_process_.execSync("git branch --show-current").toString().trim();
   }
 
   hasChanges() {
-    return external_node_child_process_namespaceObject.execSync("git status --porcelain").toString().trim().length > 0;
+    return external_node_child_process_.execSync("git status --porcelain").toString().trim().length > 0;
   }
 
   stageAll() {
-    external_node_child_process_namespaceObject.execSync("git add .");
+    external_node_child_process_.execSync("git add .");
   }
 
   squashOnto(targetBranch) {
-    external_node_child_process_namespaceObject.execSync(`git reset --soft ${targetBranch}`);
+    external_node_child_process_.execSync(`git reset --soft ${targetBranch}`);
   }
 
   commit(message, skipVerify = true) {
     const flag = skipVerify ? "--no-verify" : "";
-    external_node_child_process_namespaceObject.execSync(`git commit ${flag} -m "${message}"`);
+    external_node_child_process_.execSync(`git commit ${flag} -m "${message}"`);
   }
 
   pushForce(branchName) {
-    external_node_child_process_namespaceObject.execSync(`git push origin "${branchName}" --force`);
+    external_node_child_process_.execSync(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(remote = "origin") {
+    try {
+      return external_node_child_process_.execSync(`git remote get-url ${remote}`).toString().trim();
+    } catch {
+      return null;
+    }
   }
 
   runVerification() {
@@ -63519,7 +63610,7 @@ class GitCliAdapter {
 
     const run = (command) => {
       try {
-        const result = external_node_child_process_namespaceObject.execSync(command, { stdio: "pipe", encoding: "utf-8" });
+        const result = external_node_child_process_.execSync(command, { stdio: "pipe", encoding: "utf-8" });
         output += `\n--- [SUCCESS] ${command} ---\n${result}`;
       } catch (err) {
         success = false;
@@ -63527,9 +63618,17 @@ class GitCliAdapter {
       }
     };
 
-    run("npm run check");
+    run("npm run check:fast");
 
     return { success, output: output.trim() };
+  }
+
+  fix() {
+    try {
+      external_node_child_process_.execSync("npm run check:fix", { stdio: "inherit" });
+    } catch {
+      /* ignore errors */
+    }
   }
 }
 
@@ -70731,15 +70830,33 @@ function getOctokit(token, options, ...additionalPlugins) {
  */
 class GitHubActionsAdapter {
   getInput(name, options = {}) {
-    // First try to get without required: true to check for existence or fallback
+    // 1. Try to get from CLI arguments (--name or --agent_role if name is role)
+    const args = process.argv.slice(2);
+    const argName = `--${name}`;
+    const aliasName = name === "agent_role" ? "--role" : null;
+
+    for (let i = 0; i < args.length; i++) {
+      if (args[i].startsWith(argName + "=") || (aliasName && args[i].startsWith(aliasName + "="))) {
+        return args[i].split("=")[1];
+      }
+
+      if (args[i] === argName || (aliasName && args[i] === aliasName)) {
+        if (args[i + 1] && !args[i + 1].startsWith("--")) {
+          return args[i + 1];
+        }
+      }
+    }
+
+    // 2. Try to get from core.getInput
     const value = getInput(name, { ...options, required: false });
 
+    // 3. Try to get from environment variables
     if (!value) {
       const fallback = process.env[name.toUpperCase()];
       if (fallback) return fallback;
     }
 
-    // If still no value and it was required, call with original options to trigger core's error handling
+    // 4. If still no value and it was required, call with original options to trigger core's error handling
     if (!value && options.required) {
       return getInput(name, options);
     }
@@ -70748,41 +70865,78 @@ class GitHubActionsAdapter {
   }
 
   getEventContext() {
-    try {
+    const args = process.argv.slice(2);
+    let cliOwner = null;
+    let cliRepo = null;
+
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === "--owner") cliOwner = args[i + 1];
+      if (args[i] === "--repo") cliRepo = args[i + 1];
+    }
+
+    // Priority 1: CLI Arguments
+    if (cliOwner && cliRepo) {
       return {
-        owner: github_context.repo.owner,
-        repo: github_context.repo.repo,
-        eventName: github_context.eventName || process.env.GITHUB_EVENT_NAME || "manual",
-        payload: github_context.payload || {},
-      };
-    } catch {
-      // Fallback for local execution if github.context is not fully initialized
-      const [owner, repo] = (process.env.GITHUB_REPOSITORY || "owner/repo").split("/");
-      return {
-        owner,
-        repo,
+        owner: cliOwner,
+        repo: cliRepo,
         eventName: process.env.GITHUB_EVENT_NAME || "manual",
         payload: {},
       };
     }
+
+    // Priority 2: Explicit Environment Variables (local dev)
+    if (process.env.GH_OWNER && process.env.GH_REPO) {
+      return {
+        owner: process.env.GH_OWNER,
+        repo: process.env.GH_REPO,
+        eventName: process.env.GITHUB_EVENT_NAME || "manual",
+        payload: {},
+      };
+    }
+
+    try {
+      // Priority 3: GitHub Actions Context
+      if (github_context.repo.owner && github_context.repo.repo) {
+        return {
+          owner: github_context.repo.owner,
+          repo: github_context.repo.repo,
+          eventName: github_context.eventName || process.env.GITHUB_EVENT_NAME || "manual",
+          payload: github_context.payload || {},
+        };
+      }
+    } catch {
+      // Ignore context errors
+    }
+
+    // Priority 4: Standard GH Env Vars or hardcoded fallback
+    const [envOwner, envRepo] = (process.env.GITHUB_REPOSITORY || "owner/repo").split("/");
+    return {
+      owner: process.env.GH_OWNER || envOwner,
+      repo: process.env.GH_REPO || envRepo,
+      eventName: process.env.GITHUB_EVENT_NAME || "manual",
+      payload: {},
+    };
   }
 
   info(message) {
+    if (process.env.NODE_ENV === "test" && process.env.SILENCE_LOGS !== "false") return;
     info(message);
   }
 
   warning(message) {
+    if (process.env.NODE_ENV === "test" && process.env.SILENCE_LOGS !== "false") return;
     warning(message);
   }
 
   error(message) {
+    if (process.env.NODE_ENV === "test" && process.env.SILENCE_LOGS !== "false") return;
     error(message);
   }
 
   setFailed(message) {
+    if (process.env.NODE_ENV === "test" && process.env.SILENCE_LOGS !== "false") return;
     setFailed(message);
   }
-
   setOutput(name, value) {
     setOutput(name, value);
   }
@@ -75984,12 +76138,68 @@ class GitHubAdapter {
 class GitHubProjectAdapter {
   constructor(token) {
     this.octokit = new Octokit({ auth: token });
+    this.resolvedIds = new Map();
+  }
+
+  /**
+   * Resolves a project ID. If it's a number, it fetches the global node ID.
+   * @param {string} owner
+   * @param {string|number} projectIdOrNumber
+   * @returns {Promise<string>}
+   */
+  async _resolveId(owner, projectIdOrNumber) {
+    const key = `${owner}/${projectIdOrNumber}`;
+    if (this.resolvedIds.has(key)) return this.resolvedIds.get(key);
+
+    const idStr = projectIdOrNumber.toString();
+    if (idStr.startsWith("PVT_") || idStr.length > 10) {
+      this.resolvedIds.set(key, idStr);
+      return idStr;
+    }
+
+    const number = parseInt(idStr, 10);
+    // Separate queries to avoid one failing the entire request due to 'Resource not accessible'
+    const userQuery = `query($owner: String!, $number: Int!) { user(login: $owner) { projectV2(number: $number) { id } } }`;
+    const orgQuery = `query($owner: String!, $number: Int!) { organization(login: $owner) { projectV2(number: $number) { id } } }`;
+
+    let id = null;
+
+    try {
+      const userRes = await this.octokit.graphql(userQuery, { owner, number });
+      id = userRes.user?.projectV2?.id;
+    } catch {
+      // Ignore errors here, we will try org next or fail at the end
+    }
+
+    if (!id) {
+      try {
+        const orgRes = await this.octokit.graphql(orgQuery, { owner, number });
+        id = orgRes.organization?.projectV2?.id;
+      } catch (err) {
+        // Handle the 'Resource not accessible' or 'NOT_FOUND' specifically
+        if (err.message.includes("Resource not accessible")) {
+          throw new Error(
+            `Permission Denied: The token provided does not have access to GitHub Projects v2 for ${owner}. If this is a User project, you MUST use a Personal Access Token (PAT) with 'project' scope instead of the default GITHUB_TOKEN.`,
+          );
+        }
+      }
+    }
+
+    if (!id) {
+      throw new Error(
+        `Could not resolve Project Number ${number} for owner ${owner}. Please verify the project number and ensure your token has 'project' scope permissions.`,
+      );
+    }
+
+    this.resolvedIds.set(key, id);
+    return id;
   }
 
   /**
    * Fetches all items from a GitHub Project.
    */
-  async getProjectItems(projectId) {
+  async getProjectItems(projectId, owner) {
+    const id = owner ? await this._resolveId(owner, projectId) : projectId;
     const query = `
       query($projectId: ID!) {
         node(id: $projectId) {
@@ -76036,7 +76246,9 @@ class GitHubProjectAdapter {
       }
     `;
 
-    const response = await this.octokit.graphql(query, { projectId });
+    const response = await this.octokit.graphql(query, { projectId: id });
+    if (!response.node) return [];
+
     return response.node.items.nodes.map((node) => ({
       id: node.id,
       title: node.content?.title,
@@ -76052,7 +76264,8 @@ class GitHubProjectAdapter {
     }));
   }
 
-  async addItemToProject(projectId, contentId) {
+  async addItemToProject(projectId, contentId, owner) {
+    const id = owner ? await this._resolveId(owner, projectId) : projectId;
     const mutation = `
       mutation($projectId: ID!, $contentId: ID!) {
         addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
@@ -76060,19 +76273,15 @@ class GitHubProjectAdapter {
         }
       }
     `;
-    const response = await this.octokit.graphql(mutation, { projectId, contentId });
+    const response = await this.octokit.graphql(mutation, { projectId: id, contentId });
     return response.addProjectV2ItemById.item.id;
   }
 
-  async findItemByIssueNumber(projectId, issueNumber) {
-    // We reuse the list but filter for the number
-    const items = await this.getProjectItems(projectId);
+  async findItemByIssueNumber(projectId, issueNumber, owner) {
+    const items = await this.getProjectItems(projectId, owner);
     return items.find((i) => i.number === issueNumber) || null;
   }
 
-  /**
-   * Internal helper to find field and option IDs.
-   */
   async _getFieldAndOptionIds(projectId, fieldName, optionName) {
     const query = `
       query($projectId: ID!) {
@@ -76105,8 +76314,9 @@ class GitHubProjectAdapter {
     return { fieldId: field.id, optionId: option.id };
   }
 
-  async updateItemStatus(projectId, itemId, statusName) {
-    const { fieldId, optionId } = await this._getFieldAndOptionIds(projectId, "Status", statusName);
+  async updateItemStatus(projectId, itemId, statusName, owner) {
+    const id = owner ? await this._resolveId(owner, projectId) : projectId;
+    const { fieldId, optionId } = await this._getFieldAndOptionIds(id, "Status", statusName);
 
     const mutation = `
       mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
@@ -76121,11 +76331,12 @@ class GitHubProjectAdapter {
       }
     `;
 
-    await this.octokit.graphql(mutation, { projectId, itemId, fieldId, optionId });
+    await this.octokit.graphql(mutation, { projectId: id, itemId, fieldId, optionId });
   }
 
-  async updateCustomField(projectId, itemId, fieldName, value) {
-    const { fieldId, optionId } = await this._getFieldAndOptionIds(projectId, fieldName, value);
+  async updateCustomField(projectId, itemId, fieldName, value, owner) {
+    const id = owner ? await this._resolveId(owner, projectId) : projectId;
+    const { fieldId, optionId } = await this._getFieldAndOptionIds(id, fieldName, value);
 
     const mutation = `
       mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
@@ -76140,7 +76351,7 @@ class GitHubProjectAdapter {
       }
     `;
 
-    await this.octokit.graphql(mutation, { projectId, itemId, fieldId, optionId });
+    await this.octokit.graphql(mutation, { projectId: id, itemId, fieldId, optionId });
   }
 }
 
@@ -76263,15 +76474,20 @@ class MockGitCliAdapter {
   }
 
   pushForce(branchName) {
-    this.commandsExecuted.push(`git push origin "${branchName}" --force`);
+    this.commandsExecuted.push(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(_remote = "origin") {
+    return "https://github.com/owner/repo.git";
   }
 
   runVerification() {
-    this.commandsExecuted.push("npm run format || true");
-    this.commandsExecuted.push("npm run lint:types");
-    this.commandsExecuted.push("npm run lint");
-    this.commandsExecuted.push("npm run test");
+    this.commandsExecuted.push("npm run check:fast");
     return { success: true, output: "Mock verification successful" };
+  }
+
+  fix() {
+    this.commandsExecuted.push("npm run check:fix");
   }
 }
 
@@ -76388,110 +76604,37 @@ class MockGitHubAdapter {
   }
 }
 
-;// CONCATENATED MODULE: ./src/domain/ports/IProjectManager.js
-/**
- * Interface for Project Manager operations.
- * @interface IProjectManager
- */
-class IProjectManager {
-  /**
-   * Fetches all items from a project.
-   * @param {string} projectId
-   * @returns {Promise<Array<{ id: string, title?: string, number?: number, type?: string, fields: object }>>}
-   */
-  async getProjectItems(projectId) {
-    throw new Error(`Method not implemented. ${projectId}`);
-  }
-
-  /**
-   * Adds an item to a project.
-   * @param {string} projectId
-   * @param {string} contentId
-   * @returns {Promise<string>}
-   */
-  async addItemToProject(projectId, contentId) {
-    throw new Error(`Method not implemented. ${projectId} ${contentId}`);
-  }
-
-  /**
-   * Finds an item by its issue number.
-   * @param {string} projectId
-   * @param {number} issueNumber
-   * @returns {Promise<any|null>}
-   */
-  async findItemByIssueNumber(projectId, issueNumber) {
-    throw new Error(`Method not implemented. ${projectId} ${issueNumber}`);
-  }
-
-  /**
-   * Updates the status of an item.
-   * @param {string} projectId
-   * @param {string} itemId
-   * @param {string} statusName
-   * @returns {Promise<void>}
-   */
-  async updateItemStatus(projectId, itemId, statusName) {
-    throw new Error(`Method not implemented. ${projectId} ${itemId} ${statusName}`);
-  }
-
-  /**
-   * Updates a custom field of an item.
-   * @param {string} projectId
-   * @param {string} itemId
-   * @param {string} fieldName
-   * @param {string} value
-   * @returns {Promise<void>}
-   */
-  async updateCustomField(projectId, itemId, fieldName, value) {
-    throw new Error(`Method not implemented. ${projectId} ${itemId} ${fieldName} ${value}`);
-  }
-}
-
 ;// CONCATENATED MODULE: ./src/infrastructure/adapters/MockProjectManager.js
-
-
 /**
- * Mock implementation of Project Manager for simulation and testing.
- * @implements {IProjectManager}
+ * Mock implementation of Project Manager for testing.
  */
-class MockProjectManager extends IProjectManager {
+class MockProjectManager {
   constructor() {
-    super();
-    this.memory = {
-      items: [],
-    };
+    this.items = [];
   }
 
-  async getProjectItems(projectId) {
-    return this.memory.items;
+  async getProjectItems(_projectId, _owner) {
+    return this.items;
   }
 
-  async addItemToProject(projectId, contentId) {
-    const newItem = {
-      id: `mock-item-${Math.random().toString(36).substr(2, 9)}`,
-      contentId,
-      fields: { Status: "Backlog" },
-    };
-    this.memory.items.push(newItem);
+  async addItemToProject(_projectId, contentId, _owner) {
+    const newItem = { id: `mock-item-${contentId}`, contentId, fields: {} };
+    this.items.push(newItem);
     return newItem.id;
   }
 
-  async findItemByIssueNumber(projectId, issueNumber) {
-    return this.memory.items.find((i) => i.number === issueNumber) || null;
+  async findItemByIssueNumber(_projectId, issueNumber, _owner) {
+    return this.items.find((i) => i.number === issueNumber) || null;
   }
 
-  async updateItemStatus(projectId, itemId, statusName) {
-    const item = this.memory.items.find((i) => i.id === itemId);
-    if (item) {
-      item.fields.Status = statusName;
-    }
+  async updateItemStatus(_projectId, itemId, statusName, _owner) {
+    const item = this.items.find((i) => i.id === itemId);
+    if (item) item.fields.Status = statusName;
   }
 
-  async updateCustomField(projectId, itemId, fieldName, value) {
-    const item = this.memory.items.find((i) => i.id === itemId);
-    if (item) {
-      item.fields[fieldName] = value;
-    }
+  async updateCustomField(_projectId, itemId, fieldName, value, _owner) {
+    const item = this.items.find((i) => i.id === itemId);
+    if (item) item.fields[fieldName] = value;
   }
 }
 
@@ -84817,6 +84960,19 @@ class OpenAIAdapter {
   }
 }
 
+;// CONCATENATED MODULE: ./src/domain/branding.js
+/**
+ * Unified Branding for the AI Orchestrator.
+ * Represents the identity of the agent.
+ */
+const branding = {
+  name: "AI", // Default
+  setName(newName) {
+    if (newName) this.name = newName;
+  },
+  getSignature: () => `Generated by ${branding.name} Orchestrator.`,
+};
+
 ;// CONCATENATED MODULE: ./src/domain/models.js
 /**
  * Unified AI Model Registry.
@@ -84918,6 +85074,7 @@ const DEFAULT_PREFERENCES = {
   planner: ["gemini-2.0-flash", "gemini-1.5-pro", "claude-3-5-sonnet-latest"],
   developer: ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"],
   reviewer: ["gemini-2.0-flash", "gemini-1.5-pro", "gpt-4o-mini"],
+  orchestrate: ["gemini-2.0-flash", "gemini-1.5-pro", "claude-3-5-sonnet-latest"],
 };
 
 /** Model preferences based on task complexity for the developer role. */
@@ -84967,17 +85124,6 @@ function getProviderForModel(modelName) {
  * Preferences and provider detection sourced from the unified Model Registry.
  */
 
-
-/**
- * Unified Branding for the AI Orchestrator.
- */
-const branding = {
-  name: "AI", // Default
-  setName(newName) {
-    if (newName) this.name = newName;
-  },
-  getSignature: () => `Generated by ${branding.name} Orchestrator.`,
-};
 
 /**
  * Detect available model providers based on supplied API keys.
@@ -85060,6 +85206,7 @@ function extractTaskComplexity(text) {
 ;// CONCATENATED MODULE: external "node:fs/promises"
 const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/promises");
 ;// CONCATENATED MODULE: ./src/infrastructure/services/FileExecutor.js
+
 
 
 
@@ -85158,6 +85305,29 @@ class FileExecutor {
           `[FileExecutor] Failed to ${change.operation} file ${change.path}: ${err.message}`,
         );
       }
+    }
+
+    // Run post-edit hooks (format/lint) on the modified files to ensure AI output matches standards
+    const hookPath = external_node_path_namespaceObject.resolve(this.workspaceDir, ".rulesync/hooks/format.sh");
+    try {
+      await promises_namespaceObject.access(hookPath);
+      for (const change of changes) {
+        if (change.operation !== "delete") {
+          try {
+            // Force execution via bash to ensure script compatibility
+            (0,external_node_child_process_.execSync)(`bash "${hookPath}" "${change.path}"`, {
+              cwd: this.workspaceDir,
+              stdio: "inherit",
+            });
+          } catch (hookErr) {
+            logger.warning(
+              `[FileExecutor] Post-edit hook failed for ${change.path}: ${hookErr.message}`,
+            );
+          }
+        }
+      }
+    } catch {
+      // Hook doesn't exist or is not accessible, skip silently
     }
   }
 
@@ -85292,8 +85462,1287 @@ async function checkTaskReadiness(
   }
 }
 
+;// CONCATENATED MODULE: ./src/use-cases/shared/ContextFilters.js
+/**
+ * Checks if a given text body is an AI-generated report that should be excluded from context.
+ *
+ * @param {string} body - The text to check.
+ * @returns {boolean} True if the text is an AI report.
+ */
+function isAIReport(body) {
+  if (!body) return false;
+
+  return (
+    /### (📋 )?Triage/i.test(body) ||
+    /### (🎯 )?Plan/i.test(body) ||
+    /### (🛠️ )?Technical Checklist/i.test(body) ||
+    /AI Triage & Planning Report/i.test(body) ||
+    /ai-triage-(start|end)/i.test(body) ||
+    /--- AI SIMULATION/i.test(body) ||
+    /🔍 AI Architecture Review/i.test(body) ||
+    /Review generated by AI Orchestration/i.test(body) ||
+    /<!-- ai-usage:.*?-->/i.test(body)
+  );
+}
+
+/**
+ * Filters and cleans issue comments to minimize token usage.
+ * Removes large logs and repetitive AI metadata blocks.
+ */
+function cleanCommentBody(body) {
+  if (!body) return "";
+
+  // 1. Remove cost reports and specific markers
+  let cleaned = body.replace(
+    /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g,
+    "[Cost Report Omitted]",
+  );
+  cleaned = cleaned.replace(/<!-- ai-usage:.*?-->/g, "");
+
+  // 2. Remove triage metadata
+  cleaned = cleaned.replace(
+    /<!-- ai-triage-start -->[\s\S]*?<!-- ai-triage-end -->/g,
+    "[Triage Metadata Omitted]",
+  );
+
+  // 3. Truncate large code blocks (likely logs) if they exceed 1000 chars
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, (match) => {
+    if (match.length > 1000) {
+      return (
+        match.substring(0, 300) +
+        "\n\n... [Large Log/Code Block Truncated to save tokens] ...\n\n" +
+        match.substring(match.length - 300)
+      );
+    }
+    return match;
+  });
+
+  return cleaned;
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/track-cost-report/main.js
+
+
+const REPORT_SIGNATURE = "<!-- ai-usage-report -->";
+
+/**
+ * Removes the cost report block from a text string.
+ * @param {string} text
+ * @returns {{ success: boolean, value: string, error?: string }}
+ */
+function removeCostReport(text) {
+  if (!text) return { success: true, value: "" };
+
+  // 1. Surgical removal if markers exist
+  const markerRegex = /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g;
+  let cleanText = text.replace(markerRegex, "\n");
+
+  // 2. Fallback: Search for the report header and signature
+  const contentRegex =
+    /## 💰 AI Usage & Cost Report[\s\S]*?_Updated automatically by AI Orchestration_/g;
+  cleanText = cleanText.replace(contentRegex, "\n");
+
+  // 3. Robust cleanup of rogue markers
+  cleanText = cleanText.replace(/<!-- ai-usage-report -->/g, "");
+  cleanText = cleanText.replace(/<!-- ai-triage-end -->/g, "");
+
+  // 4. Collapse consecutive newlines to a single one and trim
+  cleanText = cleanText.replace(/\n{2,}/g, "\n");
+
+  return { success: true, value: cleanText.trim() };
+}
+
+/**
+ * Updates or creates a cost tracking comment on a GitHub issue/PR.
+ * @returns {Promise<{ success: boolean, value?: { body: string, isUpdate: boolean, commentId?: number }, error?: string }>}
+ */
+async function trackCostReport(
+  gitProvider,
+  { owner, repo, issueNumber, agent, provider, usage, model },
+) {
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
+  const displayModel = model || provider;
+  const newRow = `| ${agent} | ${displayModel} | ${usage.prompt_tokens || 0} | ${usage.completion_tokens || 0} | $${costs.total_cost.toFixed(6)} |`;
+
+  try {
+    const comments = await gitProvider.listComments(owner, repo, issueNumber);
+    const reportComment = comments.find((c) => c.body?.includes(REPORT_SIGNATURE));
+
+    let body;
+    let isUpdate = false;
+    let commentId;
+
+    if (reportComment) {
+      const lines = reportComment.body.split("\n");
+      const dataRows = lines.filter(
+        (l) =>
+          l.startsWith("|") &&
+          !l.includes("Agent") &&
+          !l.includes("---") &&
+          !l.toLowerCase().includes("total") &&
+          !l.includes("<!--"),
+      );
+
+      let currentTotal = 0;
+      const filteredRows = dataRows.map((row) => {
+        const parts = row
+          .split("|")
+          .map((p) => p.trim())
+          .filter(Boolean);
+        const costStr = parts[4]?.replace("$", "").replace("**", "") || "0";
+        const cost = parseFloat(costStr);
+        if (!Number.isNaN(cost)) {
+          currentTotal += cost;
+        }
+        return row;
+      });
+
+      currentTotal += costs.total_cost;
+
+      body = [
+        "<!-- ai-cost-report-start -->",
+        REPORT_SIGNATURE,
+        "## 💰 AI Usage & Cost Report",
+        "",
+        "| Agent | Model | In Tokens | Out Tokens | Cost (USD) |",
+        "| :--- | :--- | :--- | :--- | :--- |",
+        ...filteredRows,
+        newRow,
+        `| **Total** | | | | **$${currentTotal.toFixed(6)}** |`,
+        "",
+        "_Updated automatically by AI Orchestration_",
+        "---",
+        "<!-- ai-cost-report-end -->",
+      ].join("\n");
+
+      try {
+        await gitProvider.updateComment(owner, repo, reportComment.id, body);
+        isUpdate = true;
+        commentId = reportComment.id;
+      } catch (err) {
+        // If update fails (e.g. permission issue), fallback to creating a new comment
+        console.warn(
+          `[CostReport] Failed to update existing comment #${reportComment.id}: ${err.message}. Creating a new one instead.`,
+        );
+        await gitProvider.createComment(owner, repo, issueNumber, body);
+        isUpdate = false;
+      }
+    } else {
+      body = [
+        "<!-- ai-cost-report-start -->",
+        REPORT_SIGNATURE,
+        "## 💰 AI Usage & Cost Report",
+        "",
+        "| Agent | Model | In Tokens | Out Tokens | Cost (USD) |",
+        "| :--- | :--- | :--- | :--- | :--- |",
+        newRow,
+        `| **Total** | | | | **$${costs.total_cost.toFixed(6)}** |`,
+        "",
+        "_Updated automatically by AI Orchestration_",
+        "---",
+        "<!-- ai-cost-report-end -->",
+      ].join("\n");
+
+      await gitProvider.createComment(owner, repo, issueNumber, body);
+    }
+
+    return {
+      success: true,
+      value: { body, isUpdate, commentId },
+    };
+  } catch (error) {
+    const isPermissionError =
+      error.message?.includes("Resource not accessible") ||
+      error.status === 403 ||
+      error.status === 404;
+
+    if (isPermissionError) {
+      return {
+        success: false,
+        error: `Cost tracking skipped: GITHUB_TOKEN lacks 'issues:write' permissions to post the report.`,
+      };
+    }
+
+    return {
+      success: false,
+      error: `Failed to update cost tracking comment: ${error.message}`,
+    };
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/prompts.json
-const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nPROJECT RULES & CONTEXT:\\n{{project_rules}}\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: Suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan. \\n\\nCRITICAL CONTEXT AWARENESS:\\nBefore creating tasks, review existing code. DO NOT create tasks to define or implement entities, value objects, or use-cases that ALREADY EXIST in the codebase. Only plan for NEW components or MODIFICATIONS to existing ones.\\n\\nDECOMPOSITION & DDD RULES:\\n- **Cohesive Grouping**: Avoid excessive granularity. Group related layers into single actionable tasks if they represent a single logical feature (e.g., \'[Logic] Implement Domain & Use Case for X\', \'[UI] Build Component & BDD acceptance tests for Y\').\\n- **Functional Atomicity**: Steps must be concrete \'Verb-first\' instructions.\\n- **Clean Architecture Flow**: Ensure the plan respects the dependency rule (Domain -> Use Case -> Infrastructure).\\n\\nEach item in the Action Items checklist will be automatically converted into a native GitHub SUB-ISSUE. Ensure titles are concise and actionable.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report. Ensure that EACH item in the Technical Checklist is descriptive and includes specific technical instructions (libraries, patterns, or file paths) as they will become independent sub-tasks.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: standard`\\n- **Milestone**: `Phase 2` \\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` \\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: [Briefly describe the strategy, e.g., extending the domain to support X].\\n\\n**Scope**:\\n- In: [List key additions]\\n- Out: [List exclusions]\\n\\n### 🛠️ Technical Checklist\\n\\n- [ ] [Logic] Implement the `[Component]` domain logic (Use Case X, Entity Y) ensuring adherence to Pattern Z\\n- [ ] [Infra/UI] Build the `[Component]` UI using Lit and Web Awesome, including BDD acceptance tests\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"qU":"You are an Autonomous Developer for the repository \'{{repo}}\'. You strictly adhere to the project standards and architecture described below:\\n\\n{{project_rules}}\\n\\nBefore creating any files, check the surrounding code structure to ensure your changes blend perfectly. You must produce clean, documented code that follows the established standards in the project root.\\n\\nAll file modifications MUST be wrapped in a `<file_changes>` block. Each modification must use the following XML structure:\\n\\n<file_changes>\\n  <file path=\\"path/to/file.ext\\" operation=\\"create|update|delete\\">\\n    <content>\\n      [FULL FILE CONTENT]\\n    </content>\\n  </file>\\n</file_changes>\\n\\nNEVER use markdown diffs or partial code blocks for file changes. ALWAYS provide the full file content for \'create\' and \'update\' operations.","aI":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. Ensure all code passes local linting and tests.","Cw":"I have implemented the requested changes.\\n\\n<file_changes>\\n  <file path=\\"src/example.js\\" operation=\\"create\\">\\n    <content>\\nimport { something } from \\"./utils.js\\";\\n\\nexport const example = () => something();\\n    </content>\\n  </file>\\n</file_changes>"},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
+const prompts_namespaceObject = /*#__PURE__*/JSON.parse('{"lD":{"qU":"You are a Senior Product Manager and Architect for the repository \'{{repo}}\'. Your goal is to TRIAGE and PLAN incoming requests using architectural best practices (Clean Architecture, DDD).\\n\\nPROJECT RULES & CONTEXT:\\n{{project_rules}}\\n\\nTRIAGE MISSION:\\n1. Categorize (type: task, bug, spike).\\n2. Prioritize (priority: critical, standard).\\n3. Identify Blockers: Look for dependencies on other issues.\\n4. Propose Milestone: Select the most appropriate milestone.\\n5. Rate Complexity: Rate implementation complexity as `low`, `medium`, or `high` based on scope and logical depth.\\n6. Recommend Model: Suggest a model from the list below.\\n\\nAVAILABLE MODELS:\\n{{model_registry}}\\n\\nPLANNING MISSION (Skill Aligned):\\nCreate a technical implementation plan. \\n\\nCRITICAL CONTEXT AWARENESS:\\nBefore creating tasks, review existing code. DO NOT create tasks to define or implement entities, value objects, or use-cases that ALREADY EXIST in the codebase. Only plan for NEW components or MODIFICATIONS to existing ones.\\n\\nDECOMPOSITION & DDD RULES:\\n- **Cohesive Grouping**: Avoid excessive granularity. Group related layers into single actionable tasks if they represent a single logical feature (e.g., \'[Logic] Implement Domain & Use Case for X\', \'[UI] Build Component & BDD acceptance tests for Y\').\\n- **Functional Atomicity**: Steps must be concrete \'Verb-first\' instructions.\\n- **Clean Architecture Flow**: Ensure the plan respects the dependency rule (Domain -> Use Case -> Infrastructure).\\n- **Mandatory Validation**: EVERY plan MUST include a final \'[QA/Validation]\' task that explicitly requires running \'npm run check\' and fixing all formatting (oxfmt) or linting (oxlint) errors.\\n\\nEach item in the Action Items checklist will be automatically converted into a native GitHub SUB-ISSUE. Ensure titles are concise and actionable.","aI":"Please TRIAGE and PLAN the following issue:\\n\\nTitle: {{title}}\\n\\nBody:\\n{{body}}\\n\\nGenerate a skill-aligned planning report. Ensure that EACH item in the Technical Checklist is descriptive and includes specific technical instructions (libraries, patterns, or file paths) as they will become independent sub-tasks.","Cw":"🤖 **AI Triage & Planning Report**:\\n\\n<!-- ai-triage-start -->\\n### 📋 Triage\\n- **Type**: `type: task`\\n- **Priority**: `priority: standard`\\n- **Milestone**: `Phase 2` \\n- **Complexity**: `medium`\\n- **Recommended Model**: `gemini-2.0-flash` \\n<!-- ai-triage-end -->\\n\\n### 🎯 Plan Overview\\n**Approach**: [Briefly describe the strategy, e.g., extending the domain to support X].\\n\\n**Scope**:\\n- In: [List key additions]\\n- Out: [List exclusions]\\n\\n### 🛠️ Technical Checklist\\n\\n- [ ] [Logic] Implement the `[Component]` domain logic (Use Case X, Entity Y) ensuring adherence to Pattern Z\\n- [ ] [Infra/UI] Build the `[Component]` UI using Lit and Web Awesome, including BDD acceptance tests\\n- [ ] [QA/Validation] Run `npm run check` and fix all formatting (oxfmt) and linting (oxlint) errors before submitting\\n\\nIf approved, label this issue `ready-for-dev`."},"PD":{"qU":"You are an Autonomous Developer for the repository \'{{repo}}\'. You focus PURELY on code implementation using Clean Architecture.\\n\\n{{project_rules}}\\n\\nSTRICT STANDARDS ADHERENCE:\\n- **No Shell Access**: You do NOT have access to the shell. Focus exclusively on reading and editing files.\\n- **Orchestrated Validation**: The orchestrator will run all tests and linters for you. If something fails, you will receive the output in the next turn.\\n- **Direct Tool Usage**: Use your file tools (`replace`, `write_file`, `serena`) DIRECTLY. No XML blocks needed if tools are used.\\n- **Efficiency**: Combine searches and reads. Aim to finish the implementation in the minimum number of steps.\\n\\nYour mission: Implement the requested logic, ensuring Clean Architecture layers are respected. When you are confident in your changes, signal completion.","aI":"Implement the following plan found in the issue thread:\\n\\n{{context}}\\n\\nFollow the project\'s established standards and architecture. You MUST run \'npm run format\' and \'npm run lint\' and ensure they pass before finishing. If this is a re-implementation based on a previous failure, analyze the provided feedback carefully and fix the underlying cause.","Cw":"I have implemented the requested changes and verified they pass all project standards.\\n\\n<file_changes>\\n  <file path=\\"src/example.js\\" operation=\\"create\\">\\n    <content>\\nimport { something } from \\"./utils.js\\";\\n\\nexport const example = () => something();\\n    </content>\\n  </file>\\n</file_changes>"},"Yc":{"q":"You are a Senior Architect reviewing a Pull Request for the repository \'{{repo}}\'. You focus on architectural integrity, decoupling, security, and overall code quality.\\n\\nYou MAY use read-only tools (like serena or read_file) if you need more context from the existing codebase to provide a better review. However, be CAREFUL not to attempt tool calls on malformed paths you might see in lock files or raw diffs. Your output should only be text feedback.","a":"Review the following changes for adherence to the project\'s architecture and standards:\\n\\n{{diff}}\\n\\nCheck for:\\n1. Adherence to the project\'s established patterns.\\n2. Clean separation of concerns.\\n3. Presence of comprehensive tests.\\n\\nREMINDER: You can use symbolic tools to explore the codebase if needed, but do not attempt to modify any files."}}');
+;// CONCATENATED MODULE: ./src/use-cases/implement-issue/main.js
+
+
+
+
+
+/**
+ * AI Developer logic to implement a task.
+ */
+async function implementIssue({
+  repo,
+  issueNumber,
+  context,
+  aiProvider,
+  model,
+  customSystemPrompt,
+  customUserPrompt,
+  maxInputTokens = 200000,
+  maxOutputTokens = 200000,
+  onStart = (_args) => {},
+}) {
+  const system = customSystemPrompt || prompts_namespaceObject.PD.qU;
+  const userTemplate = customUserPrompt || prompts_namespaceObject.PD.aI;
+
+  // Rule Discovery
+  let projectRules = "Follow standard Clean Architecture and project conventions.";
+  const rulePaths = [
+    ".agent/RULES.md",
+    "RULES.md",
+    "GEMINI.md",
+    ".serena/memories/serena-workflow.md",
+  ];
+  for (const rulePath of rulePaths) {
+    const fullPath = external_node_path_namespaceObject.resolve(process.cwd(), rulePath);
+    if (external_node_fs_namespaceObject.existsSync(fullPath)) {
+      projectRules = external_node_fs_namespaceObject.readFileSync(fullPath, "utf-8");
+      break;
+    }
+  }
+
+  const systemPrompt = system.replace("{{repo}}", repo).replace("{{project_rules}}", projectRules);
+  let userPrompt = userTemplate.replace("{{context}}", context);
+
+  // Ensure AI follows the response structure with markers
+  if (prompts_namespaceObject.PD.Cw) {
+    userPrompt += `\n\n### RESPONSE STRUCTURE (STRICT):\n${prompts_namespaceObject.PD.Cw}`;
+  }
+
+  onStart({ systemPrompt, userPrompt });
+
+  // Input Safety Check
+  const estimatedInputTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
+  if (estimatedInputTokens > maxInputTokens) {
+    return {
+      success: false,
+      error: `Input context too large: ${estimatedInputTokens} tokens (limit: ${maxInputTokens}).`,
+    };
+  }
+
+  // Call AI
+  const generatedResponse = await aiProvider.generateContent(
+    model,
+    systemPrompt,
+    userPrompt,
+    maxOutputTokens,
+  );
+
+  const response = generatedResponse.text;
+  const usage = generatedResponse.usage;
+
+  const costResult = calculateCost(model, usage);
+  const costs = costResult.value;
+
+  return {
+    success: true,
+    value: {
+      branch: `feat/issue-${issueNumber}`,
+      response,
+      systemPrompt,
+      userPrompt,
+      usage,
+      costs,
+    },
+  };
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/implement-issue/DeveloperWorkflow.js
+
+
+
+
+
+
+
+/**
+ * Orchestrates the developer workflow for an issue.
+ *
+ * @param {object} params
+ * @param {import('../../domain/ports/ICIProvider.js').ICIProvider} params.ciProvider
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
+ * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
+ * @param {import('../../domain/ports/IGitClient.js').IGitClient} params.gitClient
+ * @param {any} params.fileExecutor - The file executor service (injected)
+ * @param {string} params.model
+ * @param {string} params.owner
+ * @param {string} params.repo
+ * @param {any} params.payload
+ * @param {number} params.maxInputTokens
+ * @param {number} params.maxOutputTokens
+ * @param {boolean} params.simulationMode
+ * @param {boolean} params.useMock
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} [params.privilegedGitProvider] - Privileged provider (PAT) for PR creation.
+ * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
+ */
+async function DeveloperWorkflow({
+  ciProvider,
+  gitProvider,
+  aiProvider,
+  gitClient,
+  fileExecutor,
+  model,
+  owner,
+  repo,
+  payload,
+  maxInputTokens,
+  maxOutputTokens,
+  simulationMode,
+  useMock,
+  privilegedGitProvider,
+}) {
+  try {
+    const manualIssueNumber = ciProvider.getInput("issue_number");
+    const issueNumber = manualIssueNumber
+      ? parseInt(manualIssueNumber, 10)
+      : payload.issue?.number || payload.pull_request?.number;
+
+    let context = payload.comment?.body || payload.issue?.body || "";
+    context = cleanCommentBody(context);
+
+    let issueTitle = payload.issue?.title || "";
+    let prBranch = null;
+    let issue = null;
+    let standardComments = [];
+    let reviewComments = [];
+    let reviewSummaries = [];
+
+    if (issueNumber) {
+      try {
+        issue = await gitProvider.getIssue(owner, repo, issueNumber);
+        issueTitle = issue.title || issueTitle;
+
+        let linkedPullNumber = issue.pull_request ? issueNumber : null;
+
+        // If it's a PR, get the branch name
+        if (issue.pull_request) {
+          try {
+            const prMetadata = await gitProvider.getPullRequestMetadata(owner, repo, issueNumber);
+            prBranch = prMetadata.head?.ref;
+            if (prBranch) {
+              ciProvider.info(`[Developer] Detected PR branch: ${prBranch}`);
+            }
+          } catch (prErr) {
+            ciProvider.warning(`Failed to fetch PR metadata: ${prErr.message}`);
+          }
+        } else {
+          // Check if there is a PR for the expected branch
+          const expectedBranch = `feat/issue-${issueNumber}`;
+          try {
+            const prs = await gitProvider.listPullRequests(owner, repo, {
+              head: `${owner}:${expectedBranch}`,
+              state: "open",
+            });
+            if (prs.length > 0) {
+              const pr = prs[0];
+              prBranch = pr.head?.ref;
+              linkedPullNumber = pr.number;
+              ciProvider.info(
+                `Found linked PR #${linkedPullNumber} for branch ${prBranch}. Including PR context for reviews.`,
+              );
+            }
+          } catch (err) {
+            ciProvider.info(`PR search by branch failed: ${err.message}`);
+          }
+        }
+
+        ciProvider.info(`Fetching comments for issue #${issueNumber} to build full context...`);
+        const commentsList = await gitProvider.listComments(owner, repo, issueNumber);
+        const filteredComments = commentsList.filter((c) => !isAIReport(c.body || ""));
+
+        // If there are too many comments, only take the last 10 to keep context small
+        const maxComments = 10;
+        const recentComments =
+          filteredComments.length > maxComments
+            ? filteredComments.slice(-maxComments)
+            : filteredComments;
+
+        if (filteredComments.length > maxComments) {
+          ciProvider.info(
+            `[Developer] Too many comments (${filteredComments.length}). Truncating to last ${maxComments} for context stability.`,
+          );
+        }
+
+        standardComments = recentComments
+          .map((c) => {
+            const cleanBody = cleanCommentBody(c.body || "");
+            return cleanBody ? `[Comment by ${c.user?.login || "unknown"}]:\n${cleanBody}` : null;
+          })
+          .filter(Boolean);
+        ciProvider.info(`Found ${standardComments.length} standard comments.`);
+
+        // Fetch Review Comments if it's a PR (Reviewer feedback on specific lines)
+
+        // Try to fetch reviews if it's a PR or if we found a linked one
+        if (linkedPullNumber) {
+          try {
+            ciProvider.info(`Fetching review comments for PR #${linkedPullNumber}...`);
+            const reviews = await gitProvider.listReviewComments(owner, repo, linkedPullNumber);
+            reviewComments = reviews
+              .map((c) => {
+                const body = c.body || "";
+                if (isAIReport(body)) return null;
+
+                const cleanBody = cleanCommentBody(body);
+                return cleanBody
+                  ? `[Review Comment on ${c.path} L${c.line} by ${c.user?.login || "unknown"}]:\n${cleanBody}`
+                  : null;
+              })
+              .filter(Boolean);
+            ciProvider.info(`Found ${reviewComments.length} review comments.`);
+          } catch (err) {
+            ciProvider.info(`No review comments found or not a PR: ${err.message}`);
+          }
+
+          // Fetch Review Summaries (APPROVE/REQUEST_CHANGES top-level bodies)
+          try {
+            ciProvider.info(`Fetching review summaries for #${issueNumber}...`);
+            const reviews = await gitProvider.listReviews(owner, repo, issueNumber);
+            reviewSummaries = reviews
+              .map((r) => {
+                const body = r.body || "";
+                if (isAIReport(body)) return null;
+
+                const cleanBody = cleanCommentBody(body);
+                return cleanBody
+                  ? `[Review Summary (${r.state}) by ${r.user?.login || "unknown"}]:\n${cleanBody}`
+                  : null;
+              })
+              .filter(Boolean);
+            ciProvider.info(`Found ${reviewSummaries.length} review summaries.`);
+          } catch (err) {
+            ciProvider.info(`No review summaries found or not a PR: ${err.message}`);
+          }
+        }
+      } catch (err) {
+        ciProvider.warning(`Failed to fetch full issue context: ${err.message}`);
+      }
+    }
+
+    const allCommentsText = [...standardComments, ...reviewSummaries, ...reviewComments].join(
+      "\n\n---\n\n",
+    );
+
+    const cleanIssueBody = cleanCommentBody(issue?.body || "");
+
+    let parentContext = "";
+    const parentMatch = issue?.body?.match(/Sub-task of #(\d+)/i);
+    if (parentMatch) {
+      const parentId = parseInt(parentMatch[1], 10);
+      try {
+        ciProvider.info(
+          `[Developer] Detected sub-task. Bridging parent context from #${parentId}...`,
+        );
+        const parentIssue = await gitProvider.getIssue(owner, repo, parentId);
+        const cleanParentBody = cleanCommentBody(parentIssue.body || "");
+        parentContext = `\n\n--- PARENT MASTER PLAN (#${parentId}) ---\n${cleanParentBody}\n`;
+      } catch (err) {
+        ciProvider.warning(`Failed to fetch parent issue #${parentId}: ${err.message}`);
+      }
+    }
+
+    context = `Issue Description:\n${cleanIssueBody}${parentContext}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
+
+    if (!issueNumber) {
+      return {
+        success: false,
+        error: "Could not determine issue or PR number from GitHub context for developer.",
+      };
+    }
+
+    // Blocker Check (Algorithm 7.5)
+    const readinessResult = await checkTaskReadiness(
+      gitProvider,
+      { owner, repo, issueNumber },
+      ({ issueNumber: num }) => {
+        ciProvider.info(`[Selector] Checking readiness for issue #${num}...`);
+      },
+      ({ message }) => {
+        ciProvider.info(`[Selector] ${message}`);
+      },
+    );
+
+    if (!readinessResult.success) {
+      return readinessResult;
+    }
+
+    if (!readinessResult.value.ready) {
+      ciProvider.warning(`Skipping task #${issueNumber}: ${readinessResult.value.reason}`);
+      return {
+        success: true,
+        value: { skipped: true, reason: readinessResult.value.reason },
+      };
+    }
+
+    if (readinessResult.value.warning) {
+      ciProvider.info(`[Selector] ${readinessResult.value.warning}`);
+    } else {
+      ciProvider.info(`[Selector] Issue #${issueNumber} is READY.`);
+    }
+
+    // Configurable git author
+    const gitAuthorName = ciProvider.getInput("git_author_name") || "github-actions[bot]";
+    const gitAuthorEmail =
+      ciProvider.getInput("git_author_email") || "github-actions[bot]@users.noreply.github.com";
+
+    // Branch management: checkout existing branch and rebase on main
+    if (!useMock) {
+      const devBranchName = prBranch || `feat/issue-${issueNumber}`;
+      gitClient.configAuthor(gitAuthorName, gitAuthorEmail);
+
+      ciProvider.info("Fetching latest main and refreshing state...");
+      // Ensure we have the latest main to rebase or branch from
+      try {
+        gitClient.fetch("origin", "main");
+      } catch (err) {
+        ciProvider.warning(`Git fetch failed: ${err.message}. Proceeding with local main.`);
+      }
+
+      const branchExists = gitClient.branchExistsRemotely(devBranchName);
+
+      if (branchExists) {
+        ciProvider.info(
+          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on origin/main...`,
+        );
+        gitClient.checkout(devBranchName, false);
+        const rebaseResult = gitClient.rebase("origin/main");
+        if (rebaseResult.success) {
+          ciProvider.info("Rebase on origin/main successful.");
+        } else {
+          ciProvider.warning(
+            "Rebase failed (conflicts). Staying on branch as-is to preserve prior work.",
+          );
+          gitClient.abortRebase();
+        }
+      } else {
+        ciProvider.info(`Branch "${devBranchName}" does not exist remotely. Creating from main.`);
+        // Ensure we are on main
+        try {
+          gitClient.checkout("main");
+        } catch {
+          // Fallback if main doesn't exist locally
+          external_node_child_process_.execSync("git checkout -b main origin/main", { stdio: "inherit" });
+        }
+        gitClient.checkout(devBranchName, true /* create */);
+      }
+
+      // Final Environment Prep: Ensure dependencies are up to date before AI starts
+      ciProvider.info("Ensuring dependencies are synchronized (npm install)...");
+      try {
+        const { execSync } = await Promise.resolve(/* import() */).then(__nccwpck_require__.t.bind(__nccwpck_require__, 1421, 19));
+        execSync("npm install --silent", { stdio: "inherit" });
+      } catch (err) {
+        ciProvider.warning(
+          `npm install failed: ${err.message}. AI will proceed with current node_modules.`,
+        );
+      }
+    }
+
+    const customSystemPrompt = ciProvider.getInput("developer_system_prompt");
+    const customUserPrompt = ciProvider.getInput("developer_user_prompt");
+
+    let iteration = 0;
+    const maxIterations = 5;
+    let currentContext = context;
+    let verifySuccess = false;
+
+    while (iteration < maxIterations) {
+      iteration++;
+      const logPrefix = simulationMode ? "SIMULATION" : "EXECUTION";
+      const iterSuffix = maxIterations > 1 ? ` (Iteration ${iteration}/${maxIterations})` : "";
+
+      const result = await implementIssue({
+        aiProvider,
+        model,
+        repo,
+        issueNumber,
+        context: currentContext,
+        customSystemPrompt,
+        customUserPrompt,
+        maxInputTokens,
+        maxOutputTokens,
+        onStart: ({ systemPrompt, userPrompt }) => {
+          ciProvider.info(`--- AI ${logPrefix} (DEVELOPER)${iterSuffix} ---`);
+          ciProvider.info(`Issue/PR: #${issueNumber} in ${owner}/${repo}`);
+          ciProvider.info(`SYSTEM PROMPT:\n${systemPrompt}`);
+          ciProvider.info(`USER PROMPT:\n${userPrompt}`);
+          ciProvider.info("---------------------------------------");
+        },
+      });
+
+      if (!result.success) {
+        return result;
+      }
+
+      const { usage, response } = result.value;
+      const costResult = calculateCost(model, usage);
+      const costs = costResult.value;
+      ciProvider.info(
+        `[Cost] AI Developer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
+      );
+
+      ciProvider.info(`REAL RESPONSE:\n${response}`);
+      ciProvider.info(`REAL USAGE: ${JSON.stringify(usage, null, 2)}`);
+      ciProvider.info(`ESTIMATED API COST: $${costs.total_cost} ${costs.currency}`);
+      ciProvider.info("---------------------------------------");
+
+      if (!simulationMode && !useMock) {
+        await trackCostReport(gitProvider, {
+          owner,
+          repo,
+          issueNumber,
+          agent: "AI Developer",
+          provider: "gemini", // assuming gemini for now based on context
+          model,
+          usage,
+        });
+      }
+
+      // Execute file changes autonomously
+      ciProvider.info("[FileExecutor] Searching for file changes in AI response...");
+      const changesCount = await fileExecutor.execute(response, ciProvider);
+      if (changesCount > 0) {
+        ciProvider.info(`[FileExecutor] Successfully applied ${changesCount} file changes.`);
+        if (gitClient && !simulationMode) {
+          ciProvider.info("[Developer] Running auto-fix (format & lint:fix)... ");
+          gitClient.fix();
+        }
+      }
+
+      // Verification logic
+      ciProvider.info(`Verification step${iterSuffix}: running linters and tests...`);
+      if (gitClient) {
+        const verification = gitClient.runVerification();
+        verifySuccess = verification.success;
+
+        if (verifySuccess) {
+          ciProvider.info("Verification successful!");
+          break;
+        }
+
+        ciProvider.warning(`Verification failed${iterSuffix}. Output:\n${verification.output}`);
+
+        if (iteration < maxIterations) {
+          ciProvider.info("Feeding errors back to AI for next iteration...");
+          currentContext = `${context}\n\n### Previous Attempt Feedback:\n${verification.output}\n\nPlease fix the errors above and provide the corrected code.`;
+        } else {
+          ciProvider.error("Max iterations reached. Verification still failing.");
+        }
+      } else {
+        verifySuccess = true; // No git client, assume success (e.g. simulation without git)
+        break;
+      }
+    }
+
+    if (gitClient) {
+      try {
+        if (gitClient.hasChanges()) {
+          ciProvider.info("Changes detected. Proceeding to commit...");
+
+          const branchName = prBranch || `feat/issue-${issueNumber}`;
+
+          // Commit message: describe work done + reference the issue
+          const safeTitle = issueTitle
+            ? issueTitle
+                .toLowerCase()
+                .replace(/[^a-z0-9 ]/g, "")
+                .trim()
+            : `implement issue #${issueNumber}`;
+
+          const commitMsg = verifySuccess
+            ? `feat: ${safeTitle} (#${issueNumber})`
+            : `chore(ai): backup failing code for #${issueNumber} [skip ci]`;
+
+          // Ensure we are on the task branch
+          const currentBranch = gitClient.getCurrentBranch();
+          if (currentBranch !== branchName) {
+            gitClient.checkout(branchName, true /* create */);
+          }
+
+          gitClient.stageAll();
+
+          // Squash all branch commits into a single commit
+          try {
+            gitClient.squashOnto("main");
+            gitClient.commit(commitMsg, true /* skipVerify */);
+          } catch {
+            // Fallback: normal commit if squash fails
+            gitClient.commit(commitMsg, true /* skipVerify */);
+          }
+
+          gitClient.pushForce(branchName);
+
+          if (verifySuccess) {
+            ciProvider.info(`Creating PR for issue #${issueNumber}`);
+
+            // Use privileged provider if available to trigger other workflows (like AI Reviewer)
+            const prProvider = privilegedGitProvider || gitProvider;
+
+            await prProvider.createPullRequest(
+              owner,
+              repo,
+              commitMsg,
+              branchName,
+              "main",
+              `Resolves #${issueNumber}`,
+            );
+            ciProvider.info(`Successfully created Pull Request for issue #${issueNumber}`);
+          } else {
+            ciProvider.info(
+              `Verification failed. Code pushed to branch ${branchName} for manual review.`,
+            );
+          }
+        } else {
+          ciProvider.info("No changes to verify or commit.");
+        }
+      } catch (err) {
+        ciProvider.warning("Git or PR operations failed: " + err.message);
+      }
+    } else {
+      ciProvider.info(
+        `[Simulation Mode] Skipping test execution, branching, and PR creation for #${issueNumber}.`,
+      );
+    }
+
+    return { success: true, value: { issueNumber, verifySuccess } };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/batch-triage/main.js
+
+
+/**
+ * Use Case: Triage all open issues that are not yet in the Project Board.
+ * @param {object} params
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
+ * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
+ * @param {string} params.model
+ * @param {string} params.owner
+ * @param {string} params.repo
+ * @param {string} params.projectId
+ * @param {(status: {message: string, [key: string]: any}) => void} [params.onStatus]
+ */
+async function batchTriage({
+  gitProvider,
+  projectManager,
+  aiProvider,
+  model,
+  owner,
+  repo,
+  projectId,
+  onStatus = () => {},
+}) {
+  try {
+    // 1. Fetch all open issues
+    onStatus({ message: "Fetching all open issues from repository..." });
+    const allIssues = await gitProvider.listIssues(owner, repo, { state: "open" });
+
+    // 2. Fetch current project items to identify what's missing or incomplete
+    onStatus({ message: "Fetching current project board items..." });
+    const projectItems = await projectManager.getProjectItems(projectId, owner);
+
+    // Check available fields in the board
+    const availableFields = projectItems.length > 0 ? Object.keys(projectItems[0].fields) : [];
+    const hasPhaseField = availableFields.includes("Phase");
+    const hasPriorityField = availableFields.includes("Priority");
+
+    // An issue needs triage if:
+    // a) It's not in the board at all.
+    // b) It's in the board but missing Priority (if the field exists).
+    const issuesInBoard = new Set(projectItems.map((i) => i.number));
+    const incompleteItems = projectItems
+      .filter((item) => {
+        // If we have a priority field, it must be filled.
+        const isMissingPriority = hasPriorityField && !item.fields.Priority;
+        // Phase is optional now (can be mapped to Milestone)
+        const isMissingPhase = hasPhaseField && !item.fields.Phase;
+
+        const isMissing = isMissingPriority || isMissingPhase;
+
+        if (isMissing && item.number) {
+          onStatus({
+            message: `[Debug] Issue #${item.number} is missing fields: Priority(${!item.fields.Priority}), Phase(${!item.fields.Phase})`,
+          });
+        }
+        return isMissing;
+      })
+      .map((i) => i.number);
+
+    const untriagedIssues = allIssues.filter((i) => {
+      const notInBoard = !issuesInBoard.has(i.number);
+      const incomplete = incompleteItems.includes(i.number);
+      return notInBoard || incomplete;
+    });
+
+    if (untriagedIssues.length === 0) {
+      return { success: true, value: { count: 0, message: "Backlog is already fully triaged." } };
+    }
+
+    onStatus({ message: `Found ${untriagedIssues.length} issues to triage.` });
+
+    let triagedCount = 0;
+    for (const issue of untriagedIssues) {
+      onStatus({ message: `Processing issue #${issue.number}: ${issue.title}...` });
+
+      // 3. Check for existing reports in comments first
+      const comments = await gitProvider.listComments(owner, repo, issue.number);
+      let existingTriage = null;
+
+      for (const comment of comments) {
+        if (isAIReport(comment.body)) {
+          const phaseMatch =
+            comment.body.match(/-\s\*\*Phase\*\*:\s`?(Phase\s\d+)`?/i) ||
+            comment.body.match(/-\s\*\*Milestone\*\*:\s`?(Phase\s\d+)`?/i);
+          const priorityMatch = comment.body.match(
+            /-\s\*\*Priority\*\*:\s`?(P[0-2]|priority:\s\w+)`?/i,
+          );
+
+          if (phaseMatch || priorityMatch) {
+            existingTriage = {
+              phase: phaseMatch ? phaseMatch[1] : "Phase 1",
+              priority: priorityMatch ? priorityMatch[1].replace("priority: ", "") : "standard",
+            };
+            onStatus({
+              message: `[Config] Found existing triage report for #${issue.number}. Skipping AI call.`,
+            });
+            break;
+          }
+        }
+      }
+
+      let triage = existingTriage;
+
+      if (!triage) {
+        onStatus({ message: `Triaging issue #${issue.number} via AI...` });
+        // Ask AI for Triage (Phase & Priority)
+        const prompt = `Analyze this GitHub issue and suggest a Phase (Phase 1, Phase 2, Phase 3, Phase 4) and a Priority (P0, P1, P2) based on its title and body.
+
+        Issue #${issue.number}: ${issue.title}
+        Body: ${issue.body || "No description provided."}
+
+        Respond only with a JSON object: { "phase": "Phase X", "priority": "PY" }`;
+
+        const aiResponse = await aiProvider.generateContent(
+          model,
+          "You are a Project Manager bot. Analyze issues for triage.",
+          prompt,
+        );
+
+        try {
+          const match = aiResponse.text.match(/\{.*\}/s);
+          if (!match) throw new Error("AI response did not contain a valid JSON block.");
+          triage = JSON.parse(match[0]);
+        } catch (err) {
+          console.error(`Failed to parse AI triage for #${issue.number}: ${err.message}`);
+          continue;
+        }
+      }
+
+      try {
+        // 4. Add to Project Board
+        const itemId = await projectManager.addItemToProject(projectId, issue.node_id, owner);
+
+        // 5. Update Custom Fields (only if they exist in the board)
+        if (hasPhaseField) {
+          await projectManager.updateCustomField(projectId, itemId, "Phase", triage.phase, owner);
+        }
+
+        if (hasPriorityField) {
+          await projectManager.updateCustomField(
+            projectId,
+            itemId,
+            "Priority",
+            triage.priority,
+            owner,
+          );
+        }
+
+        // 6. Update GitHub native Milestone if applicable (extract number from Phase)
+        if (triage.phase) {
+          const milestoneNumber = parseInt(triage.phase.match(/\d+/)?.[0] || "1", 10);
+          try {
+            await gitProvider.updateMilestone(owner, repo, issue.number, milestoneNumber);
+          } catch {
+            // Milestone might not exist or other API error, skip silently
+          }
+        }
+
+        // Set initial status to Backlog
+        await projectManager.updateItemStatus(projectId, itemId, "Backlog", owner);
+
+        triagedCount++;
+      } catch (err) {
+        console.error(`Failed to link issue #${issue.number} to board: ${err.message}`);
+      }
+    }
+
+    return {
+      success: true,
+      value: { count: triagedCount, message: `Successfully triaged ${triagedCount} issues.` },
+    };
+  } catch (error) {
+    return { success: false, error: `Batch triage failed: ${error.message}` };
+  }
+}
+
+;// CONCATENATED MODULE: ./src/domain/entities/ProjectTask.js
+/**
+ * Domain Entity representing a task within a Project Board.
+ */
+class ProjectTask {
+  constructor(data) {
+    const { id, number, title, status, phase, priority, type = "Issue", fields } = data;
+    this.id = id;
+    this.number = number;
+    this.title = title;
+    this.status = status || fields?.Status || "";
+    this.phase = phase || fields?.Phase || "";
+    this.priority = priority || fields?.Priority || "";
+    this.type = type;
+  }
+
+  /**
+   * Determines if the task is currently active (being worked on or reviewed).
+   */
+  isActive() {
+    return ["In progress", "In review"].includes(this.status);
+  }
+
+  /**
+   * Determines if the task is ready to be picked up.
+   */
+  isSelectable() {
+    return this.status === "Ready";
+  }
+
+  /**
+   * Calculates a numeric priority score for sorting.
+   * Lower score = Higher priority.
+   */
+  getPriorityScore() {
+    const phaseMap = { "Phase 1": 1, "Phase 2": 2, "Phase 3": 3, "Phase 4": 4 };
+    const priorityMap = { P0: 0, P1: 1, P2: 2 };
+
+    // If phase is missing, it's untriaged, put it at the end (very high score)
+    const phaseScore = phaseMap[this.phase] || 100;
+
+    // Priority score: P0 (0) should be lower than P1 (1)
+    const priorityScore = priorityMap[this.priority] ?? 10;
+
+    // Phase is the primary tie-breaker, then priority.
+    // Phase 1 P0 = 1 * 1000 + 0 = 1000
+    // Phase 1 P1 = 1 * 1000 + 1 = 1001
+    // Untriaged = 100 * 1000 + 10 = 100010
+    return phaseScore * 1000 + priorityScore;
+  }
+}
+
+;// CONCATENATED MODULE: ./src/domain/entities/Project.js
+
+
+/**
+ * Aggregate Root representing a Project Board.
+ */
+class Project {
+  constructor({ id, tasks = [], wipLimit = 5 }) {
+    this.id = id;
+    this.tasks = tasks.map((t) => (t instanceof ProjectTask ? t : new ProjectTask(t)));
+    this.wipLimit = wipLimit; // Default limit per active column
+  }
+
+  /**
+   * Returns the count of tasks in a specific column.
+   */
+  getColumnCount(status) {
+    return this.tasks.filter((t) => t.status === status).length;
+  }
+
+  /**
+   * Returns true if a specific column has capacity.
+   */
+  hasColumnCapacity(status) {
+    return this.getColumnCount(status) < this.wipLimit;
+  }
+
+  /**
+   * Implements the core Right-to-Left selection algorithm with per-column WIP guards.
+   */
+  selectNextTask() {
+    // 1. Priority: Review (Closing work is top priority)
+    const reviewTasks = this.tasks
+      .filter((t) => t.status === "In review")
+      .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
+
+    // We prioritize tasks that are already in review regardless of the column capacity,
+    // because addressing feedback helps move items to 'Done'.
+    if (reviewTasks.length > 0) {
+      return reviewTasks[0];
+    }
+
+    // 2. Priority: Ready tasks (Phase > Priority) -> Transition to 'In progress'
+    // Check if 'In progress' column has capacity before selecting a new task.
+    if (this.hasColumnCapacity("In progress")) {
+      const readyTasks = this.tasks
+        .filter((t) => t.isSelectable())
+        .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
+
+      return readyTasks[0] || null;
+    }
+
+    return null;
+  }
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/select-next-task/main.js
+
+
+/**
+ * Use Case: Select the most appropriate next task based on Kanban priority.
+ *
+ * @param {object} dependencies
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} dependencies.projectManager
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} dependencies.gitProvider
+ * @param {string} dependencies.owner
+ * @param {string} dependencies.repo
+ * @param {string} dependencies.projectId
+ * @param {number} [dependencies.wipLimit=5]
+ * @param {(status: {message: string, [key: string]: any}) => void} [dependencies.onStatus]
+ * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
+ */
+async function selectNextTask({
+  projectManager,
+  gitProvider,
+  owner,
+  repo,
+  projectId,
+  wipLimit = 5,
+  onStatus = () => {},
+}) {
+  if (!owner || !repo || !projectManager) {
+    return { success: false, error: "Missing required dependencies for task selection." };
+  }
+  try {
+    // 1. Fetch current board state
+    onStatus({ message: "Fetching current project board items..." });
+    const rawItems = await projectManager.getProjectItems(projectId, owner);
+
+    // 2. Auto-Unblock Analysis: Check sub-tasks for Blocked items
+    const updatedRawItems = [];
+    for (const item of rawItems) {
+      if (item.fields.Status === "Blocked" && item.number) {
+        try {
+          onStatus({ message: `Analyzing dependencies for blocked task #${item.number}...` });
+          const subIssues = await gitProvider.listSubIssues(owner, repo, item.number);
+
+          if (subIssues.length > 0 && subIssues.every((s) => s.state === "closed")) {
+            onStatus({ message: `All sub-tasks for #${item.number} are closed. Unblocking...` });
+            await projectManager.updateItemStatus(projectId, item.id, "Ready", owner);
+            // Create a new item object with updated status to maintain immutability
+            updatedRawItems.push({
+              ...item,
+              fields: { ...item.fields, Status: "Ready" },
+            });
+            continue;
+          }
+        } catch (err) {
+          console.error(`Failed to analyze dependencies for #${item.number}: ${err.message}`);
+        }
+      }
+      updatedRawItems.push(item);
+    }
+
+    // 3. Hydrate Domain Entity
+    const project = new Project({
+      id: projectId,
+      tasks: updatedRawItems,
+      wipLimit,
+    });
+
+    // 4. Execute Selection Logic (Right-to-Left)
+    const selectedTask = project.selectNextTask();
+
+    // 5. Identify External Blockers (Blocked status with no sub-tasks or dependencies)
+    const externallyBlocked = updatedRawItems.filter(
+      (i) => i.fields.Status === "Blocked" && i.type === "Issue",
+    );
+
+    if (!selectedTask) {
+      let reason = "No selectable tasks found in the 'Ready' or 'In review' columns.";
+
+      if (!project.hasColumnCapacity("In review")) {
+        reason =
+          "WIP Limit reached for 'In review' column. Finish reviews before processing more feedback.";
+      } else if (!project.hasColumnCapacity("In progress")) {
+        reason =
+          "WIP Limit reached for 'In progress' column. Finish current tasks before starting new ones.";
+      }
+
+      return {
+        success: true,
+        value: {
+          selected: false,
+          externallyBlocked,
+          reason,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      value: {
+        selected: true,
+        task: selectedTask,
+        externallyBlocked,
+        inProgressWIP: project.getColumnCount("In progress"),
+        inReviewWIP: project.getColumnCount("In review"),
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to select next task: ${error.message}`,
+    };
+  }
+}
+
+;// CONCATENATED MODULE: ./src/use-cases/orchestrate/OrchestratorWorkflow.js
+
+
+
+/**
+ * Use Case: Master Orchestrator Workflow
+ * Unifies Batch Triage and Task Selection.
+ *
+ * @param {object} params
+ * @param {import('../../domain/ports/ICIProvider.js').ICIProvider} params.ciProvider
+ * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
+ * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
+ * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
+ * @param {string} params.model
+ * @param {string} params.owner
+ * @param {string} params.repo
+ * @param {string} params.projectId
+ * @param {boolean} [params.simulationMode]
+ * @param {number} [params.wipLimit=5]
+ * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
+ */
+async function OrchestratorWorkflow({
+  ciProvider,
+  gitProvider,
+  projectManager,
+  aiProvider,
+  model,
+  owner,
+  repo,
+  projectId,
+  simulationMode,
+  wipLimit = 5,
+}) {
+  const isSimulation = simulationMode;
+
+  ciProvider.info(`[Debug] Received projectId: "${projectId}"`);
+
+  if (!projectId) {
+    if (isSimulation) {
+      projectId = "SIMULATION_PROJECT_ID";
+      ciProvider.info("[Simulation] Using dummy projectId for dry-run.");
+    } else {
+      return {
+        success: false,
+        error:
+          "Missing projectId for Orchestrator workflow. Please provide 'project_id' input or set PROJECT_ID environment variable.",
+      };
+    }
+  }
+
+  try {
+    ciProvider.info("--- AI ORCHESTRATOR: Phase 1 - Batch Triage ---");
+    const triageResult = await batchTriage({
+      gitProvider,
+      projectManager,
+      aiProvider,
+      model,
+      owner,
+      repo,
+      projectId,
+      onStatus: (st) => ciProvider.info(st.message),
+    });
+
+    if (!triageResult.success) {
+      ciProvider.warning(`Batch Triage failed: ${triageResult.error}`);
+    } else {
+      ciProvider.info(triageResult.value.message);
+    }
+
+    ciProvider.info("\n--- AI ORCHESTRATOR: Phase 2 - Task Selection ---");
+    const selectionResult = await selectNextTask({
+      projectManager,
+      gitProvider,
+      owner,
+      repo,
+      projectId,
+      wipLimit,
+      onStatus: (st) => ciProvider.info(st.message),
+    });
+
+    if (!selectionResult.success) {
+      return selectionResult;
+    }
+
+    const { selected, task, reason, externallyBlocked } = selectionResult.value;
+
+    if (selected) {
+      ciProvider.info(`🎯 Selected Next Task: #${task.number} - ${task.title}`);
+      ciProvider.info(
+        `   Priority Score: ${task.getPriorityScore()} (Phase: ${task.phase}, Priority: ${task.priority})`,
+      );
+
+      // Transition to In Progress if not already there
+      if (task.status !== "In progress" && !isSimulation) {
+        try {
+          ciProvider.info(`🔄 Transitioning task #${task.number} to 'In progress'...`);
+          await projectManager.updateItemStatus(projectId, task.id, "In progress", owner);
+        } catch (err) {
+          ciProvider.warning(`Failed to update task status to 'In progress': ${err.message}`);
+        }
+      } else if (isSimulation) {
+        ciProvider.info(`[Simulation] Would transition task #${task.number} to 'In progress'.`);
+      }
+
+      ciProvider.setOutput("selected_task_number", task.number.toString());
+      ciProvider.setOutput("selected_task_id", task.id);
+    } else {
+      ciProvider.info(`⏸️ No task selected. Reason: ${reason}`);
+    }
+
+    if (externallyBlocked && externallyBlocked.length > 0) {
+      ciProvider.info(`\n🚧 Externally Blocked Tasks: ${externallyBlocked.length}`);
+      for (const item of externallyBlocked) {
+        ciProvider.info(`   - #${item.number}: ${item.title}`);
+      }
+    }
+
+    return { success: true, value: selectionResult.value };
+  } catch (error) {
+    return { success: false, error: `Orchestrator workflow failed: ${error.message}` };
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/use-cases/plan-issue/main.js
 
 
@@ -85596,1119 +87045,6 @@ async function planIssue({
       costs,
     },
   };
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/shared/ContextFilters.js
-/**
- * Checks if a given text body is an AI-generated report that should be excluded from context.
- *
- * @param {string} body - The text to check.
- * @returns {boolean} True if the text is an AI report.
- */
-function isAIReport(body) {
-  if (!body) return false;
-
-  return (
-    /### (📋 )?Triage/i.test(body) ||
-    /### (🎯 )?Plan/i.test(body) ||
-    /### (🛠️ )?Technical Checklist/i.test(body) ||
-    /AI Triage & Planning Report/i.test(body) ||
-    /ai-triage-(start|end)/i.test(body) ||
-    /--- AI SIMULATION/i.test(body) ||
-    /🔍 AI Architecture Review/i.test(body) ||
-    /Review generated by AI Orchestration/i.test(body) ||
-    /<!-- ai-usage:.*?-->/i.test(body)
-  );
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/track-cost-report/main.js
-
-
-const REPORT_SIGNATURE = "<!-- ai-usage-report -->";
-
-/**
- * Removes the cost report block from a text string.
- * @param {string} text
- * @returns {{ success: boolean, value: string, error?: string }}
- */
-function removeCostReport(text) {
-  if (!text) return { success: true, value: "" };
-
-  // 1. Surgical removal if markers exist
-  const markerRegex = /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g;
-  let cleanText = text.replace(markerRegex, "\n");
-
-  // 2. Fallback: Search for the report header and signature
-  const contentRegex =
-    /## 💰 AI Usage & Cost Report[\s\S]*?_Updated automatically by AI Orchestration_/g;
-  cleanText = cleanText.replace(contentRegex, "\n");
-
-  // 3. Robust cleanup of rogue markers
-  cleanText = cleanText.replace(/<!-- ai-usage-report -->/g, "");
-  cleanText = cleanText.replace(/<!-- ai-triage-end -->/g, "");
-
-  // 4. Collapse consecutive newlines to a single one and trim
-  cleanText = cleanText.replace(/\n{2,}/g, "\n");
-
-  return { success: true, value: cleanText.trim() };
-}
-
-/**
- * Updates or creates a cost tracking comment on a GitHub issue/PR.
- * @returns {Promise<{ success: boolean, value?: { body: string, isUpdate: boolean, commentId?: number }, error?: string }>}
- */
-async function trackCostReport(
-  gitProvider,
-  { owner, repo, issueNumber, agent, provider, usage, model },
-) {
-  const costResult = calculateCost(model, usage);
-  const costs = costResult.value;
-  const displayModel = model || provider;
-  const newRow = `| ${agent} | ${displayModel} | ${usage.prompt_tokens || 0} | ${usage.completion_tokens || 0} | $${costs.total_cost.toFixed(6)} |`;
-
-  try {
-    const comments = await gitProvider.listComments(owner, repo, issueNumber);
-    const reportComment = comments.find((c) => c.body?.includes(REPORT_SIGNATURE));
-
-    let body;
-    let isUpdate = false;
-    let commentId;
-
-    if (reportComment) {
-      const lines = reportComment.body.split("\n");
-      const dataRows = lines.filter(
-        (l) =>
-          l.startsWith("|") &&
-          !l.includes("Agent") &&
-          !l.includes("---") &&
-          !l.toLowerCase().includes("total") &&
-          !l.includes("<!--"),
-      );
-
-      let currentTotal = 0;
-      const filteredRows = dataRows.map((row) => {
-        const parts = row
-          .split("|")
-          .map((p) => p.trim())
-          .filter(Boolean);
-        const costStr = parts[4]?.replace("$", "").replace("**", "") || "0";
-        const cost = parseFloat(costStr);
-        if (!Number.isNaN(cost)) {
-          currentTotal += cost;
-        }
-        return row;
-      });
-
-      currentTotal += costs.total_cost;
-
-      body = [
-        "<!-- ai-cost-report-start -->",
-        REPORT_SIGNATURE,
-        "## 💰 AI Usage & Cost Report",
-        "",
-        "| Agent | Model | In Tokens | Out Tokens | Cost (USD) |",
-        "| :--- | :--- | :--- | :--- | :--- |",
-        ...filteredRows,
-        newRow,
-        `| **Total** | | | | **$${currentTotal.toFixed(6)}** |`,
-        "",
-        "_Updated automatically by AI Orchestration_",
-        "---",
-        "<!-- ai-cost-report-end -->",
-      ].join("\n");
-
-      try {
-        await gitProvider.updateComment(owner, repo, reportComment.id, body);
-        isUpdate = true;
-        commentId = reportComment.id;
-      } catch (err) {
-        // If update fails (e.g. permission issue), fallback to creating a new comment
-        console.warn(
-          `[CostReport] Failed to update existing comment #${reportComment.id}: ${err.message}. Creating a new one instead.`,
-        );
-        await gitProvider.createComment(owner, repo, issueNumber, body);
-        isUpdate = false;
-      }
-    } else {
-      body = [
-        "<!-- ai-cost-report-start -->",
-        REPORT_SIGNATURE,
-        "## 💰 AI Usage & Cost Report",
-        "",
-        "| Agent | Model | In Tokens | Out Tokens | Cost (USD) |",
-        "| :--- | :--- | :--- | :--- | :--- |",
-        newRow,
-        `| **Total** | | | | **$${costs.total_cost.toFixed(6)}** |`,
-        "",
-        "_Updated automatically by AI Orchestration_",
-        "---",
-        "<!-- ai-cost-report-end -->",
-      ].join("\n");
-
-      await gitProvider.createComment(owner, repo, issueNumber, body);
-    }
-
-    return {
-      success: true,
-      value: { body, isUpdate, commentId },
-    };
-  } catch (error) {
-    const isPermissionError =
-      error.message?.includes("Resource not accessible") ||
-      error.status === 403 ||
-      error.status === 404;
-
-    if (isPermissionError) {
-      return {
-        success: false,
-        error: `Cost tracking skipped: GITHUB_TOKEN lacks 'issues:write' permissions to post the report.`,
-      };
-    }
-
-    return {
-      success: false,
-      error: `Failed to update cost tracking comment: ${error.message}`,
-    };
-  }
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/implement-issue/main.js
-
-
-
-
-
-/**
- * AI Developer logic to implement a task.
- */
-async function implementIssue({
-  repo,
-  issueNumber,
-  context,
-  aiProvider,
-  model,
-  customSystemPrompt,
-  customUserPrompt,
-  maxInputTokens = 200000,
-  maxOutputTokens = 200000,
-  onStart = (_args) => {},
-}) {
-  const system = customSystemPrompt || prompts_namespaceObject.PD.qU;
-  const userTemplate = customUserPrompt || prompts_namespaceObject.PD.aI;
-
-  // Rule Discovery
-  let projectRules = "Follow standard Clean Architecture and project conventions.";
-  const rulePaths = [
-    ".agent/RULES.md",
-    "RULES.md",
-    "GEMINI.md",
-    ".serena/memories/serena-workflow.md",
-  ];
-  for (const rulePath of rulePaths) {
-    const fullPath = external_node_path_namespaceObject.resolve(process.cwd(), rulePath);
-    if (external_node_fs_namespaceObject.existsSync(fullPath)) {
-      projectRules = external_node_fs_namespaceObject.readFileSync(fullPath, "utf-8");
-      break;
-    }
-  }
-
-  const systemPrompt = system.replace("{{repo}}", repo).replace("{{project_rules}}", projectRules);
-  let userPrompt = userTemplate.replace("{{context}}", context);
-
-  // Ensure AI follows the response structure with markers
-  if (prompts_namespaceObject.PD.Cw) {
-    userPrompt += `\n\n### RESPONSE STRUCTURE (STRICT):\n${prompts_namespaceObject.PD.Cw}`;
-  }
-
-  onStart({ systemPrompt, userPrompt });
-
-  // Input Safety Check
-  const estimatedInputTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
-  if (estimatedInputTokens > maxInputTokens) {
-    return {
-      success: false,
-      error: `Input context too large: ${estimatedInputTokens} tokens (limit: ${maxInputTokens}).`,
-    };
-  }
-
-  // Call AI
-  const generatedResponse = await aiProvider.generateContent(
-    model,
-    systemPrompt,
-    userPrompt,
-    maxOutputTokens,
-  );
-
-  const response = generatedResponse.text;
-  const usage = generatedResponse.usage;
-
-  const costResult = calculateCost(model, usage);
-  const costs = costResult.value;
-
-  return {
-    success: true,
-    value: {
-      branch: `feat/issue-${issueNumber}`,
-      response,
-      systemPrompt,
-      userPrompt,
-      usage,
-      costs,
-    },
-  };
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/implement-issue/DeveloperWorkflow.js
-
-
-
-
-
-
-
-/**
- * Orchestrates the developer workflow for an issue.
- *
- * @param {object} params
- * @param {import('../../domain/ports/ICIProvider.js').ICIProvider} params.ciProvider
- * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
- * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
- * @param {import('../../domain/ports/IGitClient.js').IGitClient} params.gitClient
- * @param {any} params.fileExecutor - The file executor service (injected)
- * @param {string} params.model
- * @param {string} params.owner
- * @param {string} params.repo
- * @param {any} params.payload
- * @param {number} params.maxInputTokens
- * @param {number} params.maxOutputTokens
- * @param {boolean} params.simulationMode
- * @param {boolean} params.useMock
- * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} [params.privilegedGitProvider] - Privileged provider (PAT) for PR creation.
- * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
- */
-async function DeveloperWorkflow({
-  ciProvider,
-  gitProvider,
-  aiProvider,
-  gitClient,
-  fileExecutor,
-  model,
-  owner,
-  repo,
-  payload,
-  maxInputTokens,
-  maxOutputTokens,
-  simulationMode,
-  useMock,
-  privilegedGitProvider,
-}) {
-  try {
-    const manualIssueNumber = ciProvider.getInput("issue_number");
-    const issueNumber = manualIssueNumber
-      ? parseInt(manualIssueNumber, 10)
-      : payload.issue?.number || payload.pull_request?.number;
-
-    let context = payload.comment?.body || payload.issue?.body || "";
-    context = removeCostReport(context).value;
-    context = removePlannerMetadata(context).value;
-
-    let issueTitle = payload.issue?.title || "";
-    let prBranch = null;
-    let issue = null;
-    let standardComments = [];
-    let reviewComments = [];
-    let reviewSummaries = [];
-
-    if (issueNumber) {
-      try {
-        issue = await gitProvider.getIssue(owner, repo, issueNumber);
-        issueTitle = issue.title || issueTitle;
-
-        let linkedPullNumber = issue.pull_request ? issueNumber : null;
-
-        // If it's a PR, get the branch name
-        if (issue.pull_request) {
-          try {
-            const prMetadata = await gitProvider.getPullRequestMetadata(owner, repo, issueNumber);
-            prBranch = prMetadata.head?.ref;
-            if (prBranch) {
-              ciProvider.info(`[Developer] Detected PR branch: ${prBranch}`);
-            }
-          } catch (prErr) {
-            ciProvider.warning(`Failed to fetch PR metadata: ${prErr.message}`);
-          }
-        } else {
-          // Check if there is a PR for the expected branch
-          const expectedBranch = `feat/issue-${issueNumber}`;
-          try {
-            const prs = await gitProvider.listPullRequests(owner, repo, {
-              head: `${owner}:${expectedBranch}`,
-              state: "open",
-            });
-            if (prs.length > 0) {
-              const pr = prs[0];
-              prBranch = pr.head?.ref;
-              linkedPullNumber = pr.number;
-              ciProvider.info(
-                `Found linked PR #${linkedPullNumber} for branch ${prBranch}. Including PR context for reviews.`,
-              );
-            }
-          } catch (err) {
-            ciProvider.info(`PR search by branch failed: ${err.message}`);
-          }
-        }
-
-        ciProvider.info(`Fetching comments for issue #${issueNumber} to build full context...`);
-        const commentsList = await gitProvider.listComments(owner, repo, issueNumber);
-        standardComments = commentsList
-          .filter((c) => {
-            const body = c.body || "";
-            // Skip bot reports to reduce context noise (by signature, independent of username)
-            const isAIReportResult = isAIReport(body);
-            return !isAIReportResult;
-          })
-          .map((c) => {
-            let cleanBody = removeCostReport(c.body || "").value;
-            cleanBody = removePlannerMetadata(cleanBody).value;
-
-            return cleanBody ? `[Comment by ${c.user?.login || "unknown"}]:\n${cleanBody}` : null;
-          })
-          .filter(Boolean);
-        ciProvider.info(`Found ${standardComments.length} standard comments.`);
-
-        // Fetch Review Comments if it's a PR (Reviewer feedback on specific lines)
-
-        // Try to fetch reviews if it's a PR or if we found a linked one
-        if (linkedPullNumber) {
-          try {
-            ciProvider.info(`Fetching review comments for PR #${linkedPullNumber}...`);
-            const reviews = await gitProvider.listReviewComments(owner, repo, linkedPullNumber);
-            reviewComments = reviews
-              .map((c) => {
-                const body = c.body || "";
-                if (isAIReport(body)) return null;
-
-                let cleanBody = removeCostReport(body).value;
-                cleanBody = removePlannerMetadata(cleanBody).value;
-                return cleanBody
-                  ? `[Review Comment on ${c.path} L${c.line} by ${c.user?.login || "unknown"}]:\n${cleanBody}`
-                  : null;
-              })
-              .filter(Boolean);
-            ciProvider.info(`Found ${reviewComments.length} review comments.`);
-          } catch (err) {
-            ciProvider.info(`No review comments found or not a PR: ${err.message}`);
-          }
-
-          // Fetch Review Summaries (APPROVE/REQUEST_CHANGES top-level bodies)
-          try {
-            ciProvider.info(`Fetching review summaries for #${issueNumber}...`);
-            const reviews = await gitProvider.listReviews(owner, repo, issueNumber);
-            reviewSummaries = reviews
-              .map((r) => {
-                const body = r.body || "";
-                if (isAIReport(body)) return null;
-
-                let cleanBody = removeCostReport(body).value;
-                cleanBody = removePlannerMetadata(cleanBody).value;
-                return cleanBody
-                  ? `[Review Summary (${r.state}) by ${r.user?.login || "unknown"}]:\n${cleanBody}`
-                  : null;
-              })
-              .filter(Boolean);
-            ciProvider.info(`Found ${reviewSummaries.length} review summaries.`);
-          } catch (err) {
-            ciProvider.info(`No review summaries found or not a PR: ${err.message}`);
-          }
-        }
-      } catch (err) {
-        ciProvider.warning(`Failed to fetch full issue context: ${err.message}`);
-      }
-    }
-
-    const allCommentsText = [...standardComments, ...reviewSummaries, ...reviewComments].join(
-      "\n\n---\n\n",
-    );
-
-    let cleanIssueBody = removeCostReport(issue?.body || "").value;
-    cleanIssueBody = removePlannerMetadata(cleanIssueBody).value;
-
-    let parentContext = "";
-    const parentMatch = issue?.body?.match(/Sub-task of #(\d+)/i);
-    if (parentMatch) {
-      const parentId = parseInt(parentMatch[1], 10);
-      try {
-        ciProvider.info(
-          `[Developer] Detected sub-task. Bridging parent context from #${parentId}...`,
-        );
-        const parentIssue = await gitProvider.getIssue(owner, repo, parentId);
-        let cleanParentBody = removeCostReport(parentIssue.body || "").value;
-        cleanParentBody = removePlannerMetadata(cleanParentBody).value;
-        parentContext = `\n\n--- PARENT MASTER PLAN (#${parentId}) ---\n${cleanParentBody}\n`;
-      } catch (err) {
-        ciProvider.warning(`Failed to fetch parent issue #${parentId}: ${err.message}`);
-      }
-    }
-
-    context = `Issue Description:\n${cleanIssueBody}${parentContext}\n\n---\n\n${allCommentsText}\n\n---\n\nTriggering Context:\n${context}`;
-
-    if (!issueNumber) {
-      return {
-        success: false,
-        error: "Could not determine issue or PR number from GitHub context for developer.",
-      };
-    }
-
-    // Blocker Check (Algorithm 7.5)
-    const readinessResult = await checkTaskReadiness(
-      gitProvider,
-      { owner, repo, issueNumber },
-      ({ issueNumber: num }) => {
-        ciProvider.info(`[Selector] Checking readiness for issue #${num}...`);
-      },
-      ({ message }) => {
-        ciProvider.info(`[Selector] ${message}`);
-      },
-    );
-
-    if (!readinessResult.success) {
-      return readinessResult;
-    }
-
-    if (!readinessResult.value.ready) {
-      ciProvider.warning(`Skipping task #${issueNumber}: ${readinessResult.value.reason}`);
-      return {
-        success: true,
-        value: { skipped: true, reason: readinessResult.value.reason },
-      };
-    }
-
-    if (readinessResult.value.warning) {
-      ciProvider.info(`[Selector] ${readinessResult.value.warning}`);
-    } else {
-      ciProvider.info(`[Selector] Issue #${issueNumber} is READY.`);
-    }
-
-    // Configurable git author
-    const gitAuthorName = ciProvider.getInput("git_author_name") || "github-actions[bot]";
-    const gitAuthorEmail =
-      ciProvider.getInput("git_author_email") || "github-actions[bot]@users.noreply.github.com";
-
-    // Branch management: checkout existing branch and rebase on main
-    if (!useMock) {
-      const devBranchName = prBranch || `feat/issue-${issueNumber}`;
-      gitClient.configAuthor(gitAuthorName, gitAuthorEmail);
-
-      ciProvider.info("Fetching latest main and refreshing state...");
-      // Ensure we have the latest main to rebase or branch from
-      try {
-        gitClient.fetch("origin", "main");
-      } catch (err) {
-        ciProvider.warning(`Git fetch failed: ${err.message}. Proceeding with local main.`);
-      }
-
-      const branchExists = gitClient.branchExistsRemotely(devBranchName);
-
-      if (branchExists) {
-        ciProvider.info(
-          `Branch "${devBranchName}" exists remotely. Checking out and rebasing on origin/main...`,
-        );
-        gitClient.checkout(devBranchName, false, true); // force: true
-        const rebaseResult = gitClient.rebase("origin/main");
-        if (rebaseResult.success) {
-          ciProvider.info("Rebase on origin/main successful.");
-        } else {
-          ciProvider.warning(
-            "Rebase failed (conflicts). Staying on branch as-is to preserve prior work.",
-          );
-          gitClient.abortRebase();
-        }
-      } else {
-        ciProvider.info(
-          `Branch "${devBranchName}" does not exist remotely. Creating from origin/main.`,
-        );
-        // Ensure we are on main and up to date before creating the new branch
-        gitClient.checkout("main");
-        try {
-          gitClient.resetHard("FETCH_HEAD");
-        } catch {
-          /* ignore reset errors */
-        }
-        gitClient.checkout(devBranchName, true /* create */);
-      }
-    }
-
-    const customSystemPrompt = ciProvider.getInput("developer_system_prompt");
-    const customUserPrompt = ciProvider.getInput("developer_user_prompt");
-
-    let iteration = 0;
-    const maxIterations = 5;
-    let currentContext = context;
-    let verifySuccess = false;
-
-    while (iteration < maxIterations) {
-      iteration++;
-      const logPrefix = simulationMode ? "SIMULATION" : "EXECUTION";
-      const iterSuffix = maxIterations > 1 ? ` (Iteration ${iteration}/${maxIterations})` : "";
-
-      const result = await implementIssue({
-        aiProvider,
-        model,
-        repo,
-        issueNumber,
-        context: currentContext,
-        customSystemPrompt,
-        customUserPrompt,
-        maxInputTokens,
-        maxOutputTokens,
-        onStart: ({ systemPrompt, userPrompt }) => {
-          ciProvider.info(`--- AI ${logPrefix} (DEVELOPER)${iterSuffix} ---`);
-          ciProvider.info(`Issue/PR: #${issueNumber} in ${owner}/${repo}`);
-          ciProvider.info(`SYSTEM PROMPT:\n${systemPrompt}`);
-          ciProvider.info(`USER PROMPT:\n${userPrompt}`);
-          ciProvider.info("---------------------------------------");
-        },
-      });
-
-      if (!result.success) {
-        return result;
-      }
-
-      const { usage, response } = result.value;
-      const costResult = calculateCost(model, usage);
-      const costs = costResult.value;
-      ciProvider.info(
-        `[Cost] AI Developer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
-      );
-
-      ciProvider.info(`REAL RESPONSE:\n${response}`);
-      ciProvider.info(`REAL USAGE: ${JSON.stringify(usage, null, 2)}`);
-      ciProvider.info(`ESTIMATED API COST: $${costs.total_cost} ${costs.currency}`);
-      ciProvider.info("---------------------------------------");
-
-      // Execute file changes autonomously
-      ciProvider.info("[FileExecutor] Searching for file changes in AI response...");
-      const changesCount = await fileExecutor.execute(response, ciProvider);
-      if (changesCount > 0) {
-        ciProvider.info(`[FileExecutor] Successfully applied ${changesCount} file changes.`);
-      }
-
-      // Verification logic
-      ciProvider.info(`Verification step${iterSuffix}: running linters and tests...`);
-      if (gitClient) {
-        const verification = gitClient.runVerification();
-        verifySuccess = verification.success;
-
-        if (verifySuccess) {
-          ciProvider.info("Verification successful!");
-          break;
-        }
-
-        ciProvider.warning(`Verification failed${iterSuffix}. Output:\n${verification.output}`);
-
-        if (iteration < maxIterations) {
-          ciProvider.info("Feeding errors back to AI for next iteration...");
-          currentContext = `${context}\n\n### Previous Attempt Feedback:\n${verification.output}\n\nPlease fix the errors above and provide the corrected code.`;
-        } else {
-          ciProvider.error("Max iterations reached. Verification still failing.");
-        }
-      } else {
-        verifySuccess = true; // No git client, assume success (e.g. simulation without git)
-        break;
-      }
-    }
-
-    if (gitClient) {
-      try {
-        if (gitClient.hasChanges()) {
-          ciProvider.info("Changes detected. Proceeding to commit...");
-
-          const branchName = verifySuccess
-            ? `feat/issue-${issueNumber}`
-            : `feat/ai-backup-issue-${issueNumber}`;
-
-          // Commit message: describe work done + reference the issue
-          const safeTitle = issueTitle
-            ? issueTitle
-                .toLowerCase()
-                .replace(/[^a-z0-9 ]/g, "")
-                .trim()
-            : `implement issue #${issueNumber}`;
-          const commitMsg = verifySuccess
-            ? `feat: ${safeTitle} (#${issueNumber})`
-            : `chore(ai): backup broken code for #${issueNumber} [skip ci]`;
-
-          // Create or switch to branch only if not already on it
-          const currentBranch = gitClient.getCurrentBranch();
-          if (currentBranch !== branchName) {
-            gitClient.checkout(branchName, true /* create */);
-          }
-
-          gitClient.stageAll();
-
-          // Squash all branch commits into a single commit
-          try {
-            gitClient.squashOnto("main");
-            gitClient.commit(commitMsg);
-          } catch {
-            // Fallback: normal commit if squash fails (e.g., no common ancestor)
-            gitClient.commit(commitMsg);
-          }
-
-          gitClient.pushForce(branchName);
-
-          if (verifySuccess) {
-            ciProvider.info(`Creating PR for issue #${issueNumber}`);
-
-            // Use privileged provider if available to trigger other workflows (like AI Reviewer)
-            const prProvider = privilegedGitProvider || gitProvider;
-
-            await prProvider.createPullRequest(
-              owner,
-              repo,
-              commitMsg,
-              branchName,
-              "main",
-              `Resolves #${issueNumber}`,
-            );
-            ciProvider.info(`Successfully created Pull Request for issue #${issueNumber}`);
-          } else {
-            ciProvider.info(`Pipeline failed. Work saved to fallback branch: ${branchName}`);
-          }
-        } else {
-          ciProvider.info("No changes to verify or commit.");
-        }
-      } catch (err) {
-        ciProvider.warning("Git or PR operations failed: " + err.message);
-      }
-    } else {
-      ciProvider.info(
-        `[Simulation Mode] Skipping test execution, branching, and PR creation for #${issueNumber}.`,
-      );
-    }
-
-    return { success: true, value: { issueNumber, verifySuccess } };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/batch-triage/main.js
-/**
- * Use Case: Triage all open issues that are not yet in the Project Board.
- * @param {object} params
- * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
- * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
- * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
- * @param {string} params.model
- * @param {string} params.owner
- * @param {string} params.repo
- * @param {string} params.projectId
- * @param {(status: {message: string, [key: string]: any}) => void} [params.onStatus]
- */
-async function batchTriage({
-  gitProvider,
-  projectManager,
-  aiProvider,
-  model,
-  owner,
-  repo,
-  projectId,
-  onStatus = () => {},
-}) {
-  try {
-    // 1. Fetch all open issues
-    onStatus({ message: "Fetching all open issues from repository..." });
-    const allIssues = await gitProvider.listIssues(owner, repo, { state: "open" });
-
-    // 2. Fetch current project items to identify what's missing
-    onStatus({ message: "Fetching current project board items..." });
-    const projectItems = await projectManager.getProjectItems(projectId);
-    const existingIssueNumbers = new Set(projectItems.map((i) => i.number));
-
-    const untriagedIssues = allIssues.filter((i) => !existingIssueNumbers.has(i.number));
-
-    if (untriagedIssues.length === 0) {
-      return { success: true, value: { count: 0, message: "Backlog is already fully triaged." } };
-    }
-
-    onStatus({ message: `Found ${untriagedIssues.length} issues to triage.` });
-
-    let triagedCount = 0;
-    for (const issue of untriagedIssues) {
-      onStatus({ message: `Triaging issue #${issue.number}: ${issue.title}...` });
-
-      // 3. Ask AI for Triage (Phase & Priority)
-      const prompt = `Analyze this GitHub issue and suggest a Phase (Phase 1, Phase 2, Phase 3, Phase 4) and a Priority (P0, P1, P2) based on its title and body.
-      
-      Issue #${issue.number}: ${issue.title}
-      Body: ${issue.body || "No description provided."}
-      
-      Respond only with a JSON object: { "phase": "Phase X", "priority": "PY" }`;
-
-      const aiResponse = await aiProvider.generateContent(
-        model,
-        "You are a Project Manager bot. Analyze issues for triage.",
-        prompt,
-      );
-
-      try {
-        const match = aiResponse.text.match(/\{.*\}/s);
-        if (!match) {
-          throw new Error("AI response did not contain a valid JSON block.");
-        }
-        const triage = JSON.parse(match[0]);
-
-        // 4. Add to Project Board
-        const itemId = await projectManager.addItemToProject(projectId, issue.node_id);
-
-        // 5. Update Custom Fields
-        await projectManager.updateCustomField(projectId, itemId, "Phase", triage.phase);
-        await projectManager.updateCustomField(projectId, itemId, "Priority", triage.priority);
-        // Set initial status to Backlog
-        await projectManager.updateItemStatus(projectId, itemId, "Backlog");
-
-        triagedCount++;
-      } catch (err) {
-        console.error(`Failed to triage issue #${issue.number}: ${err.message}`);
-      }
-    }
-
-    return {
-      success: true,
-      value: { count: triagedCount, message: `Successfully triaged ${triagedCount} issues.` },
-    };
-  } catch (error) {
-    return { success: false, error: `Batch triage failed: ${error.message}` };
-  }
-}
-
-;// CONCATENATED MODULE: ./src/domain/entities/ProjectTask.js
-/**
- * Domain Entity representing a task within a Project Board.
- */
-class ProjectTask {
-  constructor(data) {
-    const { id, number, title, status, phase, priority, type = "Issue", fields } = data;
-    this.id = id;
-    this.number = number;
-    this.title = title;
-    this.status = status || fields?.Status || "";
-    this.phase = phase || fields?.Phase || "";
-    this.priority = priority || fields?.Priority || "";
-    this.type = type;
-  }
-
-  /**
-   * Determines if the task is currently active (being worked on or reviewed).
-   */
-  isActive() {
-    return ["In progress", "In review"].includes(this.status);
-  }
-
-  /**
-   * Determines if the task is ready to be picked up.
-   */
-  isSelectable() {
-    return this.status === "Ready";
-  }
-
-  /**
-   * Calculates a numeric priority score for sorting.
-   * Lower score = Higher priority.
-   */
-  getPriorityScore() {
-    const phaseMap = { "Phase 1": 1, "Phase 2": 2, "Phase 3": 3, "Phase 4": 4 };
-    const priorityMap = { P0: 0, P1: 1, P2: 2 };
-
-    // If phase is missing, it's untriaged, put it at the end (very high score)
-    const phaseScore = phaseMap[this.phase] || 100;
-
-    // Priority score: P0 (0) should be lower than P1 (1)
-    const priorityScore = priorityMap[this.priority] ?? 10;
-
-    // Phase is the primary tie-breaker, then priority.
-    // Phase 1 P0 = 1 * 1000 + 0 = 1000
-    // Phase 1 P1 = 1 * 1000 + 1 = 1001
-    // Untriaged = 100 * 1000 + 10 = 100010
-    return phaseScore * 1000 + priorityScore;
-  }
-}
-
-;// CONCATENATED MODULE: ./src/domain/entities/Project.js
-
-
-/**
- * Aggregate Root representing a Project Board.
- */
-class Project {
-  constructor({ id, tasks = [], wipLimit = 5 }) {
-    this.id = id;
-    this.tasks = tasks.map((t) => (t instanceof ProjectTask ? t : new ProjectTask(t)));
-    this.wipLimit = wipLimit; // Default limit per active column
-  }
-
-  /**
-   * Returns the count of tasks in a specific column.
-   */
-  getColumnCount(status) {
-    return this.tasks.filter((t) => t.status === status).length;
-  }
-
-  /**
-   * Returns true if a specific column has capacity.
-   */
-  hasColumnCapacity(status) {
-    return this.getColumnCount(status) < this.wipLimit;
-  }
-
-  /**
-   * Implements the core Right-to-Left selection algorithm with per-column WIP guards.
-   */
-  selectNextTask() {
-    // 1. Priority: Review (Closing work is top priority)
-    const reviewTasks = this.tasks
-      .filter((t) => t.status === "In review")
-      .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
-
-    // We prioritize tasks that are already in review regardless of the column capacity,
-    // because addressing feedback helps move items to 'Done'.
-    if (reviewTasks.length > 0) {
-      return reviewTasks[0];
-    }
-
-    // 2. Priority: Ready tasks (Phase > Priority) -> Transition to 'In progress'
-    // Check if 'In progress' column has capacity before selecting a new task.
-    if (this.hasColumnCapacity("In progress")) {
-      const readyTasks = this.tasks
-        .filter((t) => t.isSelectable())
-        .sort((a, b) => a.getPriorityScore() - b.getPriorityScore());
-
-      return readyTasks[0] || null;
-    }
-
-    return null;
-  }
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/select-next-task/main.js
-
-
-/**
- * Use Case: Select the most appropriate next task based on Kanban priority.
- *
- * @param {object} dependencies
- * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} dependencies.projectManager
- * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} dependencies.gitProvider
- * @param {string} dependencies.owner
- * @param {string} dependencies.repo
- * @param {string} dependencies.projectId
- * @param {number} [dependencies.wipLimit=5]
- * @param {(status: {message: string, [key: string]: any}) => void} [dependencies.onStatus]
- * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
- */
-async function selectNextTask({
-  projectManager,
-  gitProvider,
-  owner,
-  repo,
-  projectId,
-  wipLimit = 5,
-  onStatus = () => {},
-}) {
-  if (!owner || !repo || !projectManager) {
-    return { success: false, error: "Missing required dependencies for task selection." };
-  }
-  try {
-    // 1. Fetch current board state
-    onStatus({ message: "Fetching current project board items..." });
-    const rawItems = await projectManager.getProjectItems(projectId);
-
-    // 2. Auto-Unblock Analysis: Check sub-tasks for Blocked items
-    const updatedRawItems = [];
-    for (const item of rawItems) {
-      if (item.fields.Status === "Blocked" && item.number) {
-        try {
-          onStatus({ message: `Analyzing dependencies for blocked task #${item.number}...` });
-          const subIssues = await gitProvider.listSubIssues(owner, repo, item.number);
-
-          if (subIssues.length > 0 && subIssues.every((s) => s.state === "closed")) {
-            onStatus({ message: `All sub-tasks for #${item.number} are closed. Unblocking...` });
-            await projectManager.updateItemStatus(projectId, item.id, "Ready");
-            // Create a new item object with updated status to maintain immutability
-            updatedRawItems.push({
-              ...item,
-              fields: { ...item.fields, Status: "Ready" },
-            });
-            continue;
-          }
-        } catch (err) {
-          console.error(`Failed to analyze dependencies for #${item.number}: ${err.message}`);
-        }
-      }
-      updatedRawItems.push(item);
-    }
-
-    // 3. Hydrate Domain Entity
-    const project = new Project({
-      id: projectId,
-      tasks: updatedRawItems,
-      wipLimit,
-    });
-
-    // 4. Execute Selection Logic (Right-to-Left)
-    const selectedTask = project.selectNextTask();
-
-    // 5. Identify External Blockers (Blocked status with no sub-tasks or dependencies)
-    const externallyBlocked = updatedRawItems.filter(
-      (i) => i.fields.Status === "Blocked" && i.type === "Issue",
-    );
-
-    if (!selectedTask) {
-      let reason = "No selectable tasks found in the 'Ready' or 'In review' columns.";
-
-      if (!project.hasColumnCapacity("In review")) {
-        reason =
-          "WIP Limit reached for 'In review' column. Finish reviews before processing more feedback.";
-      } else if (!project.hasColumnCapacity("In progress")) {
-        reason =
-          "WIP Limit reached for 'In progress' column. Finish current tasks before starting new ones.";
-      }
-
-      return {
-        success: true,
-        value: {
-          selected: false,
-          externallyBlocked,
-          reason,
-        },
-      };
-    }
-
-    return {
-      success: true,
-      value: {
-        selected: true,
-        task: selectedTask,
-        externallyBlocked,
-        inProgressWIP: project.getColumnCount("In progress"),
-        inReviewWIP: project.getColumnCount("In review"),
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: `Failed to select next task: ${error.message}`,
-    };
-  }
-}
-
-;// CONCATENATED MODULE: ./src/use-cases/orchestrate/OrchestratorWorkflow.js
-
-
-
-/**
- * Use Case: Master Orchestrator Workflow
- * Unifies Batch Triage and Task Selection.
- *
- * @param {object} params
- * @param {import('../../domain/ports/ICIProvider.js').ICIProvider} params.ciProvider
- * @param {import('../../domain/ports/IGitProvider.js').IGitProvider} params.gitProvider
- * @param {import('../../domain/ports/IProjectManager.js').IProjectManager} params.projectManager
- * @param {import('../../domain/ports/IAIProvider.js').IAIProvider} params.aiProvider
- * @param {string} params.model
- * @param {string} params.owner
- * @param {string} params.repo
- * @param {string} params.projectId
- * @param {boolean} [params.simulationMode]
- * @param {number} [params.wipLimit=5]
- * @returns {Promise<{ success: boolean, value?: any, error?: string }>}
- */
-async function OrchestratorWorkflow({
-  ciProvider,
-  gitProvider,
-  projectManager,
-  aiProvider,
-  model,
-  owner,
-  repo,
-  projectId,
-  simulationMode,
-  wipLimit = 5,
-}) {
-  const isSimulation = simulationMode;
-
-  if (!projectId) {
-    if (isSimulation) {
-      projectId = "SIMULATION_PROJECT_ID";
-      ciProvider.info("[Simulation] Using dummy projectId for dry-run.");
-    } else {
-      return {
-        success: false,
-        error:
-          "Missing projectId for Orchestrator workflow. Please provide 'project_id' input or set PROJECT_ID environment variable.",
-      };
-    }
-  }
-
-  try {
-    ciProvider.info("--- AI ORCHESTRATOR: Phase 1 - Batch Triage ---");
-    const triageResult = await batchTriage({
-      gitProvider,
-      projectManager,
-      aiProvider,
-      model,
-      owner,
-      repo,
-      projectId,
-      onStatus: (st) => ciProvider.info(st.message),
-    });
-
-    if (!triageResult.success) {
-      ciProvider.warning(`Batch Triage failed: ${triageResult.error}`);
-    } else {
-      ciProvider.info(triageResult.value.message);
-    }
-
-    ciProvider.info("\n--- AI ORCHESTRATOR: Phase 2 - Task Selection ---");
-    const selectionResult = await selectNextTask({
-      projectManager,
-      gitProvider,
-      owner,
-      repo,
-      projectId,
-      wipLimit,
-      onStatus: (st) => ciProvider.info(st.message),
-    });
-
-    if (!selectionResult.success) {
-      return selectionResult;
-    }
-
-    const { selected, task, reason, externallyBlocked } = selectionResult.value;
-
-    if (selected) {
-      ciProvider.info(`🎯 Selected Next Task: #${task.number} - ${task.title}`);
-      ciProvider.info(
-        `   Priority Score: ${task.getPriorityScore()} (Phase: ${task.phase}, Priority: ${task.priority})`,
-      );
-      ciProvider.setOutput("selected_task_number", task.number.toString());
-      ciProvider.setOutput("selected_task_id", task.id);
-    } else {
-      ciProvider.info(`⏸️ No task selected. Reason: ${reason}`);
-    }
-
-    if (externallyBlocked && externallyBlocked.length > 0) {
-      ciProvider.info(`\n🚧 Externally Blocked Tasks: ${externallyBlocked.length}`);
-      for (const item of externallyBlocked) {
-        ciProvider.info(`   - #${item.number}: ${item.title}`);
-      }
-    }
-
-    return { success: true, value: selectionResult.value };
-  } catch (error) {
-    return { success: false, error: `Orchestrator workflow failed: ${error.message}` };
-  }
 }
 
 ;// CONCATENATED MODULE: ./src/use-cases/plan-issue/PlannerWorkflow.js
@@ -87151,6 +87487,7 @@ async function ReviewerWorkflow({
 
 
 
+
 /**
  * Main orchestrator logic, decoupled from specific CI or Git CLI implementations.
  *
@@ -87174,8 +87511,31 @@ async function runOrchestrator(ciProvider, gitClient) {
     }
 
     const eventContext = ciProvider.getEventContext();
-    const { owner, repo } = eventContext;
+    let { owner, repo } = eventContext;
     const { payload, eventName } = eventContext;
+
+    // isTest is strictly for the automated test suite (NODE_ENV=test)
+    const isTest = process.env.NODE_ENV === "test";
+
+    // Local Auto-detection fallback if we still have default placeholders
+    if ((owner === "owner" || !owner) && !isTest) {
+      try {
+        const remoteUrl = gitClient.getRemoteUrl();
+        if (remoteUrl) {
+          // Parse SSH or HTTPS urls:
+          // git@github.com:jorgecasar/legacy-s-end-2.git
+          // https://github.com/jorgecasar/legacy-s-end-2.git
+          const match = remoteUrl.match(/[:/]([^/]+)\/([^/.]+)(\.git)?$/);
+          if (match) {
+            owner = match[1];
+            repo = match[2];
+            ciProvider.info(`[Config] Auto-detected repository from git remote: ${owner}/${repo}`);
+          }
+        }
+      } catch {
+        // Ignore detection errors
+      }
+    }
 
     // Detect available keys from inputs first, then env vars
     const geminiKey = ciProvider.getInput("gemini_api_key") || process.env.GEMINI_API_KEY;
@@ -87183,17 +87543,33 @@ async function runOrchestrator(ciProvider, gitClient) {
     const openaiKey = ciProvider.getInput("openai_api_key") || process.env.OPENAI_API_KEY;
     const ghMcpPat = ciProvider.getInput("gh_mcp_pat") || process.env.GH_MCP_PAT;
 
+    if (!isTest) {
+      const detected = [];
+      if (geminiKey) detected.push("Gemini");
+      if (anthropicKey) detected.push("Anthropic");
+      if (openaiKey) detected.push("OpenAI");
+      if (detected.length > 0) {
+        ciProvider.info(`[Config] Detected API Keys for: ${detected.join(", ")}`);
+      } else {
+        ciProvider.warning("[Config] No API Keys detected in environment or inputs.");
+      }
+    }
+
     const maxInputTokens = parseInt(ciProvider.getInput("max_input_tokens") || "200000", 10);
     const maxOutputTokens = parseInt(ciProvider.getInput("max_output_tokens") || "200000", 10);
 
     // Check for explicit simulation mode input
     const simulationMode = ciProvider.getInput("simulation_mode") === "true";
+    const debugMode = ciProvider.getInput("debug") === "true";
+    const interactiveMode = ciProvider.getInput("interactive") === "true";
 
-    // isTest is strictly for the automated test suite (NODE_ENV=test)
-    const isTest = process.env.NODE_ENV === "test";
-
-    ciProvider.info(`[Config] NODE_ENV: ${process.env.NODE_ENV || "not set"}`);
-    ciProvider.info(`[Config] isTest: ${isTest}`);
+    if (!isTest) {
+      ciProvider.info(`[Config] Target Repository: ${owner}/${repo}`);
+      ciProvider.info(`[Config] NODE_ENV: ${process.env.NODE_ENV || "not set"}`);
+      ciProvider.info(`[Config] isTest: ${isTest}`);
+      if (debugMode) ciProvider.info("[Config] Debug mode enabled.");
+      if (interactiveMode) ciProvider.info("[Config] Interactive mode enabled (TUI).");
+    }
 
     let gitProvider;
     if (isTest) {
@@ -87277,6 +87653,8 @@ async function runOrchestrator(ciProvider, gitClient) {
           role: role.toLowerCase(),
           githubToken: token,
           ghMcpPat,
+          debug: debugMode,
+          interactive: interactiveMode,
         });
       } else if (provider === "anthropic") {
         aiProvider = new AnthropicAdapter(anthropicKey);
@@ -87310,10 +87688,19 @@ async function runOrchestrator(ciProvider, gitClient) {
             ? new MockProjectManager()
             : new GitHubProjectAdapter(token);
 
+        const inputProjectId = ciProvider.getInput("project_id");
+        const envProjectId = process.env.PROJECT_ID;
+        const finalProjectId = inputProjectId || envProjectId;
+
+        if (inputProjectId) ciProvider.info("[Config] Using projectId from input.");
+        else if (envProjectId)
+          ciProvider.info("[Config] Using projectId from environment variable.");
+        else ciProvider.warning("[Config] No projectId detected in inputs or environment.");
+
         return OrchestratorWorkflow({
           ...params,
           projectManager: pm,
-          projectId: ciProvider.getInput("project_id") || process.env.PROJECT_ID,
+          projectId: finalProjectId,
           wipLimit: parseInt(ciProvider.getInput("wip_limit") || "5", 10),
         });
       },
@@ -87376,7 +87763,7 @@ async function main() {
 /***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
-/* harmony import */ var _app_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(971);
+/* harmony import */ var _app_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2997);
 
 
 await (0,_app_js__WEBPACK_IMPORTED_MODULE_0__/* .main */ .i)();
@@ -87488,6 +87875,36 @@ __webpack_async_result__();
 /******/ 	};
 /******/ })();
 /******/ 
+/******/ /* webpack/runtime/create fake namespace object */
+/******/ (() => {
+/******/ 	var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 	var leafPrototypes;
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 16: return value when it's Promise-like
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__nccwpck_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = this(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if(typeof value === 'object' && value) {
+/******/ 			if((mode & 4) && value.__esModule) return value;
+/******/ 			if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 		}
+/******/ 		var ns = Object.create(null);
+/******/ 		__nccwpck_require__.r(ns);
+/******/ 		var def = {};
+/******/ 		leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 		for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 			Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 		}
+/******/ 		def['default'] = () => (value);
+/******/ 		__nccwpck_require__.d(ns, def);
+/******/ 		return ns;
+/******/ 	};
+/******/ })();
+/******/ 
 /******/ /* webpack/runtime/define property getters */
 /******/ (() => {
 /******/ 	// define getter functions for harmony exports
@@ -87503,6 +87920,17 @@ __webpack_async_result__();
 /******/ /* webpack/runtime/hasOwnProperty shorthand */
 /******/ (() => {
 /******/ 	__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ })();
+/******/ 
+/******/ /* webpack/runtime/make namespace object */
+/******/ (() => {
+/******/ 	// define __esModule on exports
+/******/ 	__nccwpck_require__.r = (exports) => {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
 /******/ })();
 /******/ 
 /******/ /* webpack/runtime/compat */

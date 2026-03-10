@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { branding } from "../../domain/branding.js";
 import { MODEL_REGISTRY } from "../../domain/models.js";
 import { calculateCost } from "../../domain/pricing.js";
-import { branding } from "../../infrastructure/config.js";
 import prompts from "../../prompts.json" with { type: "json" };
 
 /**

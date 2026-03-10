@@ -76,14 +76,19 @@ export class MockGitCliAdapter {
   }
 
   pushForce(branchName) {
-    this.commandsExecuted.push(`git push origin "${branchName}" --force`);
+    this.commandsExecuted.push(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(_remote = "origin") {
+    return "https://github.com/owner/repo.git";
   }
 
   runVerification() {
-    this.commandsExecuted.push("npm run format || true");
-    this.commandsExecuted.push("npm run lint:types");
-    this.commandsExecuted.push("npm run lint");
-    this.commandsExecuted.push("npm run test");
+    this.commandsExecuted.push("npm run check:fast");
     return { success: true, output: "Mock verification successful" };
+  }
+
+  fix() {
+    this.commandsExecuted.push("npm run check:fix");
   }
 }

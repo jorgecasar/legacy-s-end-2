@@ -37,6 +37,14 @@ inputs:
     description: "Force simulation mode (Dry Run). Useful for testing without cost."
     required: false
     default: "false"
+  debug:
+    description: "Enable debug mode to stream AI agent logs in real-time."
+    required: false
+    default: "false"
+  interactive:
+    description: "Launch gemini-cli in interactive mode (TUI) - Recommended for local dev only."
+    required: false
+    default: "false"
   issue_number:
     description: "Specific issue number to act upon (required for manual trigger)."
     required: false

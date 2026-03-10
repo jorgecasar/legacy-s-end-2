@@ -10,6 +10,10 @@ on:
       issue_number:
         description: "Issue number to implement"
         required: true
+      debug:
+        description: "Enable debug mode (stream logs)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,7 +60,7 @@ jobs:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           gh_mcp_pat: ${{ secrets.GH_MCP_PAT || secrets.GITHUB_TOKEN }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          issue_number: ${{ inputs.issue_number }}
+          issue_number: ${{ inputs.issue_number || github.event.issue.number }}
+          debug: ${{ github.event.inputs.debug || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
-

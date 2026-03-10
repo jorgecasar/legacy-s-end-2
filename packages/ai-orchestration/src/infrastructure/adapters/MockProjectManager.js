@@ -1,46 +1,32 @@
-import { IProjectManager } from "../../domain/ports/IProjectManager.js";
-
 /**
- * Mock implementation of Project Manager for simulation and testing.
- * @implements {IProjectManager}
+ * Mock implementation of Project Manager for testing.
  */
-export class MockProjectManager extends IProjectManager {
+export class MockProjectManager {
   constructor() {
-    super();
-    this.memory = {
-      items: [],
-    };
+    this.items = [];
   }
 
-  async getProjectItems(projectId) {
-    return this.memory.items;
+  async getProjectItems(_projectId, _owner) {
+    return this.items;
   }
 
-  async addItemToProject(projectId, contentId) {
-    const newItem = {
-      id: `mock-item-${Math.random().toString(36).substr(2, 9)}`,
-      contentId,
-      fields: { Status: "Backlog" },
-    };
-    this.memory.items.push(newItem);
+  async addItemToProject(_projectId, contentId, _owner) {
+    const newItem = { id: `mock-item-${contentId}`, contentId, fields: {} };
+    this.items.push(newItem);
     return newItem.id;
   }
 
-  async findItemByIssueNumber(projectId, issueNumber) {
-    return this.memory.items.find((i) => i.number === issueNumber) || null;
+  async findItemByIssueNumber(_projectId, issueNumber, _owner) {
+    return this.items.find((i) => i.number === issueNumber) || null;
   }
 
-  async updateItemStatus(projectId, itemId, statusName) {
-    const item = this.memory.items.find((i) => i.id === itemId);
-    if (item) {
-      item.fields.Status = statusName;
-    }
+  async updateItemStatus(_projectId, itemId, statusName, _owner) {
+    const item = this.items.find((i) => i.id === itemId);
+    if (item) item.fields.Status = statusName;
   }
 
-  async updateCustomField(projectId, itemId, fieldName, value) {
-    const item = this.memory.items.find((i) => i.id === itemId);
-    if (item) {
-      item.fields[fieldName] = value;
-    }
+  async updateCustomField(_projectId, itemId, fieldName, value, _owner) {
+    const item = this.items.find((i) => i.id === itemId);
+    if (item) item.fields[fieldName] = value;
   }
 }

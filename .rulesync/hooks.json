@@ -1,10 +1,30 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "command": "git fetch origin main --quiet"
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": ".*(write_file|replace|rm|delete_file).*",
+        "type": "command",
+        "command": "if [[ \"{{file_path}}\" == .gemini/* ]] || [[ \"{{file_path}}\" == .rulesync/* ]] || [[ \"{{file_path}}\" == .serena/* ]]; then echo '{\"decision\": \"ask\", \"reason\": \"Modifying infrastructure configuration files requires manual approval.\"}'; else echo '{\"decision\": \"allow\"}'; fi"
+      }
+    ],
     "postToolUse": [
       {
-        "matcher": "Write|Edit",
-        "command": ".rulesync/hooks/format.sh"
+        "matcher": ".*(write_file|replace|replace_symbol_body|insert_after_symbol|insert_before_symbol).*",
+        "type": "command",
+        "command": ".rulesync/hooks/format.sh {{file_path}}"
+      }
+    ],
+    "stop": [
+      {
+        "type": "command",
+        "command": "npm run check:fast"
       }
     ]
   }

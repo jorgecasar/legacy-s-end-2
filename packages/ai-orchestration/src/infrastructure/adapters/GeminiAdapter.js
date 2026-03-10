@@ -20,6 +20,8 @@ export class GeminiAdapter {
    * @param {string} [options.role]
    * @param {string} [options.githubToken]
    * @param {string} [options.ghMcpPat]
+   * @param {boolean} [options.debug]
+   * @param {boolean} [options.interactive]
    */
   constructor(apiKey, options = {}) {
     if (!apiKey) throw new Error("GEMINI_API_KEY is required.");
@@ -28,7 +30,10 @@ export class GeminiAdapter {
     this.role = options.role || "";
     this.githubToken = options.githubToken || "";
     this.ghMcpPat = options.ghMcpPat || "";
+    this.debug = options.debug || false;
+    this.interactive = options.interactive || false;
   }
+
   /**
    * Parses the raw CLI output to extract the response text and token usage.
    * @param {string} rawOutput - The raw stdout from gemini-cli
@@ -36,6 +41,12 @@ export class GeminiAdapter {
    * @returns {{ text: string, usage: { prompt_tokens: number, completion_tokens: number, total_tokens: number } }}
    */
   parseUsage(rawOutput, promptLength = 0) {
+    if (!rawOutput) {
+      return {
+        text: "",
+        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      };
+    }
     let text = rawOutput;
     let usage = {
       prompt_tokens: 0,
@@ -61,7 +72,10 @@ export class GeminiAdapter {
         }
       }
     } catch (parseErr) {
-      console.warn(`[GeminiAdapter] Failed to parse JSON usage data: ${parseErr.message}`);
+      // In debug mode, we might have mixed output, so we don't warn unless it's a real failure
+      if (!this.debug) {
+        console.warn(`[GeminiAdapter] Failed to parse JSON usage data: ${parseErr.message}`);
+      }
     }
 
     // Fallback to estimation if usage is still 0 but we have text
@@ -86,7 +100,24 @@ export class GeminiAdapter {
 
     try {
       // Find local binary, fallback to pinned npx
-      let cliPath = "npx -y @google/gemini-cli@0.31.0";
+      let executable = "npx";
+      let args = [
+        "-y",
+        "@google/gemini-cli@0.31.0",
+        this.interactive ? "-i" : "-p",
+        "",
+        "-m",
+        modelId,
+        "--approval-mode",
+        approvalMode,
+        "--output-format",
+        "json",
+        "--max-steps",
+        "15",
+        "--disable-tools",
+        "run_shell_command",
+      ];
+
       const possiblePaths = [
         path.join(process.cwd(), "node_modules", ".bin", "gemini"),
         path.join(process.cwd(), "packages", "ai-orchestration", "node_modules", ".bin", "gemini"),
@@ -94,13 +125,28 @@ export class GeminiAdapter {
 
       for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
-          cliPath = p;
+          executable = p;
+          args = [
+            this.interactive ? "-i" : "-p",
+            "",
+            "-m",
+            modelId,
+            "--approval-mode",
+            approvalMode,
+            "--output-format",
+            "json",
+          ];
           break;
         }
       }
 
-      const command = `${cliPath} -p "" -m "${modelId}" --approval-mode ${approvalMode} --output-format json`;
-      console.log(`[GeminiAdapter] Running: ${command} (${fullPrompt.length} chars input)`);
+      console.log(
+        `[GeminiAdapter] Running: ${executable} ${args.join(" ")} (${fullPrompt.length} chars input)`,
+      );
+
+      if (this.debug) {
+        console.log("[GeminiAdapter] Debug mode enabled. Streaming CLI logs to stderr...");
+      }
 
       const startTime = Date.now();
 
@@ -115,30 +161,44 @@ export class GeminiAdapter {
         );
       }
 
-      const rawOutput = cp.execSync(command, {
-        input: fullPrompt,
+      // If interactive is true, we use inherit for all stdio so the user can see/interact with the TUI
+      // Note: stdout will not be captured, so parseUsage will fallback to estimation
+      /** @type {import('child_process').StdioOptions} */
+      const stdio = this.interactive
+        ? "inherit"
+        : ["pipe", "pipe", this.debug ? "inherit" : "pipe"];
+
+      const result = cp.spawnSync(executable, args, {
+        input: this.interactive ? undefined : fullPrompt,
         env: {
           ...process.env,
           GEMINI_API_KEY: sanitizedApiKey,
           GITHUB_TOKEN: sanitizedGithubToken,
-          GH_TOKEN: sanitizedGithubToken, // Fallback for some MCP servers
-          GH_MCP_PAT: sanitizedGhMcpPat, // Required for GitHub MCP server
+          GH_TOKEN: sanitizedGithubToken,
+          GH_MCP_PAT: sanitizedGhMcpPat,
         },
-
-        encoding: "utf-8",
         maxBuffer: 50 * 1024 * 1024,
         timeout: 900000,
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio,
+        encoding: "utf-8",
       });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        throw new Error(
+          `gemini-cli exited with code ${result.status}\nSTDOUT: ${result.stdout || "captured in TUI"}\nSTDERR: ${result.stderr || ""}`,
+        );
+      }
 
       const duration = (Date.now() - startTime) / 1000;
       console.log(`[GeminiAdapter] Completed in ${duration.toFixed(2)}s.`);
 
-      return this.parseUsage(rawOutput, fullPrompt.length);
+      return this.parseUsage(result.stdout, fullPrompt.length);
     } catch (err) {
-      throw new Error(
-        `gemini-cli execution failed: ${err.message}\nSTDOUT: ${err.stdout}\nSTDERR: ${err.stderr}`,
-      );
+      throw new Error(`gemini-cli execution failed: ${err.message}`);
     }
   }
 }

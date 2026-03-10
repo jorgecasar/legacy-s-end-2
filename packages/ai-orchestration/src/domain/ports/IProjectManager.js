@@ -6,30 +6,33 @@ export class IProjectManager {
   /**
    * Fetches all items from a project.
    * @param {string} projectId
+   * @param {string} [owner]
    * @returns {Promise<Array<{ id: string, title?: string, number?: number, type?: string, fields: object }>>}
    */
-  async getProjectItems(projectId) {
-    throw new Error(`Method not implemented. ${projectId}`);
+  async getProjectItems(projectId, owner) {
+    throw new Error(`Method not implemented. ${projectId} ${owner}`);
   }
 
   /**
    * Adds an item to a project.
    * @param {string} projectId
    * @param {string} contentId
+   * @param {string} [owner]
    * @returns {Promise<string>}
    */
-  async addItemToProject(projectId, contentId) {
-    throw new Error(`Method not implemented. ${projectId} ${contentId}`);
+  async addItemToProject(projectId, contentId, owner) {
+    throw new Error(`Method not implemented. ${projectId} ${contentId} ${owner}`);
   }
 
   /**
    * Finds an item by its issue number.
    * @param {string} projectId
    * @param {number} issueNumber
+   * @param {string} [owner]
    * @returns {Promise<any|null>}
    */
-  async findItemByIssueNumber(projectId, issueNumber) {
-    throw new Error(`Method not implemented. ${projectId} ${issueNumber}`);
+  async findItemByIssueNumber(projectId, issueNumber, owner) {
+    throw new Error(`Method not implemented. ${projectId} ${issueNumber} ${owner}`);
   }
 
   /**
@@ -37,10 +40,11 @@ export class IProjectManager {
    * @param {string} projectId
    * @param {string} itemId
    * @param {string} statusName
+   * @param {string} [owner]
    * @returns {Promise<void>}
    */
-  async updateItemStatus(projectId, itemId, statusName) {
-    throw new Error(`Method not implemented. ${projectId} ${itemId} ${statusName}`);
+  async updateItemStatus(projectId, itemId, statusName, owner) {
+    throw new Error(`Method not implemented. ${projectId} ${itemId} ${statusName} ${owner}`);
   }
 
   /**
@@ -49,9 +53,12 @@ export class IProjectManager {
    * @param {string} itemId
    * @param {string} fieldName
    * @param {string} value
+   * @param {string} [owner]
    * @returns {Promise<void>}
    */
-  async updateCustomField(projectId, itemId, fieldName, value) {
-    throw new Error(`Method not implemented. ${projectId} ${itemId} ${fieldName} ${value}`);
+  async updateCustomField(projectId, itemId, fieldName, value, owner) {
+    throw new Error(
+      `Method not implemented. ${projectId} ${itemId} ${fieldName} ${value} ${owner}`,
+    );
   }
 }

@@ -198,6 +198,8 @@ describe("Workflow: DeveloperWorkflow", () => {
     );
     const gitProvider = new MockGitHubAdapter();
     gitProvider.getIssue = async () => ({ number: 11, title: "Feature Title", body: "" });
+    gitProvider.listComments = async () => [];
+    gitProvider.createComment = async () => ({ id: 123 });
 
     const gitClient = new MockGitCliAdapter();
     // Force it to take the real git path (useMock = false)
@@ -226,6 +228,7 @@ describe("Workflow: DeveloperWorkflow", () => {
       useMock: false, // Triggers branch + commit logic
     });
 
+    if (!result.success) console.log("ERROR:", result.error);
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.value.verifySuccess, true);
     assert.strictEqual(createdPR, true);
@@ -273,6 +276,7 @@ describe("Workflow: DeveloperWorkflow", () => {
       console.log("Logs:", ciProvider?.logs);
       console.log("Result:", result);
     }
+    if (!result.success) console.log("ERROR:", result.error);
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.value.verifySuccess, true);
     assert.strictEqual(verificationCallCount, 3);

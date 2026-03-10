@@ -19,3 +19,38 @@ export function isAIReport(body) {
     /<!-- ai-usage:.*?-->/i.test(body)
   );
 }
+
+/**
+ * Filters and cleans issue comments to minimize token usage.
+ * Removes large logs and repetitive AI metadata blocks.
+ */
+export function cleanCommentBody(body) {
+  if (!body) return "";
+
+  // 1. Remove cost reports and specific markers
+  let cleaned = body.replace(
+    /<!-- ai-cost-report-start -->[\s\S]*?<!-- ai-cost-report-end -->/g,
+    "[Cost Report Omitted]",
+  );
+  cleaned = cleaned.replace(/<!-- ai-usage:.*?-->/g, "");
+
+  // 2. Remove triage metadata
+  cleaned = cleaned.replace(
+    /<!-- ai-triage-start -->[\s\S]*?<!-- ai-triage-end -->/g,
+    "[Triage Metadata Omitted]",
+  );
+
+  // 3. Truncate large code blocks (likely logs) if they exceed 1000 chars
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, (match) => {
+    if (match.length > 1000) {
+      return (
+        match.substring(0, 300) +
+        "\n\n... [Large Log/Code Block Truncated to save tokens] ...\n\n" +
+        match.substring(match.length - 300)
+      );
+    }
+    return match;
+  });
+
+  return cleaned;
+}

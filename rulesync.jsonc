@@ -1,58 +1,66 @@
 {
-  "$schema": "https://raw.githubusercontent.com/dyoshikawa/rulesync/refs/heads/main/config-schema.json",
-  "targets": ["antigravity", "geminicli"],
-  "features": ["rules", "ignore", "mcp", "commands", "subagents", "skills", "hooks"],
-  "baseDirs": [".", "docs"],
-  "delete": true,
-  "verbose": false,
-  "silent": false,
-  "global": false,
-  "simulateCommands": false,
-  "simulateSubagents": false,
-  "simulateSkills": false,
-  "sources": [
-    {
-      "source": "sickn33/antigravity-awesome-skills",
-      "skills": [
-        // 🎯 Fundamentos y Gestión
-        "concise-planning",
-        "lint-and-validate",
-        "kaizen",
-        "code-review-checklist",
-        "commit",
-        "create-pr",
-        "changelog-automation",
-        "documentation-templates",
-        "git-pushing",
+	"$schema": "https://github.com/dyoshikawa/rulesync/releases/download/v7.18.1/config-schema.json",
+	"targets": ["antigravity", "geminicli"],
+	"features": [
+		"rules",
+		"ignore",
+		"mcp",
+		"commands",
+		"subagents",
+		"skills",
+		"hooks"
+	],
+	"baseDirs": ["."],
+	"delete": true,
+	"verbose": false,
+	"silent": false,
+	"global": false,
+	"simulateCommands": false,
+	"simulateSubagents": false,
+	"simulateSkills": false,
+	"sources": [
+		{
+			"source": "sickn33/antigravity-awesome-skills",
+			"skills": [
+				// 🎯 Fundamentos y Gestión
+				"concise-planning",
+				"lint-and-validate",
+				"kaizen",
+				"code-review-checklist",
+				"commit",
+				"create-pr",
+				"changelog-automation",
+				"documentation-templates",
+				"git-pushing",
 
-        // 🎨 Frontend & UI
-        "frontend-design",
-        "frontend-security-coder",
-        "javascript-pro",
+				// 🎨 Frontend & UI
+				"frontend-design",
+				"frontend-security-coder",
+				"javascript-pro",
 
-        // 🏗️ Arquitectura y Patrones
-        "architecture-decision-records",
-        "architecture-patterns",
-        "domain-driven-design",
-        "ddd-context-mapping",
-        "ddd-strategic-design",
-        "ddd-tactical-patterns",
-        "senior-architect",
+				// 🏗️ Arquitectura y Patrones
+				"architecture-decision-records",
+				"architecture-patterns",
+				"domain-driven-design",
+				"ddd-context-mapping",
+				"ddd-strategic-design",
+				"ddd-tactical-patterns",
+				"senior-architect",
 
-        // 🎮 Game Development
-        "game-development/game-design",
-        "algorithmic-art",
+				// 🎮 Game Development
+				"game-development/game-design",
+				"algorithmic-art",
 
-        // 🐞 Calidad y Testing
-        "test-driven-development",
-        "test-fixing",
-        "e2e-testing-patterns",
-        "browser-automation",
-        "systematic-debugging",
-        "verification-before-completion",
-        "receiving-code-review",
-        "requesting-code-review",
-      ],
-    },
-  ],
+				// 🐞 Calidad y Testing
+				"test-driven-development",
+				"test-fixing",
+				"e2e-testing-patterns",
+				"browser-automation",
+				"systematic-debugging",
+				"verification-before-completion",
+				"receiving-code-review",
+				"requesting-code-review"
+			]
+		}
+	]
 }

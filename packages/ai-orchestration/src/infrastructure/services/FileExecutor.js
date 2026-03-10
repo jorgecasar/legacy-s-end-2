@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { execSync } from "node:child_process";
 
 /**
  * Executes file system modifications based on parsed XML blocks from LLM responses.
@@ -96,6 +97,29 @@ export class FileExecutor {
           `[FileExecutor] Failed to ${change.operation} file ${change.path}: ${err.message}`,
         );
       }
+    }
+
+    // Run post-edit hooks (format/lint) on the modified files to ensure AI output matches standards
+    const hookPath = path.resolve(this.workspaceDir, ".rulesync/hooks/format.sh");
+    try {
+      await fs.access(hookPath);
+      for (const change of changes) {
+        if (change.operation !== "delete") {
+          try {
+            // Force execution via bash to ensure script compatibility
+            execSync(`bash "${hookPath}" "${change.path}"`, {
+              cwd: this.workspaceDir,
+              stdio: "inherit",
+            });
+          } catch (hookErr) {
+            logger.warning(
+              `[FileExecutor] Post-edit hook failed for ${change.path}: ${hookErr.message}`,
+            );
+          }
+        }
+      }
+    } catch {
+      // Hook doesn't exist or is not accessible, skip silently
     }
   }
 

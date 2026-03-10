@@ -5,7 +5,7 @@ import child_process from "node:child_process";
  */
 
 /**
- * Adapter for local Git operations using `child_process.child_process.execSync`.
+ * Adapter for local Git operations using `child_process.execSync`.
  * @implements {IGitClient}
  */
 export class GitCliAdapter {
@@ -27,7 +27,6 @@ export class GitCliAdapter {
   }
 
   fetch(remote = "origin", branch = "") {
-    // If branch is provided, fetch specifically that branch and update the local tracking ref
     const target = branch ? `${remote} ${branch}:${remote}/${branch}` : remote;
     child_process.execSync(`git fetch ${target}`, { stdio: "inherit" });
   }
@@ -37,6 +36,13 @@ export class GitCliAdapter {
   }
 
   checkout(branchName, create = false) {
+    // Safety check: prevent creating local branches named origin/*
+    if (create && branchName.startsWith("origin/")) {
+      throw new Error(
+        `Invalid branch name: "${branchName}". Local branches should not start with "origin/".`,
+      );
+    }
+
     if (create) {
       child_process.execSync(`git checkout -b "${branchName}"`);
     } else {
@@ -44,13 +50,23 @@ export class GitCliAdapter {
         child_process.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
       } catch {
         // If checkout fails due to local changes, try to stash, checkout, and pop
-        console.warn(`[GitCliAdapter] Checkout failed, attempting to stash local changes...`);
-        child_process.execSync("git stash");
-        child_process.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+        console.warn(
+          `[GitCliAdapter] Checkout failed for "${branchName}", attempting to stash local changes...`,
+        );
         try {
-          child_process.execSync("git stash pop");
-        } catch {
-          console.warn(`[GitCliAdapter] Merge conflict after stash pop. Please resolve manually.`);
+          child_process.execSync("git stash");
+          child_process.execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+          try {
+            child_process.execSync("git stash pop");
+          } catch {
+            console.warn(
+              `[GitCliAdapter] Merge conflict after stash pop. Please resolve manually.`,
+            );
+          }
+        } catch (stashErr) {
+          throw new Error(
+            `Checkout failed for "${branchName}" even after stash attempt: ${stashErr.message}`,
+          );
         }
       }
     }
@@ -95,7 +111,15 @@ export class GitCliAdapter {
   }
 
   pushForce(branchName) {
-    child_process.execSync(`git push origin "${branchName}" --force`);
+    child_process.execSync(`git push origin "${branchName}" --force --no-verify`);
+  }
+
+  getRemoteUrl(remote = "origin") {
+    try {
+      return child_process.execSync(`git remote get-url ${remote}`).toString().trim();
+    } catch {
+      return null;
+    }
   }
 
   runVerification() {
@@ -112,8 +136,16 @@ export class GitCliAdapter {
       }
     };
 
-    run("npm run check");
+    run("npm run check:fast");
 
     return { success, output: output.trim() };
+  }
+
+  fix() {
+    try {
+      child_process.execSync("npm run check:fix", { stdio: "inherit" });
+    } catch {
+      /* ignore errors */
+    }
   }
 }
