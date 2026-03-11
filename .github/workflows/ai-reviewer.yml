@@ -34,10 +34,13 @@ jobs:
         run: npm ci
 
       - name: Check
-        run: npm run check
+        run: npm run check:fast
 
-      - name: Run CI Script Tests (Node.js Test)
-        run: npm run test
+  e2e-tests:
+    needs: validate
+    uses: ./.github/workflows/reusable-e2e.yml
+    with:
+      node-version: "24"
 
   review:
     name: AI Architecture Review
@@ -59,9 +62,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-
-      - name: Install AI Dependencies
-        run: npm install -g @google/gemini-cli
 
       - name: Run AI Reviewer
         uses: ./packages/ai-orchestration

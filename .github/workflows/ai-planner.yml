@@ -56,3 +56,4 @@ jobs:
           debug: ${{ github.event.inputs.debug || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
+

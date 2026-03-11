@@ -64,3 +64,9 @@ jobs:
           debug: ${{ github.event.inputs.debug || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
+
+  e2e-tests:
+    needs: develop
+    uses: ./.github/workflows/reusable-e2e.yml
+    with:
+      node-version: "24"

@@ -90,3 +90,4 @@ jobs:
           interactive: ${{ github.event.inputs.interactive || 'false' }}
           git_author_name: "Alarion"
           git_author_email: "alarion[bot]@users.noreply.github.com"
+
