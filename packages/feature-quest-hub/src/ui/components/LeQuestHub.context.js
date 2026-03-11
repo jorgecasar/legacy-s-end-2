@@ -1,3 +1,9 @@
 import { createContext } from "@lit/context";
 
-export const questUseCaseContext = createContext("quest-use-case");
+/** @typedef {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} ListAvailableQuests */
+
+/**
+ * Context key for the ListAvailableQuests use case.
+ * @type {import("@lit/context").Context<unknown, ListAvailableQuests>}
+ */
+export const questUseCaseContext = createContext("questUseCase");

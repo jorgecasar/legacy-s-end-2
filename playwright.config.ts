@@ -5,15 +5,17 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.BASE_URL || "http://localhost:6006",
     headless: true,
     trace: "retain-on-failure",
     screenshot: "on",
     video: "on-first-retry",
   },
   webServer: {
-    command: "npm run start",
-    port: 3000,
+    command: "npm run storybook -- --ci",
+    port: 6006,
     reuseExistingServer: !process.env.CI,
+    stdout: "ignore",
+    stderr: "pipe",
   },
 });
