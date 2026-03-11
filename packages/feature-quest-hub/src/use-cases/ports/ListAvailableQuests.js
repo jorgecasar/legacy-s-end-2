@@ -1,5 +1,5 @@
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
-/** @typedef {import("../../domain/Result.js").Result<Quest[]>} QuestsResult */
+/** @typedef {import("@legacys-end/core/domain/Result.js").Result<Quest[]>} QuestsResult */
 
 /**
  * ListAvailableQuests

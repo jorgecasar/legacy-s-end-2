@@ -1,5 +1,4 @@
 import { Given, Then, When } from "@cucumber/cucumber";
-import { expect } from "@playwright/test";
 import { QuestHubPage } from "../../e2e/pages/QuestHubPage.js";
 
 // Note: In Storybook integration, we use the iframe URL for clean isolation

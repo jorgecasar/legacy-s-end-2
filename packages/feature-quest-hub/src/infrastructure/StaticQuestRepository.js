@@ -1,10 +1,9 @@
+import { Result } from "@legacys-end/core/domain/Result.js";
 import { Quest } from "../domain/entities/Quest.js";
 import { QuestRepository } from "../use-cases/ports/QuestRepository.js";
 
 /** @typedef {import("../domain/entities/QuestId.js").QuestId} QuestId */
 /** @typedef {import("../domain/entities/QuestStatus.js").QuestStatusValues} QuestStatusValues */
-/** @typedef {import("../domain/Result.js").Result<Quest>} QuestResult */
-/** @typedef {import("../domain/Result.js").Result<Quest[]>} QuestsResult */
 
 /**
  * @typedef {Object} QuestRawData
@@ -39,12 +38,12 @@ export class StaticQuestRepository extends QuestRepository {
   /**
    * Retrieves a quest by its ID.
    * @param {QuestId} id - Quest ID.
-   * @returns {Promise<QuestResult>}
+   * @returns {Promise<Result<Quest>>}
    */
   async getById(id) {
     const questData = this.#quests.find((q) => q.id === id.value);
     if (!questData) {
-      return { success: false, error: `Quest with ID "${id}" not found.` };
+      return Result.failure(`Quest with ID "${id}" not found.`);
     }
 
     return Quest.create(questData);
@@ -52,19 +51,19 @@ export class StaticQuestRepository extends QuestRepository {
 
   /**
    * Get all quests from the provided list.
-   * @returns {Promise<QuestsResult>}
+   * @returns {Promise<Result<Quest[]>>}
    */
   async getAll() {
     const quests = [];
     for (const data of this.#quests) {
       const result = Quest.create(data);
       if (!result.success) {
-        return { success: false, error: `Failed to map quest: ${result.error}` };
+        return Result.failure(`Failed to map quest: ${result.error}`);
       }
       if (result.value) {
         quests.push(result.value);
       }
     }
-    return { success: true, value: quests };
+    return Result.success(quests);
   }
 }

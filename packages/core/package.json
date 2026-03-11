@@ -1,19 +1,18 @@
 {
-  "name": "@legacys-end/feature-quest-hub",
+  "name": "@legacys-end/core",
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./domain/*.js": "./src/domain/*.js",
+    "./domain/entities/*.js": "./src/domain/entities/*.js",
+    "./domain/services/*.js": "./src/domain/services/*.js",
+    "./use-cases/*.js": "./src/use-cases/*.js"
+  },
   "scripts": {
     "test": "node --test __tests__/*.spec.js",
     "test:coverage": "node --test --experimental-test-coverage __tests__/*.spec.js",
     "check": "oxfmt check src",
     "format": "oxfmt format src"
-  },
-  "dependencies": {
-    "@awesome.me/webawesome": "^3.2.1",
-    "@legacys-end/core": "*",
-    "@lit/context": "^1.1.0",
-    "@lit/task": "^1.0.3",
-    "lit": "^3.1.2"
   }
 }

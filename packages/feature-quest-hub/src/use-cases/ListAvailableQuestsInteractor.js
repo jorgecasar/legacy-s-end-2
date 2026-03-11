@@ -1,6 +1,7 @@
+import { Result } from "@legacys-end/core/domain/Result.js";
+
 /** @typedef {import("./ports/ListAvailableQuests.js").ListAvailableQuests} ListAvailableQuests */
 /** @typedef {import("../domain/entities/Quest.js").Quest} Quest */
-/** @typedef {import("../domain/Result.js").Result<Quest[]>} QuestsResult */
 /** @typedef {import("./ports/QuestRepository.js").QuestRepository} QuestRepository */
 
 /**
@@ -23,22 +24,19 @@ export class ListAvailableQuestsInteractor {
 
   /**
    * Executes the use case logic.
-   * @returns {Promise<QuestsResult>}
+   * @returns {Promise<Result<Quest[]>>}
    */
   async execute() {
     try {
       const result = await this.#questRepository.getAll();
 
       if (!result.success) {
-        return { success: false, error: result.error };
+        return Result.failure(result.error || "Unknown error");
       }
 
-      return { success: true, value: result.value || [] };
+      return Result.success(result.value || []);
     } catch (error) {
-      return {
-        success: false,
-        error: `Error listing available quests: ${error.message}`,
-      };
+      return Result.failure(`Error listing available quests: ${error.message}`);
     }
   }
 }

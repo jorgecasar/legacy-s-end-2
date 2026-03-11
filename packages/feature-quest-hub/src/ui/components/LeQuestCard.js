@@ -76,8 +76,7 @@ export class LeQuestCard extends LitElement {
           ${this.quest.level ? html`<span class="level">Lvl ${this.quest.level}</span>` : ""}
         </div>
 
-        <p class="description">${this.quest.description}</p>
-        
+        <p class="description">${this.quest.description}</p>        
         <div slot="footer" class="footer-container">
           <wa-badge variant=${badgeVariant} pill>${this.status}</wa-badge>
           
