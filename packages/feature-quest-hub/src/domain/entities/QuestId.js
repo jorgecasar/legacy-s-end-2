@@ -1,4 +1,4 @@
-/** @typedef {import("../Result.js").Result<QuestId>} QuestIdResult */
+import { Result } from "@legacys-end/core/domain/Result.js";
 
 /**
  * Value Object: QuestId
@@ -21,14 +21,13 @@ export class QuestId {
   /**
    * Factory method to create a QuestId.
    * @param {string} value
-   * @returns {QuestIdResult}
+   * @returns {Result<QuestId>}
    */
   static create(value) {
     if (!value || typeof value !== "string" || value.trim().length === 0) {
-      return { success: false, error: "QuestId must be a non-empty string." };
+      return Result.failure("QuestId must be a non-empty string.");
     }
-    // Add additional validation here if needed (regex, uuid, etc.)
-    return { success: true, value: new QuestId(value) };
+    return Result.success(new QuestId(value));
   }
 
   /**

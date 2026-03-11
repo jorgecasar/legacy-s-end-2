@@ -1,10 +1,8 @@
+import { Result } from "@legacys-end/core/domain/Result.js";
 import { QuestId } from "./QuestId.js";
 import { QuestStatus } from "./QuestStatus.js";
 
-/** @typedef {import("../Result.js").Result<Quest>} QuestResult */
-/** @typedef {import("../Result.js").Result<QuestStatusValues>} QuestStatusResult */
 /** @typedef {import("./QuestStatus.js").QuestStatusValues} QuestStatusValues */
-/** @typedef {import("../Result.js").Result<QuestId>} QuestIdResult */
 
 /**
  * Quest
@@ -56,7 +54,7 @@ export class Quest {
    * @param {string} [params.description] - Short description of the mission.
    * @param {string} [params.image] - Optional URL for the quest image.
    * @param {number} [params.level] - Required level to attempt.
-   * @returns {QuestResult}
+   * @returns {Result<Quest>}
    */
   static create({
     id,
@@ -68,32 +66,30 @@ export class Quest {
   }) {
     // Validate ID through Value Object
     const idResult =
-      id instanceof QuestId
-        ? /** @type {QuestIdResult} */ ({ success: true, value: id })
-        : QuestId.create(id);
+      id instanceof QuestId ? Result.success(id) : QuestId.create(/** @type {string} */ (id));
     if (!idResult.success) {
-      return { success: false, error: idResult.error };
+      return Result.failure(idResult.error || "Invalid ID");
     }
 
     if (!title || typeof title !== "string") {
-      return { success: false, error: "Quest must have a valid string title." };
+      return Result.failure("Quest must have a valid string title.");
     }
     if (!Object.values(QuestStatus).includes(/** @type {any} */ (status))) {
-      return { success: false, error: `Invalid QuestStatus: ${status}` };
+      return Result.failure(`Invalid QuestStatus: ${status}`);
     }
 
     try {
       const quest = new Quest({
-        id: idResult.value,
+        id: /** @type {QuestId} */ (idResult.value),
         title,
         status,
         description,
         image,
         level,
       });
-      return { success: true, value: quest };
+      return Result.success(quest);
     } catch (error) {
-      return { success: false, error: `Unexpected error creating Quest: ${error.message}` };
+      return Result.failure(`Unexpected error creating Quest: ${error.message}`);
     }
   }
 
@@ -130,45 +126,43 @@ export class Quest {
   /**
    * Unlock the quest, making it available.
    * Only a locked quest can be unlocked.
-   * @returns {QuestStatusResult}
+   * @returns {Result<QuestStatusValues>}
    */
   unlock() {
     if (this.#status !== QuestStatus.LOCKED) {
-      return { success: false, error: `Cannot unlock a quest that is ${this.#status}.` };
+      return Result.failure(`Cannot unlock a quest that is ${this.#status}.`);
     }
     this.#status = QuestStatus.AVAILABLE;
-    return { success: true, value: this.#status };
+    return Result.success(this.#status);
   }
 
   /**
    * Complete the quest.
    * Only an available quest can be completed.
-   * @returns {QuestStatusResult}
+   * @returns {Result<QuestStatusValues>}
    */
   complete() {
     if (this.#status !== QuestStatus.AVAILABLE) {
-      return {
-        success: false,
-        error: `Only Available quests can be completed. Current status: ${this.#status}.`,
-      };
+      return Result.failure(
+        `Only Available quests can be completed. Current status: ${this.#status}.`,
+      );
     }
     this.#status = QuestStatus.COMPLETED;
-    return { success: true, value: this.#status };
+    return Result.success(this.#status);
   }
 
   /**
    * Restart the quest, making it available again.
    * Only a completed quest can be restarted.
-   * @returns {QuestStatusResult}
+   * @returns {Result<QuestStatusValues>}
    */
   restart() {
     if (this.#status !== QuestStatus.COMPLETED) {
-      return {
-        success: false,
-        error: `Only Completed quests can be restarted. Current status: ${this.#status}.`,
-      };
+      return Result.failure(
+        `Only Completed quests can be restarted. Current status: ${this.#status}.`,
+      );
     }
     this.#status = QuestStatus.AVAILABLE;
-    return { success: true, value: this.#status };
+    return Result.success(this.#status);
   }
 }

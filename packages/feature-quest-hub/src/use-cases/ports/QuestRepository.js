@@ -1,7 +1,7 @@
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
 /** @typedef {import("../../domain/entities/QuestId.js").QuestId} QuestId */
-/** @typedef {import("../../domain/Result.js").Result<Quest>} QuestResult */
-/** @typedef {import("../../domain/Result.js").Result<Quest[]>} QuestsResult */
+/** @typedef {import("@legacys-end/core/domain/Result.js").Result<Quest>} QuestResult */
+/** @typedef {import("@legacys-end/core/domain/Result.js").Result<Quest[]>} QuestsResult */
 
 /**
  * QuestRepository
