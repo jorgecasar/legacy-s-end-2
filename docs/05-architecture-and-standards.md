@@ -12,6 +12,8 @@ geminicli:
 
 # 05 - Architecture and Code Standards
 
+This document defines the mandatory standards for Legacy's End. All new features must follow the pattern established in `packages/feature-quest-hub`.
+
 ## 1. Modular Monorepo Architecture (Vertical Slices)
 
 The project is structured as a modular monorepo using the `@legacys-end` namespace. This approach combines **Clean Architecture** with **Vertical Slices** to ensure high modularity, clear dependencies, and incremental delivery.
@@ -78,7 +80,7 @@ Logic and entities follow a "local-first" policy:
 We use `@lit/context` to decouple components from business logic:
 
 - **Providers**: High-level containers or the `game-app` provide implementations (Use Cases, Services).
-- **Consumers**: UI components use the `@consume` decorator to request their dependencies.
+- **Consumers**: UI components use the `@consume` decorator to request their dependencies. Components must consume Use Case interfaces, never implementations.
 
 ### 2.2 Real-time State vs. Persistent State
 
@@ -94,45 +96,68 @@ We use `@lit/context` to decouple components from business logic:
 5.  **Persistence (Use Case)**: If valid, the Use Case instructs Infra to save the state.
 6.  **Reactive Update (Signals)**: Infra updates a **Signal**. The UI re-renders automatically.
 
-## 4. Internal Folder Structure (per Package)
+## 4. Clean Architecture Layers (Internal Folder Structure)
 
-Every functional package (core, shared or feature) should follow this structure for consistency:
+Every feature package must follow this structure for consistency:
 
 ```text
 src/
 ├── domain/                    # Layer 1: Pure Domain
 │   ├── entities/              # Entities specific to this package
 │   ├── value-objects/         # Immutables (Position, Reward)
-│   └── logic/                 # Pure functions
+│   └── logic/                 # Pure functions, Result type. No external dependencies.
 │
-├── use-cases/                 # Layer 2: Use Cases
-│   ├── ports/                 # Interfaces/Ports
-│   └── [use-case-name].js
+├── use-cases/                 # Layer 2: Business Logic
+│   ├── ports/                 # Interfaces/Ports (Input/Output)
+│   └── [use-case].js          # Interactors/Orchestrators
 │
 ├── infrastructure/            # Layer 3: Adapters
-│   └── [adapter-name].js
+│   └── [adapter].js           # Concrete implementations of ports
 │
 └── ui/                        # Layer 4: Presentation
     ├── components/            # Lit Components
     ├── controllers/           # ReactiveControllers
-    └── stories/               # Storybook Stories
+    ├── stories/               # Storybook Stories
+    └── [ComponentName].styles.js # Component styles
 ```
 
-## 5. Code Standards
+## 5. The Result Pattern (Mandatory)
 
-### 5.1 Naming Conventions
+All functions in Domain, Use Cases, and Infrastructure must return a `Result<T>` object. Use strings for error messages or specialized Domain Errors.
 
-- **Files**: `kebab-case.js` (e.g., `move-hero.js`).
-- **Classes**: `PascalCase` (e.g., `class StartQuest`).
-- **Functions**: `camelCase` (e.g., `moveHero()`).
-- **Components**: `PascalCase` class, `kebab-case` tag with `le-` prefix (e.g., `le-game-viewport`).
-- **Styles**: `[component-name].styles.js` (separate from logic).
+```javascript
+/** @typedef {import("../domain/Result.js").Result<Data>} DataResult */
+async execute(): Promise<DataResult> {
+  // ...
+  return { success: true, value: data };
+}
+```
 
-### 5.2 Syntax Requirements
+## 6. Domain Entities & Value Objects
 
-- **Decorators**: Always use `accessor` for decorated fields (e.g., `@state() accessor name = ""`).
-- **Result Pattern**: Mandatory for all logic layers: `{ success, value, error }`.
+- **Value Objects**: Use them for IDs and complex attributes. Must have a static `create()` method.
+- **Entities**: Protect invariants using a private constructor and a static `create()` factory that returns a `Result`.
+- **Naming**: Contracts (Abstract Classes) take the base name (e.g., `QuestRepository`). Implementations use a technical suffix (e.g., `StaticQuestRepository`).
 
-### 5.3 UI Components
+## 7. UI Components (Lit)
 
+- **Asynchrony**: Always use `@lit/task` for data fetching. Handle all states: `initial`, `pending`, `error`, and `complete`.
+- **Events**: Define Custom Events in the domain layer when they represent business actions (e.g., `QuestSelectedEvent`).
 - **Component Library**: Always prioritize using **Web Awesome** components for standard UI elements (buttons, inputs, dialogs, layout utilities like `wa-stack`, etc.) rather than building custom components from scratch. Custom `le-*` components should wrap or compose Web Awesome components whenever possible.
+
+## 8. Coding Style & Typing
+
+- **JSDoc**: Mandatory for all files. Group `@typedef` at the top of the file, right after imports.
+- **No `any`**: Be specific with types. Use `unknown` or `Record<string, unknown>` only if strictly necessary.
+- **Naming Conventions**:
+    - **Files**: `kebab-case.js` (e.g., `move-hero.js`).
+    - **Classes**: `PascalCase` (e.g., `class StartQuest`).
+    - **Functions**: `camelCase` (e.g., `moveHero()`).
+    - **Components**: `PascalCase` class, `kebab-case` tag with `le-` prefix (e.g., `le-game-viewport`).
+- **Decorators**: Always use `accessor` for decorated fields (e.g., `@state() accessor name = ""`).
+
+## 9. Testing Strategy
+
+- **100% Logic Coverage**: Mandatory for `domain/` and `use-cases/`.
+- **BDD**: Use Cucumber for acceptance tests, running against Storybook stories for UI isolation.
+- **Unit Tests**: Use Node.js native test runner (`node --test`).
