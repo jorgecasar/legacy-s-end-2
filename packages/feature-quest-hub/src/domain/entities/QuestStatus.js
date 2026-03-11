@@ -1,4 +1,8 @@
 /**
+ * @typedef {typeof QuestStatus[keyof typeof QuestStatus]} QuestStatusValues
+ */
+
+/**
  * QuestStatus
  * Represents the status of a mission in the Quest Hub.
  */

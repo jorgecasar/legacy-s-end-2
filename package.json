@@ -24,8 +24,8 @@
     "test": "npm test --workspaces --if-present",
     "test:coverage": "npm test:coverage --workspaces --if-present",
     "test:e2e": "playwright test",
-    "test:bdd": "cucumber-js",
-    "start": "vite --port 3000",
+    "test:bdd": "start-server-and-test storybook http://localhost:6006 cucumber-js",
+    "start": "vite --port 3000 --strictPort",
     "format": "oxfmt packages features e2e --no-error-on-unmatched-pattern",
     "format:check": "oxfmt --check packages features e2e --no-error-on-unmatched-pattern",
     "check:fast": "npm run format:check && npm run lint && npm run test",
@@ -56,6 +56,7 @@
     "oxlint": "^1.50.0",
     "playwright": "^1.58.2",
     "rulesync": "^7.18.1",
+    "start-server-and-test": "^2.1.5",
     "storybook": "^10.2.13",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

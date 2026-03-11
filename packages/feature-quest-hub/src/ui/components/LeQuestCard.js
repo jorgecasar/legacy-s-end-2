@@ -6,31 +6,53 @@ import "@awesome.me/webawesome/dist/components/skeleton/skeleton.js";
 import { html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
+import { QuestSelectedEvent } from "../../domain/events/QuestSelectedEvent.js";
 import { questCardStyles } from "./LeQuestCard.styles.js";
+
+/** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
+/** @typedef {import("../../domain/entities/QuestStatus.js").QuestStatusValues} QuestStatusValues */
+/** @typedef {import("lit").TemplateResult} TemplateResult */
+/** @typedef {import("lit").PropertyValues} PropertyValues */
 
 /**
  * LeQuestCard
+ *
  * UI Component representing a mission in the Quest Hub.
- * Dumb component: receives data via properties and emits events.
+ * It is a "Dumb Component" that receives data via properties and emits domain events.
+ *
+ * @customElement le-quest-card
+ * @fires {QuestSelectedEvent} quest-selected - Emitted when the user selects an available mission.
+ * @fires {CustomEvent} quest-locked-attempt - Emitted when the user tries to click a locked mission.
  */
 export class LeQuestCard extends LitElement {
   static styles = questCardStyles;
 
-  /** @type {import("../../domain/entities/Quest.js").Quest} */
+  /**
+   * The Quest Entity from Domain.
+   * @type {Quest}
+   */
   @property({ type: Object }) accessor quest;
 
   /**
-   * Reflect status to attribute for CSS styling
-   * @type {string}
+   * Current status of the quest (reflected to attribute for CSS styling).
+   * @type {QuestStatusValues}
    */
   @property({ type: String, reflect: true }) accessor status = QuestStatus.LOCKED;
 
+  /**
+   * Synchronizes the internal status with the quest entity.
+   * @param {PropertyValues} changedProperties
+   */
   updated(changedProperties) {
     if (changedProperties.has("quest") && this.quest) {
       this.status = this.quest.status;
     }
   }
 
+  /**
+   * Main render method.
+   * @returns {TemplateResult}
+   */
   render() {
     if (!this.quest) {
       return html`
@@ -76,6 +98,10 @@ export class LeQuestCard extends LitElement {
     `;
   }
 
+  /**
+   * Handles user interaction with the card.
+   * Emits the corresponding domain or UI events based on status.
+   */
   _handleQuestClick() {
     if (this.status === QuestStatus.LOCKED) {
       this.dispatchEvent(
@@ -88,12 +114,6 @@ export class LeQuestCard extends LitElement {
       return;
     }
 
-    this.dispatchEvent(
-      new CustomEvent("quest-selected", {
-        detail: { quest: this.quest },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    this.dispatchEvent(new QuestSelectedEvent(this.quest));
   }
 }

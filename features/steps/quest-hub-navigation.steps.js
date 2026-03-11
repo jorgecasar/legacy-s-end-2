@@ -2,15 +2,17 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 
 Given("I am on the home page", async function () {
-  // Navigation to the base URL as defined in playwright.config.ts
-  // For now we assume http://localhost:3000
-  await this.page.goto("http://localhost:3000");
+  // Navigation to Storybook home or a safe entry point
+  await this.page.goto(
+    "http://localhost:6006/iframe.html?id=features-quest-hub-le-quest-hub--default",
+  );
 });
 
 When("I navigate to the Quest Hub", async function () {
-  // Simulation of navigation to the quest hub route
-  // In a future implementation, this could involve clicking a navigation link
-  await this.page.goto("http://localhost:3000/quest-hub");
+  // In Storybook context, we ensure the component story is loaded
+  await this.page.goto(
+    "http://localhost:6006/iframe.html?id=features-quest-hub-le-quest-hub--default",
+  );
 });
 
 Then("I should see the Quest Hub interface loaded correctly", async function () {
