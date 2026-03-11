@@ -9,6 +9,7 @@ build/
 *.tsbuildinfo
 coverage/
 test-results/
+playwright-report/
 
 # OS files
 .DS_Store
