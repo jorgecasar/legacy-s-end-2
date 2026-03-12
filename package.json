@@ -24,7 +24,7 @@
     "test": "npm test --workspaces --if-present",
     "test:coverage": "npm test:coverage --workspaces --if-present",
     "test:e2e": "playwright test",
-    "test:bdd": "start-server-and-test storybook http://localhost:6006 cucumber-js",
+    "test:bdd": "npm run build-storybook && start-server-and-test preview-storybook http://localhost:6006 cucumber-js",
     "start": "vite --port 3000 --strictPort",
     "format": "oxfmt packages features e2e --no-error-on-unmatched-pattern",
     "format:check": "oxfmt --check packages features e2e --no-error-on-unmatched-pattern",
@@ -34,7 +34,8 @@
     "prepare": "husky",
     "postinstall": "if [ \"$CI\" = \"true\" ]; then npx playwright install --with-deps chromium; fi",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "preview-storybook": "npx http-server storybook-static -p 6006 --silent"
   },
   "devDependencies": {
     "@awesome.me/webawesome": "^3.2.1",
