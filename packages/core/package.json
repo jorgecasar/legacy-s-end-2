@@ -7,7 +7,9 @@
     "./domain/*.js": "./src/domain/*.js",
     "./domain/entities/*.js": "./src/domain/entities/*.js",
     "./domain/services/*.js": "./src/domain/services/*.js",
-    "./use-cases/*.js": "./src/use-cases/*.js"
+    "./use-cases/*.js": "./src/use-cases/*.js",
+    "./use-cases/ports/*.js": "./src/use-cases/ports/*.js",
+    "./infrastructure/*.js": "./src/infrastructure/*.js"
   },
   "scripts": {
     "test": "node --test __tests__/*.spec.js",
