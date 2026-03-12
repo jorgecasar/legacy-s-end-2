@@ -85,6 +85,12 @@ inputs:
   git_author_email:
     description: "Git author email for commits made by the AI agent."
     required: false
+  verification_result:
+    description: "The result of the verification step (success or failure)."
+    required: false
+  verification_output:
+    description: "The detailed output of the verification step."
+    required: false
 runs:
   using: "node20"
   main: "dist/index.js"

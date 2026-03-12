@@ -106,4 +106,59 @@ describe("Workflow: ReviewerWorkflow", () => {
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "AI Failure");
   });
+
+  test("should automatically approve if CI verification passed", async () => {
+    const ciProvider = new MockCIAdapter(
+      { pull_number: "7", verification_result: "success" },
+      { payload: {} },
+    );
+    const gitProvider = new MockGitHubAdapter();
+    const aiProvider = new MockAIAdapter();
+
+    const result = await ReviewerWorkflow({
+      ciProvider,
+      gitProvider,
+      aiProvider,
+      owner: "o",
+      repo: "r",
+      payload: {},
+      model: "simulation",
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.reviewEvent, "APPROVE");
+    assert.ok(gitProvider.memory.reviews[0].body.includes("CI Verification Passed"));
+    // Verify AI was NOT called
+    assert.strictEqual(aiProvider.calls.length, 0);
+  });
+
+  test("should report failure if CI verification failed", async () => {
+    const ciProvider = new MockCIAdapter(
+      {
+        pull_number: "7",
+        verification_result: "failure",
+        verification_output: "Linter failed at line 10",
+      },
+      { payload: {} },
+    );
+    const gitProvider = new MockGitHubAdapter();
+    const aiProvider = new MockAIAdapter();
+
+    const result = await ReviewerWorkflow({
+      ciProvider,
+      gitProvider,
+      aiProvider,
+      owner: "o",
+      repo: "r",
+      payload: {},
+      model: "simulation",
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.reviewEvent, "COMMENT");
+    assert.ok(gitProvider.memory.reviews[0].body.includes("CI Verification Failed"));
+    assert.ok(gitProvider.memory.reviews[0].body.includes("Linter failed at line 10"));
+    // Verify AI was NOT called
+    assert.strictEqual(aiProvider.calls.length, 0);
+  });
 });

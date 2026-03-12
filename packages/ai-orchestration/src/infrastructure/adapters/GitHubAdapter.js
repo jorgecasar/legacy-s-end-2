@@ -169,4 +169,14 @@ export class GitHubAdapter {
     );
     return data;
   }
+
+  async createReview(owner, repo, pullNumber, body, event) {
+    await this.octokit.rest.pulls.createReview({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      body,
+      event,
+    });
+  }
 }

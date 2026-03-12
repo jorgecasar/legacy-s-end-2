@@ -108,4 +108,8 @@ export class MockGitHubAdapter {
   async listSubIssues(_owner, _repo, _parentIssueNumber) {
     return [];
   }
+
+  async createReview(owner, repo, pullNumber, body, event) {
+    this.memory.reviews.push({ pullNumber, body, state: event, user: { login: "mock-bot" } });
+  }
 }

@@ -7,7 +7,12 @@
  * @implements {IAIProvider}
  */
 export class MockAIAdapter {
+  constructor() {
+    this.calls = [];
+  }
+
   async generateContent(modelId, systemPrompt, userPrompt, maxOutputTokens) {
+    this.calls.push({ modelId, systemPrompt, userPrompt, maxOutputTokens });
     const estimatedInputTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
 
     let simulatedText = `Detailed implementation simulation for ${modelId}`;

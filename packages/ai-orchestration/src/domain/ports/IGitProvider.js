@@ -169,7 +169,15 @@ export class IGitProvider {
    * @param {number} _parentIssueNumber
    * @returns {Promise<any[]>}
    */
-  async listSubIssues(_owner, _repo, _parentIssueNumber) {
+  /**
+   * @param {string} _owner
+   * @param {string} _repo
+   * @param {number} _pullNumber
+   * @param {string} _body
+   * @param {'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'} _event
+   * @returns {Promise<void>}
+   */
+  async createReview(_owner, _repo, _pullNumber, _body, _event) {
     throw new Error("Not implemented");
   }
 }

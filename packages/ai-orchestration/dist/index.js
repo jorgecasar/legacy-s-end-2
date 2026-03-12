@@ -76122,6 +76122,16 @@ class GitHubAdapter {
     );
     return data;
   }
+
+  async createReview(owner, repo, pullNumber, body, event) {
+    await this.octokit.rest.pulls.createReview({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      body,
+      event,
+    });
+  }
 }
 
 ;// CONCATENATED MODULE: ./src/infrastructure/adapters/GitHubProjectAdapter.js
@@ -76365,7 +76375,12 @@ class GitHubProjectAdapter {
  * @implements {IAIProvider}
  */
 class MockAIAdapter {
+  constructor() {
+    this.calls = [];
+  }
+
   async generateContent(modelId, systemPrompt, userPrompt, maxOutputTokens) {
+    this.calls.push({ modelId, systemPrompt, userPrompt, maxOutputTokens });
     const estimatedInputTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
 
     let simulatedText = `Detailed implementation simulation for ${modelId}`;
@@ -76601,6 +76616,10 @@ class MockGitHubAdapter {
 
   async listSubIssues(_owner, _repo, _parentIssueNumber) {
     return [];
+  }
+
+  async createReview(owner, repo, pullNumber, body, event) {
+    this.memory.reviews.push({ pullNumber, body, state: event, user: { login: "mock-bot" } });
   }
 }
 
@@ -87352,8 +87371,8 @@ async function ReviewerWorkflow({
     }
 
     // Try to identify task number from branch (feat/issue-123) or PR body (closes #123)
-    const branchMatch = prMetadata.head?.ref?.match(/issue-(\d+)/);
-    const bodyMatch = prMetadata.body?.match(/(?:closes|fixes|resolves) #(\d+)/i);
+    const branchMatch = prMetadata.head?.ref?.match(/(?:issue-|task-|#)(\d+)/i);
+    const bodyMatch = prMetadata.body?.match(/(?:closes|fixes|resolves|refs) #(\d+)/i);
     const taskNumber = branchMatch
       ? parseInt(branchMatch[1], 10)
       : bodyMatch
@@ -87396,52 +87415,78 @@ async function ReviewerWorkflow({
     const customUserPrompt = ciProvider.getInput("reviewer_user_prompt");
 
     const logPrefix = simulationMode ? "SIMULATION" : "EXECUTION";
-    const result = await reviewPR({
-      aiProvider,
-      model,
-      repo,
-      diff,
-      conversationContext, // Pass the previous conversation
-      customSystemPrompt,
-      customUserPrompt,
-      maxInputTokens,
-      maxOutputTokens,
-      onStart: ({ systemPrompt, userPrompt }) => {
-        ciProvider.info(`--- AI ${logPrefix} (REVIEWER) ---`);
-        ciProvider.info(`PR: #${pullNumber} in ${owner}/${repo}`);
-        ciProvider.info(`SYSTEM PROMPT:\n${systemPrompt}`);
-        ciProvider.info(`USER PROMPT:\n${userPrompt}`);
-        ciProvider.info("--------------------------------------");
-      },
-    });
 
-    if (!result.success) {
-      return result;
+    // NEW: Handle verification results from CI
+    const verificationResult = ciProvider.getInput("verification_result");
+    const verificationOutput = ciProvider.getInput("verification_output");
+
+    let response;
+    let usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    let costs = { total_cost: 0, currency: "USD" };
+
+    if (verificationResult === "success") {
+      ciProvider.info("[Reviewer] CI verification passed. Automatically approving.");
+      response =
+        "✅ **CI Verification Passed**: All tests and linting checks passed successfully. Architecture looks consistent with the implementation standards.";
+    } else if (verificationResult === "failure") {
+      ciProvider.info("[Reviewer] CI verification failed. Reporting failure.");
+      response = `❌ **CI Verification Failed**: The following issues were detected during the automated checks:\n\n\`\`\`\n${verificationOutput || "No detailed output provided."}\n\`\`\`\n\nPlease fix the errors above before the architecture review can proceed.`;
+    } else {
+      // Traditional AI Review
+      const result = await reviewPR({
+        aiProvider,
+        model,
+        repo,
+        diff,
+        conversationContext,
+        customSystemPrompt,
+        customUserPrompt,
+        maxInputTokens,
+        maxOutputTokens,
+        onStart: ({ systemPrompt, userPrompt }) => {
+          ciProvider.info(`--- AI ${logPrefix} (REVIEWER) ---`);
+          ciProvider.info(`PR: #${pullNumber} in ${owner}/${repo}`);
+          ciProvider.info(`SYSTEM PROMPT:\n${systemPrompt}`);
+          ciProvider.info(`USER PROMPT:\n${userPrompt}`);
+          ciProvider.info("--------------------------------------");
+        },
+      });
+
+      if (!result.success) {
+        return result;
+      }
+
+      response = result.value.response;
+      usage = result.value.usage;
+      const costResult = calculateCost(model, usage);
+      costs = costResult.value;
+
+      ciProvider.info(
+        `[Cost] AI Reviewer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
+      );
+      ciProvider.info(`REAL RESPONSE:\n${response}`);
+      ciProvider.info(`REAL USAGE: ${JSON.stringify(usage, null, 2)}`);
+      ciProvider.info(`ESTIMATED API COST: $${costs.total_cost} ${costs.currency}`);
     }
 
-    const { usage, response } = result.value;
-    const costResult = calculateCost(model, usage);
-    const costs = costResult.value;
-    ciProvider.info(
-      `[Cost] AI Reviewer (${model}) used ${usage.total_tokens} tokens. Estimated cost: $${costs.total_cost} ${costs.currency}`,
-    );
-
-    ciProvider.info(`REAL RESPONSE:\n${response}`);
-    ciProvider.info(`REAL USAGE: ${JSON.stringify(usage, null, 2)}`);
-    ciProvider.info(`ESTIMATED API COST: $${costs.total_cost} ${costs.currency}`);
     ciProvider.info("--------------------------------------");
 
     // Post the review result back to the Pull Request
-    ciProvider.info(`[Reviewer] Posting review comment to PR #${pullNumber}...`);
+    ciProvider.info(`[Reviewer] Posting review to PR #${pullNumber}...`);
     const reviewHeader = "### 🔍 AI Architecture Review\n\n";
     const reviewFooter = "\n\n---\n_Review generated by AI Orchestration_";
-    await gitProvider.createComment(
+
+    // Determine the review event (APPROVE only if CI passed)
+    const reviewEvent = verificationResult === "success" ? "APPROVE" : "COMMENT";
+
+    await gitProvider.createReview(
       owner,
       repo,
       pullNumber,
       `${reviewHeader}${response}${reviewFooter}`,
+      reviewEvent,
     );
-    ciProvider.info(`[Reviewer] Review comment posted successfully.`);
+    ciProvider.info(`[Reviewer] Review (${reviewEvent}) posted successfully.`);
 
     const trackResult = await trackCostReport(gitProvider, {
       owner,
@@ -87461,7 +87506,7 @@ async function ReviewerWorkflow({
 
     return {
       success: true,
-      value: { pullNumber, taskNumber, response, usage, costs },
+      value: { pullNumber, taskNumber, response, usage, costs, reviewEvent },
     };
   } catch (error) {
     return { success: false, error: error.message };
