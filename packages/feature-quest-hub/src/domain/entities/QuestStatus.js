@@ -1,13 +1,16 @@
 /**
- * @typedef {typeof QuestStatus[keyof typeof QuestStatus]} QuestStatusValues
+ * @typedef {'LOCKED' | 'AVAILABLE' | 'COMPLETED'} QuestStatusValues
  */
 
 /**
- * QuestStatus
- * Represents the status of a mission in the Quest Hub.
+ * @type {{
+ *  LOCKED: QuestStatusValues,
+ *  AVAILABLE: QuestStatusValues,
+ *  COMPLETED: QuestStatusValues
+ * }}
  */
 export const QuestStatus = Object.freeze({
-  AVAILABLE: "Available",
-  LOCKED: "Locked",
-  COMPLETED: "Completed",
+  LOCKED: "LOCKED",
+  AVAILABLE: "AVAILABLE",
+  COMPLETED: "COMPLETED",
 });

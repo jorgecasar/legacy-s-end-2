@@ -5,92 +5,67 @@ import { QuestStatus } from "./QuestStatus.js";
 /** @typedef {import("./QuestStatus.js").QuestStatusValues} QuestStatusValues */
 
 /**
- * Quest
+ * Entity: Quest
  *
- * Aggregate Root for the Quest Hub domain.
- * Enforces business rules and state invariants for a single mission.
+ * Represents a quest in the game.
  */
 export class Quest {
   /** @type {QuestId} */
   #id;
   /** @type {string} */
   #title;
-  /** @type {QuestStatusValues} */
-  #status;
   /** @type {string} */
   #description;
-  /** @type {string} */
+  /** @type {QuestStatusValues} */
+  #status;
+  /** @type {string | undefined} */
   #image;
-  /** @type {number} */
+  /** @type {number | undefined} */
   #level;
 
   /**
-   * Internal constructor. Use Quest.create() instead.
-   * @param {object} params
-   * @param {QuestId} params.id
-   * @param {string} params.title
-   * @param {QuestStatusValues} [params.status]
-   * @param {string} [params.description]
-   * @param {string} [params.image]
-   * @param {number} [params.level]
+   * @param {QuestId} id
+   * @param {string} title
+   * @param {string} description
+   * @param {QuestStatusValues} status
+   * @param {string} [image]
+   * @param {number} [level]
    */
-  constructor({ id, title, status = QuestStatus.LOCKED, description = "", image = "", level = 1 }) {
+  constructor(id, title, description, status, image, level) {
     this.#id = id;
     this.#title = title;
-    this.#status = status;
     this.#description = description;
+    this.#status = status;
     this.#image = image;
     this.#level = level;
   }
 
   /**
-   * Static factory method to create a Quest entity.
-   * Enforces business rules and returns a Result object.
-   *
+   * Factory method to create a Quest.
    * @param {object} params
-   * @param {string | QuestId} params.id - Unique identifier for the quest.
-   * @param {string} params.title - Human readable title.
-   * @param {QuestStatusValues} [params.status] - Initial status (Locked by default).
-   * @param {string} [params.description] - Short description of the mission.
-   * @param {string} [params.image] - Optional URL for the quest image.
-   * @param {number} [params.level] - Required level to attempt.
+   * @param {string | QuestId} params.id
+   * @param {string} params.title
+   * @param {string} params.description
+   * @param {QuestStatusValues} [params.status]
+   * @param {string} [params.image]
+   * @param {number} [params.level]
    * @returns {Result<Quest>}
    */
-  static create({
-    id,
-    title,
-    status = QuestStatus.LOCKED,
-    description = "",
-    image = "",
-    level = 1,
-  }) {
-    // Validate ID through Value Object
-    const idResult =
-      id instanceof QuestId ? Result.success(id) : QuestId.create(/** @type {string} */ (id));
-    if (!idResult.success) {
-      return Result.failure(idResult.error || "Invalid ID");
-    }
-
-    if (!title || typeof title !== "string") {
+  static create({ id, title, description, status = QuestStatus.LOCKED, image, level }) {
+    if (!title || typeof title !== "string" || title.trim().length === 0) {
       return Result.failure("Quest must have a valid string title.");
     }
-    if (!Object.values(QuestStatus).includes(/** @type {any} */ (status))) {
+
+    if (!Object.values(QuestStatus).includes(status)) {
       return Result.failure(`Invalid QuestStatus: ${status}`);
     }
 
-    try {
-      const quest = new Quest({
-        id: /** @type {QuestId} */ (idResult.value),
-        title,
-        status,
-        description,
-        image,
-        level,
-      });
-      return Result.success(quest);
-    } catch (error) {
-      return Result.failure(`Unexpected error creating Quest: ${error.message}`);
+    const idResult = id instanceof QuestId ? Result.success(id) : QuestId.create(id);
+    if (!idResult.success) {
+      return Result.failure(idResult.error);
     }
+
+    return Result.success(new Quest(idResult.value, title, description, status, image, level));
   }
 
   /** @returns {QuestId} */
@@ -103,22 +78,22 @@ export class Quest {
     return this.#title;
   }
 
-  /** @returns {QuestStatusValues} */
-  get status() {
-    return this.#status;
-  }
-
   /** @returns {string} */
   get description() {
     return this.#description;
   }
 
-  /** @returns {string} */
+  /** @returns {QuestStatusValues} */
+  get status() {
+    return this.#status;
+  }
+
+  /** @returns {string | undefined} */
   get image() {
     return this.#image;
   }
 
-  /** @returns {number} */
+  /** @returns {number | undefined} */
   get level() {
     return this.#level;
   }
@@ -126,20 +101,28 @@ export class Quest {
   /**
    * Unlock the quest, making it available.
    * Only a locked quest can be unlocked.
-   * @returns {Result<QuestStatusValues>}
+   * @returns {Result<Quest>}
    */
   unlock() {
     if (this.#status !== QuestStatus.LOCKED) {
       return Result.failure(`Cannot unlock a quest that is ${this.#status}.`);
     }
-    this.#status = QuestStatus.AVAILABLE;
-    return Result.success(this.#status);
+    return Result.success(
+      new Quest(
+        this.#id,
+        this.#title,
+        this.#description,
+        QuestStatus.AVAILABLE,
+        this.#image,
+        this.#level,
+      ),
+    );
   }
 
   /**
    * Complete the quest.
    * Only an available quest can be completed.
-   * @returns {Result<QuestStatusValues>}
+   * @returns {Result<Quest>}
    */
   complete() {
     if (this.#status !== QuestStatus.AVAILABLE) {
@@ -147,14 +130,22 @@ export class Quest {
         `Only Available quests can be completed. Current status: ${this.#status}.`,
       );
     }
-    this.#status = QuestStatus.COMPLETED;
-    return Result.success(this.#status);
+    return Result.success(
+      new Quest(
+        this.#id,
+        this.#title,
+        this.#description,
+        QuestStatus.COMPLETED,
+        this.#image,
+        this.#level,
+      ),
+    );
   }
 
   /**
    * Restart the quest, making it available again.
    * Only a completed quest can be restarted.
-   * @returns {Result<QuestStatusValues>}
+   * @returns {Result<Quest>}
    */
   restart() {
     if (this.#status !== QuestStatus.COMPLETED) {
@@ -162,7 +153,15 @@ export class Quest {
         `Only Completed quests can be restarted. Current status: ${this.#status}.`,
       );
     }
-    this.#status = QuestStatus.AVAILABLE;
-    return Result.success(this.#status);
+    return Result.success(
+      new Quest(
+        this.#id,
+        this.#title,
+        this.#description,
+        QuestStatus.AVAILABLE,
+        this.#image,
+        this.#level,
+      ),
+    );
   }
 }

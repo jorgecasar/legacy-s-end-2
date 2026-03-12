@@ -20,7 +20,7 @@ export const questCardStyles = css`
     box-shadow: var(--wa-shadow-medium);
   }
 
-  :host([status="Locked"]) .card {
+  :host([status="LOCKED"]) .card {
     cursor: not-allowed;
     opacity: 0.7;
     filter: grayscale(1);

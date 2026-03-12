@@ -41,22 +41,18 @@ describe("Infrastructure: StaticQuestRepository", () => {
     assert.ok(result.value.every((q) => q instanceof Quest));
   });
 
-  it("should return error if quest mapping fails", async () => {
-    // Provide invalid quest data (missing title) to trigger error in factory
-    const repository = new StaticQuestRepository([/** @type {any} */ ({ id: "q1" })]);
-    const id = QuestId.create("q1").value;
-    const result = await repository.getById(id);
+  it("should return error if fromRawData receives invalid data", async () => {
+    const result = await StaticQuestRepository.fromRawData([
+      /** @type {any} */ ({ id: "q1" }), // Missing title
+    ]);
 
     assert.strictEqual(result.success, false);
-    assert.match(result.error, /Quest must have a valid string title/);
+    assert.match(result.error, /Failed to map quest: Quest must have a valid string title/);
   });
 
-  it("should return error if mapping all quests fails", async () => {
-    // Provide invalid quest data (missing title) to trigger error in factory
-    const repository = new StaticQuestRepository([/** @type {any} */ ({ id: "q1" })]);
-    const result = await repository.getAll();
-
-    assert.strictEqual(result.success, false);
-    assert.match(result.error, /Failed to map quest/);
+  it("should throw an error if the constructor receives invalid data", () => {
+    assert.throws(() => {
+      new StaticQuestRepository([/** @type {any} */ ({ id: "q1" })]);
+    }, /Failed to map quest: Quest must have a valid string title/);
   });
 });
