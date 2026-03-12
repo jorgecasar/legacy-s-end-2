@@ -111,13 +111,14 @@ export class LeQuestHub extends LitElement {
     }
 
     return html`
-      <div class="grid">
-        ${quests.map(
-          (quest) => html`
-            <le-quest-card .quest=${quest} @quest-selected=${this._handleQuestSelected}></le-quest-card>
-          `,
-        )}
-      </div>
+        <h1>Quest Hub</h1>
+        <div class="grid">
+          ${quests.map(
+            (quest) => html`
+              <le-quest-card .quest=${quest} @quest-selected=${this._handleQuestSelected}></le-quest-card>
+            `,
+          )}
+        </div>
     `;
   }
 

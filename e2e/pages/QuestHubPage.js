@@ -9,30 +9,43 @@ export class QuestHubPage {
    */
   constructor(page) {
     this.page = page;
+    // Main container
     this.hubContainer = page.locator("le-quest-hub");
-    this.questList = this.hubContainer.locator(".quest-list");
-    this.questCards = this.hubContainer.locator(".quest-card");
+    // List of cards - using the custom element name as a reliable tag
+    this.questCards = this.hubContainer.locator("le-quest-card");
   }
 
   async goto() {
-    // This assumes the Quest Hub is accessible via a specific route or component
-    // For standalone testing, we might need a specific story or test page
     await this.page.goto("/");
   }
 
   async expectVisible() {
     await expect(this.hubContainer).toBeVisible();
+    // Using accessibility selector to verify the main heading
+    await expect(this.page.getByRole("heading", { name: /Quest Hub/i })).toBeVisible();
   }
 
   async getQuestCount() {
+    // Wait for the first card to be visible to ensure async loading is done
+    await this.questCards.first().waitFor({ state: "visible", timeout: 5000 });
     return await this.questCards.count();
+  }
+
+  /**
+   * Finds a quest card by its title using accessible heading role
+   * @param {string} title
+   */
+  getQuestCardByTitle(title) {
+    return this.questCards.filter({
+      has: this.page.getByRole("heading", { name: title }),
+    });
   }
 
   /**
    * @param {string} title
    */
   async expectQuestVisible(title) {
-    const quest = this.questCards.filter({ hasText: title });
-    await expect(quest).toBeVisible();
+    const card = this.getQuestCardByTitle(title);
+    await expect(card).toBeVisible();
   }
 }
