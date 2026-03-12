@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Refactored `Quest` entity to follow immutable state transition patterns (returning new instances).
+- Enhanced `NavigateToQuestHub` use case with explicit `Result` pattern.
+- Improved `StaticQuestRepository` with robust mapping and static factory `fromRawData`.
+- Modernized `LeQuestCard` and `LeQuestHub` components with TC39 decorators and `@lit/task`.
+
+## [1.0.0] - 2026-04-19
+
+### Added
+
 - Implemented `@legacys-end/content` package for game level and dialogue definitions.
 - Created `DialogueNode` entity and `AdvanceDialogue` use case in `@legacys-end/core`.
 - Developed `GameStore` infrastructure service using `@lit-labs/signals` for reactive state management.

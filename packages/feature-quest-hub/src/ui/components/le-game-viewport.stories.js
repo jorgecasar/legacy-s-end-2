@@ -1,27 +1,9 @@
-import { html, LitElement } from "lit";
-import { property } from "lit/decorators.js";
-import { provide } from "@lit/context";
-import { gameStoreContext } from "./GameStore.context.js";
+import { html } from "lit";
 import { gameStore } from "../../infrastructure/GameStore.js";
 import HeroState from "@legacys-end/core/domain/entities/HeroState.js";
 import Position from "@legacys-end/core/domain/entities/Position.js";
 import "./le-game-viewport.js";
-
-// Simple decorator component to provide context in stories
-if (!customElements.get("le-game-level-decorator")) {
-  class LeGameLevelDecorator extends LitElement {
-    @provide({ context: gameStoreContext })
-    @property({ type: Object })
-    accessor store;
-
-    render() {
-      return html`
-        <slot></slot>
-      `;
-    }
-  }
-  customElements.define("le-game-level-decorator", LeGameLevelDecorator);
-}
+import "./le-game-level-decorator.js";
 
 export default {
   title: "Features/Game Level/LeGameViewport",

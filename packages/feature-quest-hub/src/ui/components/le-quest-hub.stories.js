@@ -21,14 +21,25 @@ export const Default = {
         title: "Story: Awakening",
         status: QuestStatus.AVAILABLE,
         description: "Learning context.",
+        image: "",
+        level: 1,
       },
       {
         id: "q2",
         title: "Story: Syntax",
         status: QuestStatus.LOCKED,
         description: "Locked mission.",
+        image: "",
+        level: 2,
       },
-      { id: "q3", title: "Story: Master", status: QuestStatus.COMPLETED, description: "Done." },
+      {
+        id: "q3",
+        title: "Story: Master",
+        status: QuestStatus.COMPLETED,
+        description: "Done.",
+        image: "",
+        level: 3,
+      },
     ];
     const repository = new StaticQuestRepository(mockQuests);
     const useCase = new ListAvailableQuestsInteractor(repository);

@@ -1,69 +1,66 @@
-import { Result } from "@legacys-end/core/domain/Result.js";
 import { Quest } from "../domain/entities/Quest.js";
+import { Result } from "@legacys-end/core/domain/Result.js";
 import { QuestRepository } from "../use-cases/ports/QuestRepository.js";
 
 /** @typedef {import("../domain/entities/QuestId.js").QuestId} QuestId */
-/** @typedef {import("../domain/entities/QuestStatus.js").QuestStatusValues} QuestStatusValues */
-
-/**
- * @typedef {Object} QuestRawData
- * @property {string} id
- * @property {string} title
- * @property {QuestStatusValues} [status]
- * @property {string} [description]
- * @property {string} [image]
- * @property {number} [level]
- */
 
 /**
  * StaticQuestRepository
  *
- * In-memory implementation of the QuestRepository port.
- * Returns Quest entities from a provided data array.
- *
+ * In-memory repository for quests.
  * @implements {QuestRepository}
  */
 export class StaticQuestRepository extends QuestRepository {
-  /** @type {QuestRawData[]} */
+  /** @type {Quest[]} */
   #quests;
 
   /**
-   * @param {QuestRawData[]} [initialData=[]] - Initial raw data to be mapped to entities.
+   * @param {any[]} questsData
    */
-  constructor(initialData = []) {
+  constructor(questsData = []) {
     super();
-    this.#quests = initialData;
-  }
+    const results = questsData.map((data) => Quest.create(data));
+    const failures = results.filter((res) => !res.success);
 
-  /**
-   * Retrieves a quest by its ID.
-   * @param {QuestId} id - Quest ID.
-   * @returns {Promise<Result<Quest>>}
-   */
-  async getById(id) {
-    const questData = this.#quests.find((q) => q.id === id.value);
-    if (!questData) {
-      return Result.failure(`Quest with ID "${id}" not found.`);
+    if (failures.length > 0) {
+      throw new Error(`Failed to map quest: ${failures[0].error}`);
     }
 
-    return Quest.create(questData);
+    this.#quests = results.filter((res) => res.success).map((res) => res.value);
   }
 
   /**
-   * Get all quests from the provided list.
+   * @param {QuestId} questId
+   * @returns {Promise<Result<Quest>>}
+   */
+  async getById(questId) {
+    const quest = this.#quests.find((q) => q.id.equals(questId));
+    if (!quest) {
+      return Result.failure(`Quest with ID ${questId.value} not found.`);
+    }
+    return Result.success(quest);
+  }
+
+  /**
    * @returns {Promise<Result<Quest[]>>}
    */
   async getAll() {
-    const quests = [];
-    for (const data of this.#quests) {
-      const result = Quest.create(data);
-      if (!result.success) {
-        return Result.failure(`Failed to map quest: ${result.error}`);
-      }
-      if (result.value) {
-        quests.push(result.value);
-      }
+    return Result.success([...this.#quests]);
+  }
+
+  /**
+   * Mocks a database lookup from raw data.
+   * @param {any[]} data
+   * @returns {Promise<Result<Quest[]>>}
+   */
+  static async fromRawData(data) {
+    const results = data.map((d) => Quest.create(d));
+    const failures = results.filter((r) => !r.success);
+
+    if (failures.length > 0) {
+      return Result.failure(`Failed to map quest: ${failures[0].error}`);
     }
-    return Result.success(quests);
+
+    return Result.success(results.map((r) => r.value));
   }
 }

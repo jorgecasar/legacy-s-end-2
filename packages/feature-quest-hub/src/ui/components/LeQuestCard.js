@@ -37,13 +37,14 @@ export class LeQuestCard extends LitElement {
    * Current status of the quest (reflected to attribute for CSS styling).
    * @type {QuestStatusValues}
    */
-  @property({ type: String, reflect: true }) accessor status = QuestStatus.LOCKED;
+  @property({ type: String, reflect: true }) accessor status =
+    /** @type {QuestStatusValues} */ (QuestStatus.LOCKED);
 
   /**
-   * Synchronizes the internal status with the quest entity.
+   * Synchronizes the internal status with the quest entity before rendering.
    * @param {PropertyValues} changedProperties
    */
-  updated(changedProperties) {
+  willUpdate(changedProperties) {
     if (changedProperties.has("quest") && this.quest) {
       this.status = this.quest.status;
     }
@@ -67,6 +68,8 @@ export class LeQuestCard extends LitElement {
           ? "brand"
           : "neutral";
 
+    const statusLabel = this.status.charAt(0).toUpperCase() + this.status.slice(1).toLowerCase();
+
     return html`
       <wa-card class="card" @click=${this._handleQuestClick}>
         ${this.quest.image ? html`<img slot="media" src="${this.quest.image}" alt="${this.quest.title}" />` : ""}
@@ -78,7 +81,7 @@ export class LeQuestCard extends LitElement {
 
         <p class="description">${this.quest.description}</p>        
         <div slot="footer" class="footer-container">
-          <wa-badge variant=${badgeVariant} pill>${this.status}</wa-badge>
+          <wa-badge variant=${badgeVariant} pill>${statusLabel}</wa-badge>
           
           ${
             this.status !== QuestStatus.LOCKED
