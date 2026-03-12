@@ -6,6 +6,7 @@
   "keywords": [],
   "license": "MIT",
   "author": "Jorge Casar",
+  "packageManager": "npm@11.9.0",
   "workspaces": [
     "packages/*"
   ],
@@ -61,5 +62,9 @@
     "storybook": "^10.2.13",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "turbo": "^2.8.16",
+    "vite": "^7.3.1"
   }
 }
