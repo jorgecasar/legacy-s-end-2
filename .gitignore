@@ -2,6 +2,8 @@
 node_modules/
 .npm
 
+.turbo/
+
 # Build
 dist/
 !packages/ai-orchestration/dist/
