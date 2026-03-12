@@ -169,6 +169,10 @@ export class IGitProvider {
    * @param {number} _parentIssueNumber
    * @returns {Promise<any[]>}
    */
+  async listSubIssues(_owner, _repo, _parentIssueNumber) {
+    throw new Error("Not implemented");
+  }
+
   /**
    * @param {string} _owner
    * @param {string} _repo

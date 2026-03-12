@@ -30,6 +30,28 @@ describe("Domain: Quest Entity", () => {
     assert.strictEqual(result.value.description, "My description");
   });
 
+  it("should have image and level properties", () => {
+    const result = Quest.create({
+      id: "q1",
+      title: "Title",
+      image: "image.png",
+      level: 5,
+    });
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.image, "image.png");
+    assert.strictEqual(result.value.level, 5);
+  });
+
+  it("should create a quest using a QuestId instance", () => {
+    const questId = QuestId.create("q1").value;
+    const result = Quest.create({
+      id: questId,
+      title: "Title",
+    });
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.id, questId);
+  });
+
   it("should return error if ID or title is missing", () => {
     const result1 = Quest.create({ id: "", title: "Title" });
     const result2 = Quest.create({ id: "ID", title: "" });
