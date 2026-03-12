@@ -32,8 +32,9 @@
     "check": "npm run check:fast && npm run test:e2e && npm run test:bdd",
     "check:fix": "npm run format && npm run lint:logic:fix",
     "prepare": "husky",
-    "postinstall": "if [ \"$CI\" = \"true\" ]; then npx playwright install --with-deps chromium; fi",
+    "postinstall": "if [ \"$CI\\\" = \\\"true\\\" ]; then npx playwright install --with-deps chromium; fi",
     "storybook": "storybook dev -p 6006",
+    "hono": "4.12.7",
     "build-storybook": "storybook build",
     "preview-storybook": "npx http-server storybook-static -p 6006 --silent"
   },
