@@ -11,6 +11,7 @@
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
+    "experimentalDecorators": false,
     "maxNodeModuleJsDepth": 0
   },
   "include": ["packages/*/src/**/*.js"],

@@ -2,7 +2,6 @@ import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
 import { consume } from "@lit/context";
 import { Task } from "@lit/task";
 import { html, LitElement } from "lit";
-import { state } from "lit/decorators.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
 import { questHubStyles } from "./LeQuestHub.styles.js";
 import "./le-quest-card.js";
@@ -28,7 +27,6 @@ export class LeQuestHub extends LitElement {
    * @type {ListAvailableQuests}
    */
   @consume({ context: questUseCaseContext, subscribe: true })
-  @state()
   accessor listQuestsUseCase;
 
   /**

@@ -1,0 +1,10 @@
+{
+  "name": "@legacys-end/content",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./levels/*.json": "./levels/*.json",
+    "./dialogues/*.json": "./dialogues/*.json"
+  }
+}
