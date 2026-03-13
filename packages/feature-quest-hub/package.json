@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./ui/components/*.js": "./src/ui/components/*.js",
+    "./infrastructure/*.js": "./src/infrastructure/*.js"
+  },
   "scripts": {
     "test": "node --test __tests__/*.spec.js",
     "test:coverage": "node --test --experimental-test-coverage __tests__/*.spec.js",
@@ -11,7 +15,9 @@
   },
   "dependencies": {
     "@awesome.me/webawesome": "^3.2.1",
+    "@legacys-end/content": "*",
     "@legacys-end/core": "*",
+    "@lit-labs/signals": "^0.1.0",
     "@lit/context": "^1.1.0",
     "@lit/task": "^1.0.3",
     "lit": "^3.1.2"

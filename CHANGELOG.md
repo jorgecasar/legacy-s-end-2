@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented `@legacys-end/content` package for game level and dialogue definitions.
+- Created `DialogueNode` entity and `AdvanceDialogue` use case in `@legacys-end/core`.
+- Developed `GameStore` infrastructure service using `@lit-labs/signals` for reactive state management.
+- Implemented `<le-game-viewport>` component with CSS Grid rendering and hero positioning.
+- Implemented `<le-dialogue-overlay>` component for interactive NPC interactions.
+- Added `game.html` as a test page for the game viewport and dialogue system.
+- Added `<le-game-level>` container component to orchestrate the game level initialization and rendering.
 - Implemented `le-quest-card` component covering all 4 architectural layers (Domain, Use Cases, Infrastructure, UI).
 - Defined `Quest` entity and `QuestStatus` (Available, Locked, Completed) in `@legacys-end/feature-quest-hub`.
 - Implemented `ListAvailableQuests` use case following the Result Pattern.
@@ -42,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Refactored `LeHero` and `LeDialogueOverlay` placeholders to follow project standards (separate styles, signal-based reactivity).
+- Updated `packages/feature-quest-hub/package.json` with new dependencies (`@lit-labs/signals`, `@legacys-end/content`) and exports.
 - Improved documentation structure and clarity:
   - Created root `README.md` as a central entry point.
   - Refactored `docs/09-getting-started.md` to be more actionable for new developers.

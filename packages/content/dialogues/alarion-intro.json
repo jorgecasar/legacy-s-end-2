@@ -1,0 +1,14 @@
+[
+  {
+    "id": "start",
+    "speaker": "Elder Alarion",
+    "text": "Wake up, hero. The world is ending.",
+    "nextId": "info"
+  },
+  {
+    "id": "info",
+    "speaker": "Elder Alarion",
+    "text": "The void is consuming everything. You are our last hope.",
+    "nextId": null
+  }
+]
