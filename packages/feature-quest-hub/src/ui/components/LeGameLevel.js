@@ -31,6 +31,7 @@ export class LeGameLevel extends LitElement {
   }
 
   async _initializeGame() {
+    console.log("Initializing game level...");
     const { levelMap, initialHeroPosition } = alarionAwakening;
 
     const posResult = Position.create(initialHeroPosition.x, initialHeroPosition.y);
@@ -47,6 +48,7 @@ export class LeGameLevel extends LitElement {
 
     this.gameStore.initialize(heroResult.value, levelMap);
     this.gameStore.setDialogue(alarionIntro);
+    console.log("Game level initialized successfully.");
   }
 
   render() {

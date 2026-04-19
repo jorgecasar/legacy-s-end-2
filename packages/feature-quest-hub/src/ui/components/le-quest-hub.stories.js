@@ -2,7 +2,9 @@ import { ContextProvider } from "@lit/context";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { StaticQuestRepository } from "../../infrastructure/StaticQuestRepository.js";
 import { ListAvailableQuestsInteractor } from "../../use-cases/ListAvailableQuestsInteractor.js";
+import { GameStore } from "../../infrastructure/GameStore.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
+import { gameStoreContext } from "./GameStore.context.js";
 import "./le-quest-hub.js";
 
 export default {
@@ -43,11 +45,18 @@ export const Default = {
     ];
     const repository = new StaticQuestRepository(mockQuests);
     const useCase = new ListAvailableQuestsInteractor(repository);
+    const store = new GameStore();
 
     // Proveemos el CASO DE USO (Interfaz), inyectando el Interactor (Implementación)
     new ContextProvider(container, {
       context: questUseCaseContext,
       initialValue: useCase,
+    });
+
+    // Proveemos el STORE
+    new ContextProvider(container, {
+      context: gameStoreContext,
+      initialValue: store,
     });
 
     const element = document.createElement("le-quest-hub");

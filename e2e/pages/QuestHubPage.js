@@ -13,6 +13,8 @@ export class QuestHubPage {
     this.hubContainer = page.locator("le-quest-hub");
     // List of cards - using the custom element name as a reliable tag
     this.questCards = this.hubContainer.locator("le-quest-card");
+    // Active mission section
+    this.activeMissionSection = this.hubContainer.locator(".active-mission");
   }
 
   async goto() {
@@ -47,5 +49,29 @@ export class QuestHubPage {
   async expectQuestVisible(title) {
     const card = this.getQuestCardByTitle(title);
     await expect(card).toBeVisible();
+  }
+
+  /**
+   * Selects a quest by its title
+   * @param {string} title
+   */
+  async selectQuest(title) {
+    const card = this.getQuestCardByTitle(title);
+    await card.click({ force: true });
+  }
+
+  /**
+   * Verifies if the active mission section contains the expected title
+   * @param {string} title
+   */
+  async expectActiveMission(title) {
+    await expect(this.activeMissionSection).toContainText(title);
+  }
+
+  /**
+   * Verifies if there is no active mission
+   */
+  async expectNoActiveMission() {
+    await expect(this.activeMissionSection).toContainText(/don't have an active mission/i);
   }
 }

@@ -22,6 +22,8 @@ export class Quest {
   #image;
   /** @type {number | undefined} */
   #level;
+  /** @type {string | undefined} */
+  #objective;
 
   /**
    * @param {QuestId} id
@@ -30,14 +32,16 @@ export class Quest {
    * @param {QuestStatusValues} status
    * @param {string} [image]
    * @param {number} [level]
+   * @param {string} [objective]
    */
-  constructor(id, title, description, status, image, level) {
+  constructor(id, title, description, status, image, level, objective) {
     this.#id = id;
     this.#title = title;
     this.#description = description;
     this.#status = status;
     this.#image = image;
     this.#level = level;
+    this.#objective = objective;
   }
 
   /**
@@ -49,9 +53,10 @@ export class Quest {
    * @param {QuestStatusValues} [params.status]
    * @param {string} [params.image]
    * @param {number} [params.level]
+   * @param {string} [params.objective]
    * @returns {Result<Quest>}
    */
-  static create({ id, title, description, status = QuestStatus.LOCKED, image, level }) {
+  static create({ id, title, description, status = QuestStatus.LOCKED, image, level, objective }) {
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       return Result.failure("Quest must have a valid string title.");
     }
@@ -65,7 +70,9 @@ export class Quest {
       return Result.failure(idResult.error);
     }
 
-    return Result.success(new Quest(idResult.value, title, description, status, image, level));
+    return Result.success(
+      new Quest(idResult.value, title, description, status, image, level, objective),
+    );
   }
 
   /** @returns {QuestId} */
@@ -98,6 +105,11 @@ export class Quest {
     return this.#level;
   }
 
+  /** @returns {string | undefined} */
+  get objective() {
+    return this.#objective;
+  }
+
   /**
    * Unlock the quest, making it available.
    * Only a locked quest can be unlocked.
@@ -115,6 +127,7 @@ export class Quest {
         QuestStatus.AVAILABLE,
         this.#image,
         this.#level,
+        this.#objective,
       ),
     );
   }
@@ -138,6 +151,7 @@ export class Quest {
         QuestStatus.COMPLETED,
         this.#image,
         this.#level,
+        this.#objective,
       ),
     );
   }
@@ -161,6 +175,7 @@ export class Quest {
         QuestStatus.AVAILABLE,
         this.#image,
         this.#level,
+        this.#objective,
       ),
     );
   }

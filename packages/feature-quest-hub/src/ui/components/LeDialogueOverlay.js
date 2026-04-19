@@ -1,7 +1,7 @@
-import { LitElement, html } from "lit";
-import { property } from "lit/decorators.js";
-import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
+import { SignalWatcher } from "@lit-labs/signals";
+import { html, LitElement } from "lit";
+import { property } from "lit/decorators.js";
 import { gameStoreContext } from "./GameStore.context.js";
 import { dialogueOverlayStyles } from "./LeDialogueOverlay.styles.js";
 
@@ -23,12 +23,20 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
   @property({ type: Boolean, reflect: true })
   accessor hidden = true;
 
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    const dialogue = this.gameStore?.currentDialogue.get();
+    const shouldBeHidden = !dialogue;
+    if (this.hidden !== shouldBeHidden) {
+      this.hidden = shouldBeHidden;
+    }
+  }
+
   render() {
     if (!this.gameStore) return html``;
 
     const dialogue = this.gameStore.currentDialogue.get();
-
-    this.hidden = !dialogue;
+    console.log("Rendering dialogue:", dialogue?.id || "none");
 
     if (!dialogue) {
       return html`

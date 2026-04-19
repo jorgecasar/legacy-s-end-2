@@ -1,5 +1,5 @@
 import { html } from "lit";
-import "./LeGameLevel.js";
+import "./le-game-level.js";
 
 export default {
   title: "Features/Game Level/LeGameLevel",

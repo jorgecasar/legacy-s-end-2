@@ -19,6 +19,9 @@ export class GameStore {
   /** @type {any} */
   currentDialogue = signal(null);
 
+  /** @type {any} */
+  activeQuest = signal(null);
+
   /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").default[]} */
   #dialogueNodes = [];
 
@@ -51,6 +54,14 @@ export class GameStore {
     if (this.#dialogueNodes.length > 0) {
       this.currentDialogue.set(this.#dialogueNodes[0]);
     }
+  }
+
+  /**
+   * Sets the active quest.
+   * @param {import("../domain/entities/Quest.js").Quest} quest
+   */
+  activateQuest(quest) {
+    this.activeQuest.set(quest);
   }
 
   /**
