@@ -38,11 +38,13 @@ describe("Domain: Quest Entity", () => {
       ...validParams,
       image: "test.png",
       level: 5,
+      objective: "Kill 10 rats",
     });
 
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.value.image, "test.png");
     assert.strictEqual(result.value.level, 5);
+    assert.strictEqual(result.value.objective, "Kill 10 rats");
   });
 
   describe("State Transitions", () => {

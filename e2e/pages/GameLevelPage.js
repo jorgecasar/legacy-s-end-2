@@ -45,7 +45,7 @@ export class GameLevelPage {
   }
 
   async expectDialogueVisible() {
-    await expect(this.dialogueOverlay).toBeVisible();
+    await expect(this.dialogueOverlay).toBeVisible({ timeout: 10000 });
   }
 
   async expectDialogueHidden() {

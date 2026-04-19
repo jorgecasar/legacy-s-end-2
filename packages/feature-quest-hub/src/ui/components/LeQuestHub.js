@@ -1,13 +1,16 @@
 import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
 import { consume } from "@lit/context";
+import { SignalWatcher } from "@lit-labs/signals";
 import { Task } from "@lit/task";
 import { html, LitElement } from "lit";
+import { gameStoreContext } from "./GameStore.context.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
 import { questHubStyles } from "./LeQuestHub.styles.js";
 import "./le-quest-card.js";
 
 /** @typedef {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} ListAvailableQuests */
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
+/** @typedef {import("../../infrastructure/GameStore.js").GameStore} GameStore */
 /** @typedef {import("lit").TemplateResult} TemplateResult */
 
 /**
@@ -18,7 +21,7 @@ import "./le-quest-card.js";
  *
  * @customElement le-quest-hub
  */
-export class LeQuestHub extends LitElement {
+export class LeQuestHub extends SignalWatcher(LitElement) {
   static styles = questHubStyles;
 
   /**
@@ -28,6 +31,13 @@ export class LeQuestHub extends LitElement {
    */
   @consume({ context: questUseCaseContext, subscribe: true })
   accessor listQuestsUseCase;
+
+  /**
+   * The GameStore instance.
+   * @type {GameStore}
+   */
+  @consume({ context: gameStoreContext, subscribe: true })
+  accessor gameStore;
 
   /**
    * Internal reactive task that manages the asynchronous loading lifecycle.
@@ -58,13 +68,41 @@ export class LeQuestHub extends LitElement {
    * @returns {TemplateResult}
    */
   render() {
-    return this.#loadQuestsTask.render({
-      initial: () => this.#renderInitial(),
-      pending: () => this.#renderPending(),
-      error: (error) =>
-        this.#renderError(error instanceof Error ? error : new Error(String(error))),
-      complete: (quests) => this.#renderSuccess(quests),
-    });
+    return html`
+      ${this.#renderActiveMission()}
+      ${this.#loadQuestsTask.render({
+        initial: () => this.#renderInitial(),
+        pending: () => this.#renderPending(),
+        error: (error) =>
+          this.#renderError(error instanceof Error ? error : new Error(String(error))),
+        complete: (quests) => this.#renderSuccess(quests),
+      })}
+    `;
+  }
+
+  /**
+   * Renders the active mission section if there is one.
+   * @returns {TemplateResult | typeof import("lit").nothing}
+   */
+  #renderActiveMission() {
+    const activeQuest = this.gameStore?.activeQuest.get();
+    if (!activeQuest)
+      return html`
+        <div class="active-mission" id="no-active-mission">
+          <h2>Active Mission</h2>
+          <p>You don't have an active mission. Select one from the catalogue below.</p>
+        </div>
+      `;
+
+    return html`
+      <div class="active-mission" id="active-mission-section">
+        <h2>Active Mission: ${activeQuest.title}</h2>
+        <p>${activeQuest.description}</p>
+        <div class="meta">
+          <span><strong>Objective:</strong> ${activeQuest.objective}</span>
+        </div>
+      </div>
+    `;
   }
 
   /**
@@ -113,7 +151,7 @@ export class LeQuestHub extends LitElement {
         <div class="grid">
           ${quests.map(
             (quest) => html`
-              <le-quest-card .quest=${quest} @quest-selected=${this._handleQuestSelected}></le-quest-card>
+              <le-quest-card .quest=${quest} @quest-selected=${this.#onQuestSelected}></le-quest-card>
             `,
           )}
         </div>
@@ -124,8 +162,11 @@ export class LeQuestHub extends LitElement {
    * Handles the selection of a quest card.
    * @param {CustomEvent} e - The custom event from the card.
    */
-  _handleQuestSelected(e) {
+  #onQuestSelected(e) {
     const { quest } = e.detail;
-    console.log("Quest selected in Hub:", quest.title);
+    if (this.gameStore) {
+      this.gameStore.activateQuest(quest);
+    }
+    console.log("Quest selected and set as active:", quest.title);
   }
 }

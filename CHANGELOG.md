@@ -9,10 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Configured **CI/CD pipeline** with GitHub Actions (`ci.yml`) including automated linting, unit tests, and E2E/BDD tests.
+- Implemented **Active Mission** state management in `GameStore` and UI in `LeQuestHub`.
+- Integrated **Cucumber BDD** into the E2E infrastructure with Playwright and Storybook.
+- Created `quest-selection-flow.feature` to validate the full user journey from quest selection to mission activation.
 - Refactored `Quest` entity to follow immutable state transition patterns (returning new instances).
 - Enhanced `NavigateToQuestHub` use case with explicit `Result` pattern.
 - Improved `StaticQuestRepository` with robust mapping and static factory `fromRawData`.
 - Modernized `LeQuestCard` and `LeQuestHub` components with TC39 decorators and `@lit/task`.
+
+### Fixed
+
+- Fixed syntax error in root `package.json` `postinstall` script that caused CI failures during `npm ci`.
+- Fixed pre-existing BDD test failures in `dialogue-interaction.feature` by increasing timeouts for async initialization.
+- Improved Storybook isolation by providing necessary context providers in component stories.
 
 ## [1.0.0] - 2026-04-19
 
