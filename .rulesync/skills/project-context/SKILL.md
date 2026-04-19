@@ -1,29 +1,27 @@
 ---
 name: project-context
-description: "Resumen del contexto del proyecto y sus restricciones clave"
+description: "Summary of project context and its key architectural constraints."
 targets: ["*"]
 ---
 
 # Project Context: Legacy's End
 
 ## Core Goals
-
-- Replicación integral de un juego narrativo RPG siguiendo estándares de alta calidad.
-- Uso de **Clean Architecture** y **DDD**.
-- Desarrollo asistido por IA (Antigravity/Gemini CLI) con reglas unificadas.
+- Integral replication of a narrative RPG game following high-quality standards.
+- Use of **Clean Architecture** and **DDD**.
+- AI-assisted development (rulesync + Serena) with unified rules.
 
 ## Infrastructure & Tooling
+- **AI**: Rulesync (rules management) and Serena (semantic analysis).
+- **Runtime**: Node.js v24+ (ESM).
+- **UI Engine**: Lit (Web Components) + Web Awesome.
+- **Workflow**: Strict TDD/BDD, Conventional Commits, and Serena's reflection cycle.
 
-- **IA**: Rulesync (gestión de reglas) y Serena (análisis semántico).
-- **Runtime**: Node.js (ESM).
-- **Framework**: Lit (Web Components) + Web Awesome.
-- **Workflow**: TDD/BDD estricto, Conventional Commits y ciclo de reflexión de Serena.
-
-## Skillsets
-
-- El proyecto cuenta con más de 70 habilidades externas de `antigravity-awesome-skills` para tareas de arquitectura, seguridad, frontend y gestión de producto.
+## Coding Mandates
+- **TC39 Decorators**: Mandatory `accessor` keyword for all decorated fields.
+- **Separated Styles**: UI styles MUST be in `[ComponentName].styles.js`.
+- **Result Pattern**: Mandatory `{ success, value, error }` return for business logic.
 
 ## Verification
-
-- Cualquier cambio debe ser validado con linting y tests antes de ser propuesto.
-- No se realizan commits sin confirmación explícita del usuario.
+- Every change must be validated with linting (oxlint) and tests (node test) before proposal.
+- No commits without explicit user confirmation.

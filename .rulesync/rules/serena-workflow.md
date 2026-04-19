@@ -26,3 +26,9 @@ To maximize the efficiency of **Serena** and other AI agents, follow these proce
 
 - **Semantic Structure**: Maintain a clear file and folder structure (Clean Architecture) as Serena uses relational structures for retrieval.
 - **Interpretability**: Prioritize code that produces meaningful logs and test outputs. The agent cannot use a debugger; it relies on text feedback.
+
+## 4. Mandatory UI Validation
+
+Before finalizing any UI task, the agent MUST perform:
+1. **Decorator Audit**: Ensure every `@property`, `@state`, or `@consume` uses `accessor`.
+2. **Style Audit**: Verify no inline `css` exists; styles must be imported from `.styles.js`.

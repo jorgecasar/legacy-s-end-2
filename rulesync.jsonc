@@ -61,6 +61,12 @@
 				"receiving-code-review",
 				"requesting-code-review"
 			]
+		},
+		{
+			"source": "crystian/skills",
+			"skills": [
+				"skill-optimizer"
+			]
 		}
 	]
 }
