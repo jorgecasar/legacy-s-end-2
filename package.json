@@ -58,7 +58,7 @@
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "playwright": "^1.58.2",
-    "rulesync": "^7.18.1",
+    "rulesync": "^7.30.0",
     "start-server-and-test": "^2.1.5",
     "storybook": "^10.2.13",
     "typescript": "^5.9.3",
