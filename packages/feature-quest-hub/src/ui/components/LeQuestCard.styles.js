@@ -42,18 +42,18 @@ export const questCardStyles = css`
     margin: 0;
     font-size: var(--wa-font-size-large);
     font-weight: var(--wa-font-weight-bold);
-    color: var(--wa-color-neutral-900);
+    color: var(--wa-color-text-normal);
   }
 
   .level {
     font-size: var(--wa-font-size-small);
-    color: var(--wa-color-neutral-600);
+    color: var(--wa-color-text-quiet);
   }
 
   .description {
     margin: 0;
     font-size: var(--wa-font-size-medium);
-    color: var(--wa-color-neutral-700);
+    color: var(--wa-color-text-normal);
     line-height: var(--wa-line-height-normal);
   }
 

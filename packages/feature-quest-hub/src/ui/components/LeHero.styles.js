@@ -5,9 +5,9 @@ export const heroStyles = css`
     display: block;
     width: 80%;
     height: 80%;
-    background-color: #007bff;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    background-color: var(--wa-color-brand-fill-normal);
+    border-radius: var(--wa-border-radius-circle);
+    box-shadow: var(--wa-shadow-medium);
     margin: 10%;
     z-index: 10;
   }

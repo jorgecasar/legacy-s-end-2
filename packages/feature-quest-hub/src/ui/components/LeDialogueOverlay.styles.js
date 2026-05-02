@@ -3,19 +3,19 @@ import { css } from "lit";
 export const dialogueOverlayStyles = css`
   :host {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    background-color: rgba(20, 20, 20, 0.9);
-    border: 2px solid #555;
-    color: #eee;
-    padding: 20px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    bottom: var(--wa-spacing-large);
+    left: var(--wa-spacing-large);
+    right: var(--wa-spacing-large);
+    background-color: var(--wa-color-surface-raised);
+    border: 2px solid var(--wa-color-surface-border);
+    color: var(--wa-color-text-normal);
+    padding: var(--wa-spacing-large);
+    font-family: var(--wa-font-sans);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    gap: var(--wa-spacing-medium);
+    border-radius: var(--wa-border-radius-medium);
+    box-shadow: var(--wa-shadow-large);
     z-index: 100;
   }
 
@@ -24,15 +24,15 @@ export const dialogueOverlayStyles = css`
   }
 
   .speaker {
-    font-weight: bold;
-    color: #007bff;
-    font-size: 1.1em;
-    border-bottom: 1px solid #333;
-    padding-bottom: 5px;
+    font-weight: var(--wa-font-weight-bold);
+    color: var(--wa-color-brand-on-quiet);
+    font-size: var(--wa-font-size-large);
+    border-bottom: 1px solid var(--wa-color-surface-border);
+    padding-bottom: var(--wa-spacing-x-small);
   }
 
   .text {
-    line-height: 1.5;
+    line-height: var(--wa-line-height-normal);
     min-height: 3em;
   }
 
@@ -42,21 +42,17 @@ export const dialogueOverlayStyles = css`
   }
 
   button {
-    background-color: #007bff;
-    color: white;
+    background-color: var(--wa-color-brand-fill-normal);
+    color: var(--wa-color-brand-on-loud);
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: var(--wa-spacing-small) var(--wa-spacing-medium);
+    border-radius: var(--wa-border-radius-small);
     cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
+    font-weight: var(--wa-font-weight-bold);
+    transition: background-color var(--wa-transition-fast);
   }
 
   button:hover {
-    background-color: #0056b3;
-  }
-
-  button:active {
-    background-color: #004085;
+    background-color: var(--wa-color-brand-fill-loud);
   }
 `;

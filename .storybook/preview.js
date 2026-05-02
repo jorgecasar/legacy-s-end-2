@@ -1,7 +1,26 @@
-import "@awesome.me/webawesome/dist/styles/webawesome.css";
+import "@awesome.me/webawesome/dist/styles/themes/awesome.css";
+import { html } from "lit";
 
 /** @type { import('@storybook/web-components-vite').Preview } */
 const preview = {
+  decorators: [
+    (story) => {
+      // Apply theme classes to html element for Web Awesome compatibility
+      document.documentElement.classList.add("wa-theme-awesome", "wa-dark", "wa-palette-bright");
+      
+      return html`
+      <div style="
+        min-height: 100vh;
+        background-color: var(--wa-color-surface-default);
+        color: var(--wa-color-text-normal);
+        padding: var(--wa-spacing-medium);
+        margin: -1rem; /* Offset storybook default padding */
+      ">
+        ${story()}
+      </div>
+    `;
+    },
+  ],
   parameters: {
     controls: {
       matchers: {

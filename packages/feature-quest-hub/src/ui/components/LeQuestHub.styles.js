@@ -17,17 +17,18 @@ export const questHubStyles = css`
     gap: var(--wa-spacing-small, 8px);
     padding: var(--wa-spacing-large, 24px);
     font-size: var(--wa-font-size-large, 1.25rem);
-    color: var(--wa-color-neutral-600, #666);
+    color: var(--wa-color-text-quiet);
   }
   .active-mission {
-    background: var(--wa-color-primary-50, #f0f7ff);
-    border: 2px solid var(--wa-color-primary-500, #3b82f6);
+    background: var(--wa-color-brand-fill-quiet);
+    border: 2px solid var(--wa-color-brand-border-normal);
     border-radius: var(--wa-border-radius-medium, 8px);
     padding: var(--wa-spacing-medium, 16px);
     margin-bottom: var(--wa-spacing-large, 24px);
+    color: var(--wa-color-text-normal);
   }
   .active-mission h2 {
     margin-top: 0;
-    color: var(--wa-color-primary-700, #1d4ed8);
+    color: var(--wa-color-brand-on-quiet);
   }
 `;
