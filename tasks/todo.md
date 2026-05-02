@@ -19,10 +19,10 @@
 - [x] **Verification**: Visual check in Storybook.
 
 ## Task 4: Production Entry Point
-- [ ] Update `index.html` to use `<le-app>` instead of `<le-quest-hub>`.
-- [ ] Ensure `vite.config.js` correctly handles imports.
-- [ ] **Acceptance Criteria**: `npm start` shows a fully functional Quest Hub at `localhost:3000`.
-- [ ] **Verification**: Run `npm start`, navigate to the hub, and select a mission.
+- [x] Update `index.html` to use `<le-app>` instead of `<le-quest-hub>`.
+- [x] Ensure `vite.config.js` correctly handles imports.
+- [x] **Acceptance Criteria**: `npm start` shows a fully functional Quest Hub at `localhost:3000`.
+- [x] **Verification**: Run `npm start`, navigate to the hub, and select a mission.
 
 ## Task 5: BDD Verification
 - [ ] Update Cucumber step definitions to wait for `<le-app>` initialization.
