@@ -7,10 +7,10 @@
 - [x] **Verification**: Run `npm run lint` and verify no errors in new files.
 
 ## Task 2: Service Instantiation & DI
-- [ ] Instantiate `GameStore` and `ListAvailableQuestsInteractor` (with `StaticQuestRepository`) inside `LeApp`.
-- [ ] Pass these instances to the `@provide` decorators in `LeApp`.
-- [ ] **Acceptance Criteria**: `<le-quest-hub>` transitions from "Waiting for Use Case" to rendering quest cards in a Storybook story.
-- [ ] **Verification**: Create `le-app.stories.js` and verify it works in Storybook.
+- [x] Instantiate `GameStore` and `ListAvailableQuestsInteractor` (with `StaticQuestRepository`) inside `LeApp`.
+- [x] Pass these instances to the `@provide` decorators in `LeApp`.
+- [x] **Acceptance Criteria**: `<le-quest-hub>` transitions from "Waiting for Use Case" to rendering quest cards in a Storybook story.
+- [x] **Verification**: Create `le-app.stories.js` and verify it works in Storybook.
 
 ## Task 3: Web Awesome & Theme Integration
 - [ ] Import Web Awesome base styles and setup design tokens in `LeApp.styles.js`.
