@@ -1,6 +1,6 @@
 {
-	"$schema": "https://github.com/dyoshikawa/rulesync/releases/download/v7.18.1/config-schema.json",
-	"targets": ["antigravity", "geminicli"],
+	"$schema": "https://github.com/dyoshikawa/rulesync/releases/download/v8.15.0/config-schema.json",
+	"targets": ["geminicli"],
 	"features": [
 		"rules",
 		"ignore",
@@ -8,9 +8,10 @@
 		"commands",
 		"subagents",
 		"skills",
-		"hooks"
+		"hooks",
+		"permissions"
 	],
-	"baseDirs": ["."],
+	"outputRoots": ["."],
 	"delete": true,
 	"verbose": false,
 	"silent": false,
@@ -18,7 +19,88 @@
 	"simulateCommands": false,
 	"simulateSubagents": false,
 	"simulateSkills": false,
+	"mcpServers": {
+		"serena": {
+			"description": "Semantic code analysis and search (symbols, references, definitions)",
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena",
+				"start-mcp-server",
+				"--context",
+				"ide-assistant",
+				"--enable-web-dashboard",
+				"false",
+				"--project",
+				"."
+			],
+			"env": {}
+		},
+		"context7": {
+			"description": "Up-to-date library documentation search (Lit, Web Awesome, @lit/localize, etc.)",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@upstash/context7-mcp"],
+			"env": {}
+		},
+		"playwright": {
+			"description": "Browser automation via Playwright: navigate, click, type, snapshot, E2E test execution",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@playwright/mcp@latest"],
+			"env": {}
+		},
+		"chrome-devtools": {
+			"description": "Chrome DevTools bridge: inspect DOM/CSS, execute JS, record performance traces on live browser",
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "chrome-devtools-mcp@latest"],
+			"env": {}
+		}
+	},
 	"sources": [
+		{
+			"source": "addyosmani/agent-skills",
+			"commands": [
+				"build",
+				"code-simplify",
+				"planning",
+				"review",
+				"ship",
+				"spec",
+				"test"
+			],
+			"subagents": [
+				"code-reviewer",
+				"security-auditor",
+				"test-engineer"
+			],
+			"skills": [
+				"api-and-interface-design",
+				"browser-testing-with-devtools",
+				"ci-cd-and-automation",
+				"code-review-and-quality",
+				"code-simplification",
+				"context-engineering",
+				"debugging-and-error-recovery",
+				"deprecation-and-migration",
+				"documentation-and-adrs",
+				"frontend-ui-engineering",
+				"git-workflow-and-versioning",
+				"idea-refine",
+				"incremental-implementation",
+				"performance-optimization",
+				"planning-and-task-breakdown",
+				"security-and-hardening",
+				"shipping-and-launch",
+				"source-driven-development",
+				"spec-driven-development",
+				"test-driven-development",
+				"using-agent-skills"
+			]
+		},
 		{
 			"source": "sickn33/antigravity-awesome-skills",
 			"skills": [

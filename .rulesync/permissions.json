@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "permission": {
+    "files": {
+      "strategy": "allow"
+    },
+    "tools": {
+      "strategy": "allow"
+    },
+    "network": {
+      "strategy": "ask"
+    }
+  }
+}
