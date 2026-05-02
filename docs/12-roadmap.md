@@ -40,11 +40,12 @@ The project is in the initial phase of tool and standards setup.
 
 **Goal**: Deliver a functional, visually appealing Quest Hub without waiting for the full game engine domain to be built.
 
-- [ ] Configure **Vite** and **Lit**.
-- [ ] Set up `@lit/context` for Dependency Injection.
-- [ ] Integrate **Web Awesome** in `@legacys-end/theme`.
+- [x] Configure **Vite** and **Lit**.
+- [x] Set up `@lit/context` for Dependency Injection.
+- [x] Integrate **Web Awesome** in `@legacys-end/theme`.
 - [x] Implement Dumb Components: `<le-quest-card>` and `<le-quest-hub>` with their Storybook stories.
 - [x] Build `ListAvailableQuests` Use Case with a mocked `ContentAdapter` to feed the Hub.
+- [x] **Composition Root**: Implement `<le-app>` to assemble the application.
 
 ### Phase 2: First Playable Level (Vertical Slice 2) ⚔️
 
@@ -79,7 +80,7 @@ The project is in the initial phase of tool and standards setup.
 
 ## 📈 Coverage Tracking
 
-- **Domain**: 0%
-- **Use Cases**: 0%
-- **UI**: 0%
-- **E2E**: 0%
+- **Domain**: 10%
+- **Use Cases**: 20%
+- **UI**: 30%
+- **E2E**: 10%
