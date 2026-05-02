@@ -1,8 +1,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { QuestHubPage } from "../../e2e/pages/QuestHubPage.js";
 
-const HUB_STORY_URL =
-  "http://localhost:6006/iframe.html?id=features-quest-hub-le-quest-hub--default";
+const HUB_STORY_URL = "http://localhost:6006/iframe.html?id=app-le-app--default";
 
 Given("I am in the Quest Hub", async function () {
   await this.page.goto(HUB_STORY_URL);

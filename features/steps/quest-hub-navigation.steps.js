@@ -2,8 +2,7 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { QuestHubPage } from "../../e2e/pages/QuestHubPage.js";
 
 // Note: In Storybook integration, we use the iframe URL for clean isolation
-const HUB_STORY_URL =
-  "http://localhost:6006/iframe.html?id=features-quest-hub-le-quest-hub--default";
+const HUB_STORY_URL = "http://localhost:6006/iframe.html?id=app-le-app--default";
 
 Given("I am on the home page", async function () {
   // For BDD isolation, we start at the component entry point
