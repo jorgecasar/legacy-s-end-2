@@ -22,6 +22,7 @@ Welcome to the official documentation for the comprehensive replication of **Leg
 16. [**Glossary of Terms**](./15-glossary.md): Key narrative, technical, and game term definitions.
 17. [**AI Orchestration Pipelines**](./16-ai-orchestration.md): Strategy for autonomous, multi-agent development via GitHub Issues and Actions.
 18. [**Built-in AI (In-Game)**](./17-built-in-ai.md): AI-powered NPCs and dynamic narrative generation using Chrome Built-in AI.
+19. [**Task Specifications**](./specs/README.md): Detailed requirements and implementation plans for each development phase.
 
 ---
 
