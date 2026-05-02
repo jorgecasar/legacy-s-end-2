@@ -13,10 +13,10 @@
 - [x] **Verification**: Create `le-app.stories.js` and verify it works in Storybook.
 
 ## Task 3: Web Awesome & Theme Integration
-- [ ] Import Web Awesome base styles and setup design tokens in `LeApp.styles.js`.
-- [ ] Add `<wa-theme>` wrapper in `LeApp.render()`.
-- [ ] **Acceptance Criteria**: Buttons, cards, and spinners use Web Awesome design system.
-- [ ] **Verification**: Visual check in Storybook.
+- [x] Import Web Awesome base styles and setup design tokens in `LeApp.styles.js`.
+- [x] Add theme wrapper classes in `LeApp.render()` and `index.html`.
+- [x] **Acceptance Criteria**: Buttons, cards, and spinners use Web Awesome design system.
+- [x] **Verification**: Visual check in Storybook.
 
 ## Task 4: Production Entry Point
 - [ ] Update `index.html` to use `<le-app>` instead of `<le-quest-hub>`.

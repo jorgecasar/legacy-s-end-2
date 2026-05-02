@@ -74,9 +74,11 @@ export class LeApp extends LitElement {
 
   render() {
     return html`
-      <main>
-        <le-quest-hub></le-quest-hub>
-      </main>
+      <div class="app-container wa-theme-awesome wa-dark">
+        <main>
+          <le-quest-hub></le-quest-hub>
+        </main>
+      </div>
     `;
   }
 }

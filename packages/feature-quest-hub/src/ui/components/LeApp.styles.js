@@ -13,5 +13,11 @@ export const appStyles = css`
 
   main {
     padding: var(--wa-spacing-medium);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .app-container {
+    min-height: 100vh;
   }
 `;
