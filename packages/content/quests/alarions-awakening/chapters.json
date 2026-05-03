@@ -1,0 +1,24 @@
+{
+  "chapters": [
+    {
+      "id": "chap-01",
+      "background": "forest-corrupted",
+      "startPos": { "x": 10, "y": 50 },
+      "exitZone": { "x": 90, "y": 90, "radius": 5 },
+      "obstacles": [
+        { "x": 0, "y": 0, "width": 100, "height": 5 },
+        { "x": 0, "y": 95, "width": 100, "height": 5 },
+        { "x": 0, "y": 0, "width": 5, "height": 100 },
+        { "x": 95, "y": 0, "width": 5, "height": 100 }
+      ],
+      "entities": [
+        {
+          "id": "npc-alarion",
+          "type": "npc",
+          "position": { "x": 30, "y": 50 },
+          "visibility": "always"
+        }
+      ]
+    }
+  ]
+}

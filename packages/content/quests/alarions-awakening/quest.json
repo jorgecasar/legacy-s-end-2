@@ -1,0 +1,8 @@
+{
+  "id": "alarions-awakening",
+  "rewards": [{ "type": "skill", "id": "clean-code-aura" }],
+  "requirements": {
+    "completedQuests": []
+  },
+  "chapters": ["chap-01"]
+}
