@@ -1,17 +1,12 @@
 {
   "version": 1,
   "permission": {
-    "files": {
-      "strategy": "ask",
-      "allow": ["packages/**", "docs/**", "features/**", "e2e/**"]
-    },
-    "tools": {
-      "strategy": "ask",
-      "allow": ["ls", "cat", "grep", "npm test", "npm run lint"]
-    },
-    "network": {
-      "strategy": "ask",
-      "allow": ["github.com", "npm.com", "context7.com"]
+    "read": {
+      "packages/**": "allow",
+      "docs/**": "allow",
+      "features/**": "allow",
+      "e2e/**": "allow",
+      "credentials/**": "deny"
     }
   }
 }

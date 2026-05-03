@@ -1,0 +1,57 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(credentials/**)"
+    ],
+    "allow": [
+      "Read(docs/**)",
+      "Read(e2e/**)",
+      "Read(features/**)",
+      "Read(packages/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch origin main --quiet"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*(write_file|replace|rm|delete_file).*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"{{file_path}}\" == .gemini/* ]] || [[ \"{{file_path}}\" == .rulesync/* ]] || [[ \"{{file_path}}\" == .serena/* ]]; then echo '{\"decision\": \"ask\", \"reason\": \"Modifying infrastructure configuration files requires manual approval.\"}'; else echo '{\"decision\": \"allow\"}'; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*(write_file|replace|replace_symbol_body|insert_after_symbol|insert_before_symbol).*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.rulesync/hooks/format.sh {{file_path}}"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run check:fast"
+          }
+        ]
+      }
+    ]
+  }
+}

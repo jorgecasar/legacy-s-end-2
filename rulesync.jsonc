@@ -1,6 +1,6 @@
 {
 	"$schema": "https://github.com/dyoshikawa/rulesync/releases/download/v8.15.0/config-schema.json",
-	"targets": ["geminicli"],
+	"targets": ["geminicli", "claudecode"],
 	"features": [
 		"rules",
 		"ignore",

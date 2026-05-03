@@ -1,17 +1,29 @@
 [[rule]]
-toolName = "network"
-decision = "ask_user"
-priority = 1000
-argsPattern = "\"strategy\\\""
+toolName = "read_file"
+decision = "deny"
+priority = 1000000
+argsPattern = "\"credentials/[^\\\"]*\\\""
 
 [[rule]]
-toolName = "files"
+toolName = "read_file"
 decision = "allow"
 priority = 1
-argsPattern = "\"strategy\\\""
+argsPattern = "\"packages/[^\\\"]*\\\""
 
 [[rule]]
-toolName = "tools"
+toolName = "read_file"
 decision = "allow"
 priority = 1
-argsPattern = "\"strategy\\\""
+argsPattern = "\"docs/[^\\\"]*\\\""
+
+[[rule]]
+toolName = "read_file"
+decision = "allow"
+priority = 1
+argsPattern = "\"features/[^\\\"]*\\\""
+
+[[rule]]
+toolName = "read_file"
+decision = "allow"
+priority = 1
+argsPattern = "\"e2e/[^\\\"]*\\\""
