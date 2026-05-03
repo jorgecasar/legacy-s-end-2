@@ -1,4 +1,5 @@
 import { Result } from "../Result.js";
+import Position from "./Position.js";
 /** @typedef {import("./Position.js").default} Position */
 
 /**
@@ -51,5 +52,18 @@ export default class HeroState {
   }
   get inventory() {
     return [...this.#inventory];
+  }
+
+  toJSON() {
+    return {
+      hp: this.#hp,
+      maxHp: this.#maxHp,
+      position: this.#position.toJSON(),
+      inventory: this.#inventory,
+    };
+  }
+
+  static fromJSON(json) {
+    return new HeroState(json.hp, json.maxHp, Position.fromJSON(json.position), json.inventory);
   }
 }

@@ -45,4 +45,12 @@ export default class Position {
   equals(other) {
     return this.#x === other.x && this.#y === other.y;
   }
+
+  toJSON() {
+    return { x: this.#x, y: this.#y };
+  }
+
+  static fromJSON(json) {
+    return new Position(json.x, json.y);
+  }
 }
