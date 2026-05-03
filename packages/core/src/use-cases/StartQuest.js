@@ -15,12 +15,12 @@ export const StartQuest = {
    * @param {number} params.initialX
    * @param {number} params.initialY
    * @param {string[]} params.initialInventory
-   * @param {number[][]} params.levelMap
-   * @returns {Result<{ heroState: HeroState, levelMap: number[][] }>}
+   * @param {any[]} params.obstacles
+   * @returns {Result<{ heroState: HeroState, obstacles: any[] }>}
    */
   execute: (params) => {
     try {
-      const { initialHp, initialMaxHp, initialX, initialY, initialInventory, levelMap } =
+      const { initialHp, initialMaxHp, initialX, initialY, initialInventory, obstacles } =
         params || {};
       const positionResult = Position.create(initialX, initialY);
       if (!positionResult.success) {
@@ -38,7 +38,7 @@ export const StartQuest = {
         return Result.failure(heroResult.error);
       }
 
-      return Result.success({ heroState: heroResult.value, levelMap });
+      return Result.success({ heroState: heroResult.value, obstacles });
     } catch (error) {
       return Result.failure(`Failed to start quest: ${error.message}`);
     }

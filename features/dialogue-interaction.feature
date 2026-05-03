@@ -17,4 +17,4 @@ Feature: Dialogue Interaction
 
   Scenario: Hero is rendered at the correct position
     Then the hero should be visible in the viewport
-    And the hero should be at position (2, 2)
+    And the hero should be at position (10, 50)

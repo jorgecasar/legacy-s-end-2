@@ -31,4 +31,18 @@ describe("Domain Service: MovementService", () => {
     assert.strictEqual(result.success, false);
     assert.match(result.error, /out of bounds/i);
   });
+
+  it("should block movement out of left bounds (0%)", () => {
+    const current = new Position(2, 50);
+    const result = MovementService.move(current, "LEFT", 5);
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /out of bounds/i);
+  });
+
+  it("should block movement out of right bounds (100%)", () => {
+    const current = new Position(98, 50);
+    const result = MovementService.move(current, "RIGHT", 5);
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /out of bounds/i);
+  });
 });

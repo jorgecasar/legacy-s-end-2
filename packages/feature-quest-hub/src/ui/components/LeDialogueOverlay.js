@@ -25,20 +25,21 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
   @property({ type: Boolean, reflect: true })
   accessor hidden = true;
 
-  updated(changedProperties) {
-    super.updated(changedProperties);
+  willUpdate() {
     const dialogue = this.gameStore?.currentDialogue.get();
-    const shouldBeHidden = !dialogue;
-    if (this.hidden !== shouldBeHidden) {
-      this.hidden = shouldBeHidden;
-    }
+    this.hidden = !dialogue;
   }
 
   render() {
     if (!this.gameStore) return html``;
 
     const dialogue = this.gameStore.currentDialogue.get();
-    console.log("Rendering dialogue:", dialogue?.id || "none");
+    console.log(
+      "[LeDialogueOverlay] Rendering dialogue:",
+      dialogue?.id || "none",
+      "Hidden:",
+      this.hidden,
+    );
 
     if (!dialogue) {
       return html`

@@ -14,6 +14,10 @@
     "experimentalDecorators": false,
     "maxNodeModuleJsDepth": 0
   },
-  "include": ["packages/*/src/**/*.js"],
+  "include": [
+    "packages/*/src/**/*.js",
+    "packages/content/**/*.js",
+    "packages/content/**/*.json"
+  ],
   "exclude": ["node_modules", "dist", ".rulesync", ".serena", ".agent", ".gemini"]
 }

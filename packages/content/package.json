@@ -5,6 +5,11 @@
   "type": "module",
   "exports": {
     "./levels/*.json": "./levels/*.json",
-    "./dialogues/*.json": "./dialogues/*.json"
+    "./dialogues/*.json": "./dialogues/*.json",
+    "./quests/*.json": "./quests/*.json",
+    "./quests/*.js": "./quests/*.js"
+  },
+  "dependencies": {
+    "@lit/localize": "^0.12.1"
   }
 }

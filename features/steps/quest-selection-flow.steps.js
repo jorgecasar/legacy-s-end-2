@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { Given, Then, When } from "@cucumber/cucumber";
 import { QuestHubPage } from "../../e2e/pages/QuestHubPage.js";
 
@@ -17,9 +18,6 @@ When("I select the mission {string}", async function (title) {
   await this.questHub.selectQuest(title);
 });
 
-Then(
-  "the {string} mission should be displayed in the Active Mission section",
-  async function (title) {
-    await this.questHub.expectActiveMission(title);
-  },
-);
+Then("the game should transition to the game level view", async function () {
+  await expect(this.page.locator("le-game-level")).toBeVisible({ timeout: 5000 });
+});

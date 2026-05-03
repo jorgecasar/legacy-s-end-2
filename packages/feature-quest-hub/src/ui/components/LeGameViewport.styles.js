@@ -28,6 +28,45 @@ export const gameViewportStyles = css`
     transition:
       left 0.1s linear,
       top 0.1s linear;
+    z-index: 10;
+  }
+
+  .npc {
+    position: absolute;
+    width: 4%;
+    height: 8%;
+    transform: translate(-50%, -50%);
+    color: var(--wa-color-brand-500);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .npc wa-icon {
+    font-size: 2rem;
+  }
+
+  .interaction-prompt {
+    position: absolute;
+    top: -30px;
+    background-color: var(--wa-color-brand-600);
+    color: white;
+    padding: 2px 8px;
+    border-radius: var(--wa-border-radius-small);
+    font-size: var(--wa-font-size-x-small);
+    white-space: nowrap;
+    animation: bounce 1s infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
   }
 
   .obstacle {

@@ -1,13 +1,17 @@
+import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
+import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
 import { provide } from "@lit/context";
+import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
-import { gameStoreContext } from "./GameStore.context.js";
-import { questUseCaseContext } from "./LeQuestHub.context.js";
-import { appStyles } from "./LeApp.styles.js";
+import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { GameStore } from "../../infrastructure/GameStore.js";
 import { StaticQuestRepository } from "../../infrastructure/StaticQuestRepository.js";
 import { ListAvailableQuestsInteractor } from "../../use-cases/ListAvailableQuestsInteractor.js";
-import { QuestStatus } from "../../domain/entities/QuestStatus.js";
+import { gameStoreContext } from "./GameStore.context.js";
+import { appStyles } from "./LeApp.styles.js";
+import { questUseCaseContext } from "./LeQuestHub.context.js";
 import "./le-quest-hub.js";
+import "./le-game-level.js";
 
 /**
  * LeApp
@@ -17,7 +21,7 @@ import "./le-quest-hub.js";
  *
  * @customElement le-app
  */
-export class LeApp extends LitElement {
+export class LeApp extends SignalWatcher(LitElement) {
   static styles = appStyles;
 
   /** @type {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} */
@@ -27,6 +31,10 @@ export class LeApp extends LitElement {
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */
   @provide({ context: gameStoreContext })
   accessor gameStore;
+
+  /** @type {import("@legacys-end/core/infrastructure/ContentAdapter.js").ContentAdapter} */
+  @provide({ context: contentAdapterContext })
+  accessor contentAdapter;
 
   constructor() {
     super();
@@ -64,18 +72,57 @@ export class LeApp extends LitElement {
 
     // Infrastructure setup
     const questRepository = new StaticQuestRepository(baselineQuests);
+    this.contentAdapter = new ContentAdapter();
 
     // Use Case setup
     this.listQuestsUseCase = new ListAvailableQuestsInteractor(questRepository);
 
     // Store setup
     this.gameStore = new GameStore();
+
+    // Keyboard controls
+    window.addEventListener("keydown", (e) => this.#handleKeyDown(e));
+  }
+
+  /** @type {Record<string, 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>} */
+  #KEY_MAP = {
+    ArrowUp: "UP",
+    w: "UP",
+    ArrowDown: "DOWN",
+    s: "DOWN",
+    ArrowLeft: "LEFT",
+    a: "LEFT",
+    ArrowRight: "RIGHT",
+    d: "RIGHT",
+  };
+
+  /**
+   * Global keyboard handler for hero movement and interaction.
+   * @param {KeyboardEvent} e
+   */
+  #handleKeyDown(e) {
+    if (!this.gameStore.activeQuest.get()) return;
+
+    const direction = this.#KEY_MAP[e.key];
+    if (direction) {
+      this.gameStore.moveHero(direction);
+    } else if (e.key === "e") {
+      this.gameStore.interact();
+    }
   }
 
   render() {
     return html`
       <main>
-        <le-quest-hub></le-quest-hub>
+        ${
+          this.gameStore.activeQuest.get()
+            ? html`
+                <le-game-level></le-game-level>
+              `
+            : html`
+                <le-quest-hub></le-quest-hub>
+              `
+        }
       </main>
     `;
   }

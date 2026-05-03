@@ -16,6 +16,14 @@ export const MovementService = {
    * @returns {Result<Position>}
    */
   move: (currentPosition, direction, step) => {
+    if (!currentPosition) {
+      return Result.failure("Current position is required.");
+    }
+
+    if (typeof step !== "number" || step <= 0 || Number.isNaN(step)) {
+      return Result.failure("Step must be a positive number.");
+    }
+
     let newX = currentPosition.x;
     let newY = currentPosition.y;
 
@@ -32,6 +40,8 @@ export const MovementService = {
       case "RIGHT":
         newX += step;
         break;
+      default:
+        return Result.failure(`Invalid direction: ${direction}`);
     }
 
     // Boundary check

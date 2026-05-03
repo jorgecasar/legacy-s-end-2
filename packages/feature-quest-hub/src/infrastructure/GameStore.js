@@ -1,6 +1,7 @@
 import { signal, computed } from "@lit-labs/signals";
 import { MoveHero } from "@legacys-end/core/use-cases/MoveHero.js";
 import { AdvanceDialogue } from "@legacys-end/core/use-cases/AdvanceDialogue.js";
+import { CollisionService } from "@legacys-end/core/domain/services/CollisionService.js";
 import DialogueNode from "@legacys-end/core/domain/entities/DialogueNode.js";
 
 /**
@@ -22,9 +23,26 @@ export class GameStore {
   /** @type {import("@lit-labs/signals").State<any>} */
   activeQuest = signal(null);
 
+  /** @type {import("@lit-labs/signals").State<any[]>} */
+  entities = signal([]);
+
   /** Granular signals for UI performance */
   heroPosition = computed(() => this.heroState.get()?.position || { x: 0, y: 0 });
   heroOutfit = computed(() => this.heroState.get()?.outfit || "base");
+
+  /** Proximity signal: returns the entity ID if hero is near an NPC */
+  nearbyEntityId = computed(() => {
+    const pos = this.heroPosition.get();
+    const currentEntities = this.entities.get();
+    if (!pos || !currentEntities.length) return null;
+
+    const INTERACTION_THRESHOLD = 5; // 5%
+    const nearby = currentEntities.find((ent) =>
+      CollisionService.isNearby(pos, ent.position, INTERACTION_THRESHOLD),
+    );
+
+    return nearby?.id || null;
+  });
 
   /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").default[]} */
   #dialogueNodes = [];
@@ -33,10 +51,25 @@ export class GameStore {
    * Initializes the game state.
    * @param {import("@legacys-end/core/domain/entities/HeroState.js").default} heroState
    * @param {Array<{x: number, y: number, width: number, height: number}>} obstacles
+   * @param {any[]} entities
    */
-  initialize(heroState, obstacles = []) {
+  initialize(heroState, obstacles = [], entities = []) {
     this.heroState.set(heroState);
     this.obstacles.set(obstacles);
+    this.entities.set(entities);
+  }
+
+  /**
+   * Triggers interaction with the nearby entity if one exists.
+   */
+  interact() {
+    const entityId = this.nearbyEntityId.get();
+    if (!entityId) return;
+
+    const entity = this.entities.get().find((e) => e.id === entityId);
+    if (entity?.decks) {
+      this.setDialogue(entity.decks.talk);
+    }
   }
 
   /**
@@ -45,19 +78,11 @@ export class GameStore {
    */
   setDialogue(nodesData) {
     this.#dialogueNodes = nodesData
-      .map((node) => DialogueNode.create(node.id, node.speaker, node.text, node.nextId))
-      .filter((result) => {
-        if (!result.success) {
-          console.error(`Failed to create dialogue node: ${result.error}`);
-          return false;
-        }
-        return true;
-      })
-      .map((result) => result.value);
+      .map((n) => DialogueNode.create(n.id, n.speaker, n.text, n.nextId))
+      .filter((r) => r.success || (console.error(r.error), false))
+      .map((r) => r.value);
 
-    if (this.#dialogueNodes.length > 0) {
-      this.currentDialogue.set(this.#dialogueNodes[0]);
-    }
+    this.currentDialogue.set(this.#dialogueNodes[0] || null);
   }
 
   /**
@@ -74,6 +99,12 @@ export class GameStore {
    * @param {number} step - Percentage of movement (default 2%)
    */
   moveHero(direction, step = 2) {
+    // Blocker fix: prevent movement during dialogue
+    if (this.currentDialogue.get()) {
+      console.warn("Movement blocked: Dialogue is active.");
+      return;
+    }
+
     const currentHero = this.heroState.get();
     const currentObstacles = this.obstacles.get();
 

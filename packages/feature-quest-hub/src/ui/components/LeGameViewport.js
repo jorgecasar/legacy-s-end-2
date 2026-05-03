@@ -29,30 +29,42 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
 
     const pos = this.gameStore.heroPosition.get();
     const outfit = this.gameStore.heroOutfit.get();
-    const obstacles = this.gameStore.obstacles.get();
 
     return html`
       <div class="viewport">
-        <!-- Render Map/Background here in the future -->
-        
-        <!-- Render Obstacles (Debug visualization) -->
-        ${obstacles.map(
-          (obs) => html`
-            <div 
-              class="obstacle" 
-              style="left: ${obs.x}%; top: ${obs.y}%; width: ${obs.width}%; height: ${obs.height}%;"
-            ></div>
-          `,
-        )}
-
-        <!-- Render Hero -->
-        <le-hero 
-          .outfit=${outfit}
-          style="left: ${pos.x}%; top: ${pos.y}%;"
-        ></le-hero>
-
-        <!-- Future: Render NPCs, Rewards, etc. -->
+        ${this.#renderObstacles()}
+        ${this.#renderNPCs()}
+        <le-hero .outfit=${outfit} style="left: ${pos.x}%; top: ${pos.y}%;"></le-hero>
       </div>
     `;
+  }
+
+  #renderObstacles() {
+    return this.gameStore.obstacles.get().map(
+      (obs) => html`
+        <div 
+          class="obstacle" 
+          style="left: ${obs.x}%; top: ${obs.y}%; width: ${obs.width}%; height: ${obs.height}%;"
+        ></div>
+      `,
+    );
+  }
+
+  #renderNPCs() {
+    const nearbyId = this.gameStore.nearbyEntityId.get();
+    return this.gameStore.entities.get().map(
+      (ent) => html`
+        <div class="npc" style="left: ${ent.position.x}%; top: ${ent.position.y}%;">
+          <wa-icon name="person"></wa-icon>
+          ${
+            nearbyId === ent.id
+              ? html`
+                  <div class="interaction-prompt">Press E</div>
+                `
+              : ""
+          }
+        </div>
+      `,
+    );
   }
 }

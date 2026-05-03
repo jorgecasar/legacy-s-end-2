@@ -15,7 +15,7 @@ export class ContentAdapter {
    * @param {object} params.chaptersData - Raw JSON chapters data
    * @param {object} params.chaptersMessages - Translatable chapter strings
    * @param {object} params.entityDecks - Translatable NPC dialogues
-   * @returns {Result<object>}
+   * @returns {Promise<Result<object>>}
    */
   async getQuest(params) {
     try {

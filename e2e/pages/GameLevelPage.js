@@ -35,12 +35,12 @@ export class GameLevelPage {
 
   async getHeroGridPosition() {
     const style = await this.hero.getAttribute("style");
-    // Extract grid-row: Y+1 and grid-column: X+1
-    const rowMatch = style.match(/grid-row:\s*(\d+)/);
-    const colMatch = style.match(/grid-column:\s*(\d+)/);
+    // Extract left: X% and top: Y%
+    const leftMatch = style.match(/left:\s*([\d.]+)%/);
+    const topMatch = style.match(/top:\s*([\d.]+)%/);
     return {
-      x: parseInt(colMatch[1]) - 1,
-      y: parseInt(rowMatch[1]) - 1,
+      x: parseFloat(leftMatch[1]),
+      y: parseFloat(topMatch[1]),
     };
   }
 
