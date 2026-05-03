@@ -1,4 +1,4 @@
-import { signal } from "@lit-labs/signals";
+import { signal, computed } from "@lit-labs/signals";
 import { MoveHero } from "@legacys-end/core/use-cases/MoveHero.js";
 import { AdvanceDialogue } from "@legacys-end/core/use-cases/AdvanceDialogue.js";
 import DialogueNode from "@legacys-end/core/domain/entities/DialogueNode.js";
@@ -10,17 +10,21 @@ import DialogueNode from "@legacys-end/core/domain/entities/DialogueNode.js";
  * It acts as an adapter between the pure Domain layer and the UI.
  */
 export class GameStore {
-  /** @type {any} */
+  /** @type {import("@lit-labs/signals").State<any>} */
   heroState = signal(null);
 
-  /** @type {any} */
-  levelMap = signal([]);
+  /** @type {import("@lit-labs/signals").State<any[]>} */
+  obstacles = signal([]);
 
-  /** @type {any} */
+  /** @type {import("@lit-labs/signals").State<any>} */
   currentDialogue = signal(null);
 
-  /** @type {any} */
+  /** @type {import("@lit-labs/signals").State<any>} */
   activeQuest = signal(null);
+
+  /** Granular signals for UI performance */
+  heroPosition = computed(() => this.heroState.get()?.position || { x: 0, y: 0 });
+  heroOutfit = computed(() => this.heroState.get()?.outfit || "base");
 
   /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").default[]} */
   #dialogueNodes = [];
@@ -28,11 +32,11 @@ export class GameStore {
   /**
    * Initializes the game state.
    * @param {import("@legacys-end/core/domain/entities/HeroState.js").default} heroState
-   * @param {number[][]} levelMap
+   * @param {Array<{x: number, y: number, width: number, height: number}>} obstacles
    */
-  initialize(heroState, levelMap) {
+  initialize(heroState, obstacles = []) {
     this.heroState.set(heroState);
-    this.levelMap.set(levelMap);
+    this.obstacles.set(obstacles);
   }
 
   /**
@@ -65,27 +69,27 @@ export class GameStore {
   }
 
   /**
-   * Moves the hero to a new position.
-   * @param {number} x
-   * @param {number} y
+   * Moves the hero in a given direction.
+   * @param {'UP' | 'DOWN' | 'LEFT' | 'RIGHT'} direction
+   * @param {number} step - Percentage of movement (default 2%)
    */
-  moveHero(x, y) {
+  moveHero(direction, step = 2) {
     const currentHero = this.heroState.get();
-    const currentMap = this.levelMap.get();
+    const currentObstacles = this.obstacles.get();
 
     if (!currentHero) return;
 
     const result = MoveHero.execute({
       heroState: currentHero,
-      newX: x,
-      newY: y,
-      levelMap: currentMap,
+      direction,
+      step,
+      obstacles: currentObstacles,
     });
 
     if (result.success) {
       this.heroState.set(result.value);
     } else {
-      console.error(result.error);
+      console.warn("Movement blocked:", result.error);
     }
   }
 

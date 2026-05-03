@@ -7,23 +7,20 @@ import Position from "@legacys-end/core/domain/entities/Position.js";
 describe("Infrastructure: GameStore", () => {
   const pos = Position.create(0, 0).value;
   const hero = HeroState.create(100, 100, pos, []).value;
-  const levelMap = [
-    [0, 0],
-    [0, 0],
-  ];
+  const obstacles = [{ x: 50, y: 50, width: 10, height: 10 }];
 
   it("should initialize state", () => {
-    gameStore.initialize(hero, levelMap);
+    gameStore.initialize(hero, obstacles);
     assert.strictEqual(gameStore.heroState.get().hp, 100);
-    assert.deepStrictEqual(gameStore.levelMap.get(), levelMap);
+    assert.deepStrictEqual(gameStore.obstacles.get(), obstacles);
   });
 
   it("should move hero", () => {
-    gameStore.initialize(hero, levelMap);
-    gameStore.moveHero(1, 1);
+    gameStore.initialize(hero, []);
+    gameStore.moveHero("RIGHT", 5);
     const newHero = gameStore.heroState.get();
-    assert.strictEqual(newHero.position.x, 1);
-    assert.strictEqual(newHero.position.y, 1);
+    assert.strictEqual(newHero.position.x, 5);
+    assert.strictEqual(newHero.position.y, 0);
   });
 
   it("should handle dialogue", () => {

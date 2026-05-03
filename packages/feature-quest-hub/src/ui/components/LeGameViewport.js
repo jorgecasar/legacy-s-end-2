@@ -8,7 +8,7 @@ import "./le-hero.js";
 /**
  * LeGameViewport
  *
- * Component that renders the game level and the hero position.
+ * Component that renders the game level and the hero position using relative coordinates (0-100%).
  * It uses SignalWatcher to reactively update when the gameStore signals change.
  *
  * @customElement le-game-viewport
@@ -21,42 +21,37 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
   accessor gameStore;
 
   render() {
-    if (!this.gameStore)
+    if (!this.gameStore) {
       return html`
-        <div>Loading store...</div>
-      `;
-
-    const heroState = this.gameStore.heroState.get();
-    const levelMap = this.gameStore.levelMap.get();
-
-    if (!levelMap || levelMap.length === 0) {
-      return html`
-        <div>Loading level...</div>
+        <div class="loading">Loading store...</div>
       `;
     }
 
-    const rows = levelMap.length;
-    const cols = levelMap[0].length;
+    const pos = this.gameStore.heroPosition.get();
+    const outfit = this.gameStore.heroOutfit.get();
+    const obstacles = this.gameStore.obstacles.get();
 
     return html`
-      <div class="grid" style="grid-template-rows: repeat(${rows}, 1fr); grid-template-columns: repeat(${cols}, 1fr);">
-        ${levelMap.map((row, y) =>
-          row.map(
-            (tileType, x) => html`
-          <div class="tile" data-type="${tileType}" data-x="${x}" data-y="${y}"></div>
-        `,
-          ),
-        )}
+      <div class="viewport">
+        <!-- Render Map/Background here in the future -->
         
-        ${
-          heroState
-            ? html`
-          <le-hero 
-            style="grid-row: ${heroState.position.y + 1}; grid-column: ${heroState.position.x + 1};"
-          ></le-hero>
-        `
-            : ""
-        }
+        <!-- Render Obstacles (Debug visualization) -->
+        ${obstacles.map(
+          (obs) => html`
+            <div 
+              class="obstacle" 
+              style="left: ${obs.x}%; top: ${obs.y}%; width: ${obs.width}%; height: ${obs.height}%;"
+            ></div>
+          `,
+        )}
+
+        <!-- Render Hero -->
+        <le-hero 
+          .outfit=${outfit}
+          style="left: ${pos.x}%; top: ${pos.y}%;"
+        ></le-hero>
+
+        <!-- Future: Render NPCs, Rewards, etc. -->
       </div>
     `;
   }

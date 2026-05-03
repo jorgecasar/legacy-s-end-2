@@ -5,6 +5,8 @@ import { property } from "lit/decorators.js";
 import { gameStoreContext } from "./GameStore.context.js";
 import { dialogueOverlayStyles } from "./LeDialogueOverlay.styles.js";
 
+/** @typedef {import("../../infrastructure/GameStore.js").GameStore} GameStore */
+
 /**
  * LeDialogueOverlay
  *
@@ -16,7 +18,7 @@ import { dialogueOverlayStyles } from "./LeDialogueOverlay.styles.js";
 export class LeDialogueOverlay extends SignalWatcher(LitElement) {
   static styles = dialogueOverlayStyles;
 
-  /** @type {import("../../infrastructure/GameStore.js").GameStore} */
+  /** @type {GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
   accessor gameStore;
 

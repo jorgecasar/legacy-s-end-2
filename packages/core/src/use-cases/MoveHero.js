@@ -1,44 +1,38 @@
 import { Result } from "../domain/Result.js";
-import { checkCollision } from "../domain/services/CollisionService.js";
+import { CollisionService } from "../domain/services/CollisionService.js";
+import { MovementService } from "../domain/services/MovementService.js";
 import HeroState from "../domain/entities/HeroState.js";
-import Position from "../domain/entities/Position.js";
 
 /**
  * MoveHero
  *
- * Use case for moving the hero to a new position.
+ * Use case for moving the hero based on a direction and step size.
  */
 export const MoveHero = {
   /**
    * @param {object} params
    * @param {HeroState} params.heroState
-   * @param {number} params.newX
-   * @param {number} params.newY
-   * @param {number[][]} params.levelMap
+   * @param {'UP' | 'DOWN' | 'LEFT' | 'RIGHT'} params.direction
+   * @param {number} params.step
+   * @param {Array<{x: number, y: number, width: number, height: number}>} params.obstacles
    * @returns {Result<HeroState>}
    */
   execute: (params) => {
     try {
-      const { heroState, newX, newY, levelMap } = params || {};
-      const positionResult = Position.create(newX, newY);
-      if (!positionResult.success) {
-        return Result.failure(positionResult.error);
+      const { heroState, direction, step, obstacles = [] } = params || {};
+
+      const movementResult = MovementService.move(heroState.position, direction, step);
+      if (!movementResult.success) {
+        return Result.failure(movementResult.error);
       }
 
-      const newPosition = positionResult.value;
+      const newPosition = movementResult.value;
 
-      if (checkCollision(newPosition, levelMap)) {
+      if (CollisionService.checkCollision(newPosition, obstacles)) {
         return Result.failure("Move blocked by collision");
       }
 
-      const heroResult = HeroState.create(
-        heroState.hp,
-        heroState.maxHp,
-        newPosition,
-        heroState.inventory,
-      );
-
-      return heroResult;
+      return HeroState.create(heroState.hp, heroState.maxHp, newPosition, heroState.inventory);
     } catch (error) {
       return Result.failure(`Failed to move hero: ${error.message}`);
     }
