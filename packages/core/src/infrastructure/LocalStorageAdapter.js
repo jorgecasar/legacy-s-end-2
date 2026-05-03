@@ -1,36 +1,37 @@
 import { Result } from "../domain/Result.js";
 
-/** @typedef {import("../use-cases/ports/PersistenceProvider.js").PersistenceProvider} PersistenceProvider */
+/**
+ * LocalStorageAdapter
+ *
+ * Infrastructure service that persists game state to browser LocalStorage.
+ */
+export class LocalStorageAdapter {
+  #key = "legacys_end_save";
 
-export default class LocalStorageAdapter {
   /**
-   * @param {string} key
-   * @param {unknown} data
-   * @returns {Promise<import("../domain/Result.js").Result<void>>}
+   * Saves state to storage.
+   * @param {object} data
+   * @returns {Result<boolean>}
    */
-  async save(key, data) {
+  save(data) {
     try {
-      const serializedData = JSON.stringify(data);
-      localStorage.setItem(key, serializedData);
-      return Result.success();
-    } catch (error) {
-      return Result.failure(`LocalStorage save failed: ${error.message}`);
+      localStorage.setItem(this.#key, JSON.stringify(data));
+      return Result.success(true);
+    } catch (e) {
+      return Result.failure(`Failed to save: ${e.message}`);
     }
   }
 
   /**
-   * @param {string} key
-   * @returns {Promise<import("../domain/Result.js").Result<unknown>>}
+   * Loads state from storage.
+   * @returns {Result<object | null>}
    */
-  async load(key) {
+  load() {
     try {
-      const data = localStorage.getItem(key);
-      if (data === null) {
-        return Result.success(undefined);
-      }
-      return Result.success(JSON.parse(data));
-    } catch (error) {
-      return Result.failure(`LocalStorage load failed: ${error.message}`);
+      const data = localStorage.getItem(this.#key);
+      return Result.success(data ? JSON.parse(data) : null);
+    } catch (e) {
+      return Result.failure(`Failed to load: ${e.message}`);
     }
   }
 }

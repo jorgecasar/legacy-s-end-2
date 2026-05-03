@@ -11,6 +11,8 @@ import DialogueNode from "@legacys-end/core/domain/entities/DialogueNode.js";
  * It acts as an adapter between the pure Domain layer and the UI.
  */
 export class GameStore {
+  /** @type {import("@legacys-end/core/infrastructure/AutoSaveService.js").default | null} */
+  #autoSaveService = null;
   /** @type {import("@lit-labs/signals").State<any>} */
   heroState = signal(null);
 
@@ -46,6 +48,14 @@ export class GameStore {
 
   /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").default[]} */
   #dialogueNodes = [];
+
+  /**
+   * Sets the AutoSaveService for automatic persistence.
+   * @param {import("@legacys-end/core/infrastructure/AutoSaveService.js").default} service
+   */
+  setAutoSaveService(service) {
+    this.#autoSaveService = service;
+  }
 
   /**
    * Initializes the game state.
@@ -119,6 +129,7 @@ export class GameStore {
 
     if (result.success) {
       this.heroState.set(result.value);
+      this.#autoSaveService?.requestSave(result.value);
     } else {
       console.warn("Movement blocked:", result.error);
     }

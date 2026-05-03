@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert";
-import LocalStorageAdapter from "../src/infrastructure/LocalStorageAdapter.js";
+import { LocalStorageAdapter } from "../src/infrastructure/LocalStorageAdapter.js";
 
 describe("LocalStorageAdapter", () => {
   let mockStorage = {};
@@ -27,54 +27,52 @@ describe("LocalStorageAdapter", () => {
     delete global.localStorage;
   });
 
-  it("should save data to localStorage", async () => {
+  it("should save data to localStorage", () => {
     const adapter = new LocalStorageAdapter();
-    const result = await adapter.save("testKey", { val: 42 });
+    const result = adapter.save({ val: 42 });
 
     assert.strictEqual(result.success, true);
-    assert.strictEqual(result.value, undefined);
-    assert.strictEqual(mockStorage["testKey"], '{"val":42}');
+    assert.strictEqual(result.value, true);
+    assert.strictEqual(mockStorage["legacys_end_save"], '{"val":42}');
   });
 
-  it("should return false if save fails", async () => {
+  it("should return failure if save throws", () => {
     global.localStorage.setItem = () => {
       throw new Error("Quota exceeded");
     };
 
     const adapter = new LocalStorageAdapter();
-    const result = await adapter.save("testKey", { val: 42 });
+    const result = adapter.save({ val: 42 });
 
     assert.strictEqual(result.success, false);
-    assert.strictEqual(result.value, undefined);
-    assert.strictEqual(result.error, "LocalStorage save failed: Quota exceeded");
+    assert.ok(result.error.includes("Quota exceeded"));
   });
 
-  it("should load data from localStorage", async () => {
-    mockStorage["testKey"] = '{"val":42}';
+  it("should load data from localStorage", () => {
+    mockStorage["legacys_end_save"] = '{"val":42}';
 
     const adapter = new LocalStorageAdapter();
-    const result = await adapter.load("testKey");
+    const result = adapter.load();
 
     assert.strictEqual(result.success, true);
     assert.deepStrictEqual(result.value, { val: 42 });
   });
 
-  it("should return undefined if key not found", async () => {
+  it("should return null if no save exists", () => {
     const adapter = new LocalStorageAdapter();
-    const result = await adapter.load("missingKey");
+    const result = adapter.load();
 
     assert.strictEqual(result.success, true);
-    assert.strictEqual(result.value, undefined);
+    assert.strictEqual(result.value, null);
   });
 
-  it("should return false if load fails", async () => {
-    mockStorage["testKey"] = "invalid json";
+  it("should return failure for corrupted JSON", () => {
+    mockStorage["legacys_end_save"] = "not valid json{{{";
 
     const adapter = new LocalStorageAdapter();
-    const result = await adapter.load("testKey");
+    const result = adapter.load();
 
     assert.strictEqual(result.success, false);
-    assert.strictEqual(result.value, undefined);
-    assert.ok(result.error.startsWith("LocalStorage load failed:"));
+    assert.ok(result.error.includes("Failed to load"));
   });
 });

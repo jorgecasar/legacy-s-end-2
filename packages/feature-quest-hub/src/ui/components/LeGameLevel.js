@@ -5,6 +5,8 @@ import { gameStoreContext } from "./GameStore.context.js";
 import { gameLevelStyles } from "./LeGameLevel.styles.js";
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
 import { InitializeQuest } from "@legacys-end/core/use-cases/InitializeQuest.js";
+import { LoadProgress } from "@legacys-end/core/use-cases/LoadProgress.js";
+import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
 // Raw data imports (to be passed to adapter)
 import questData from "@legacys-end/content/quests/alarions-awakening/quest.json" with { type: "json" };
 import { questMessages } from "@legacys-end/content/quests/alarions-awakening/quest.messages.js";
@@ -47,8 +49,7 @@ export class LeGameLevel extends LitElement {
     this._gameInitialized = true;
     console.log("Initializing game level via InitializeQuest Use Case...");
 
-    // Clear previous state
-    this.gameStore.activeQuest.set(null);
+    // Clear previous dialogue state
     this.gameStore.currentDialogue.set(null);
 
     const result = await InitializeQuest.execute({
@@ -65,14 +66,25 @@ export class LeGameLevel extends LitElement {
       return;
     }
 
-    const { heroState, obstacles, entities } = result.value;
+    const { obstacles, entities } = result.value;
+    let { heroState } = result.value;
+
+    // Try to restore saved progress
+    const storageAdapter = new LocalStorageAdapter();
+    const loadResult = LoadProgress.execute({ storageAdapter });
+    if (loadResult.success) {
+      heroState = loadResult.value;
+      console.log("Restored saved progress.");
+    }
 
     this.gameStore.initialize(heroState, obstacles, entities);
 
-    // Automatically trigger intro dialogue if available
-    const firstNPC = entities[0];
-    if (firstNPC?.decks) {
-      this.gameStore.setDialogue(firstNPC.decks.talk);
+    // Automatically trigger intro dialogue if no saved progress
+    if (!loadResult.success) {
+      const firstNPC = entities[0];
+      if (firstNPC?.decks) {
+        this.gameStore.setDialogue(firstNPC.decks.talk);
+      }
     }
 
     console.log("Game level initialized successfully.");

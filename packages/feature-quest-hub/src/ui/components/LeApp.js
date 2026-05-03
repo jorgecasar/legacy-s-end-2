@@ -1,5 +1,7 @@
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
 import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
+import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
+import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js";
 import { provide } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
@@ -79,6 +81,17 @@ export class LeApp extends SignalWatcher(LitElement) {
 
     // Store setup
     this.gameStore = new GameStore();
+
+    // Persistence setup
+    const storageAdapter = new LocalStorageAdapter();
+    const autoSaveService = new AutoSaveService(storageAdapter);
+    this.gameStore.setAutoSaveService(autoSaveService);
+
+    // Force save on page unload
+    window.addEventListener("beforeunload", () => {
+      const heroState = this.gameStore.heroState.get();
+      if (heroState) autoSaveService.forceSave(heroState);
+    });
 
     // Keyboard controls
     window.addEventListener("keydown", (e) => this.#handleKeyDown(e));

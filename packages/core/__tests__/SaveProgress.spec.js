@@ -1,66 +1,36 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import SaveProgress from "../src/use-cases/SaveProgress.js";
+import { SaveProgress } from "../src/use-cases/SaveProgress.js";
+import { Result } from "../src/domain/Result.js";
+import HeroState from "../src/domain/entities/HeroState.js";
+import Position from "../src/domain/entities/Position.js";
 
 describe("SaveProgress", () => {
-  it("should successfully save data via provider", async () => {
-    /** @type {any} */
-    const mockProvider = {
-      save: async (key, data) => {
-        assert.strictEqual(key, "testKey");
-        assert.deepStrictEqual(data, { level: 1 });
-        return { success: true };
+  const hero = HeroState.create(80, 100, Position.create(3, 4).value, ["sword"]).value;
+
+  it("should successfully save heroState via storageAdapter", () => {
+    const mockAdapter = {
+      save(data) {
+        assert.deepStrictEqual(data, hero.toJSON());
+        return Result.success(true);
       },
     };
 
-    const useCase = new SaveProgress(mockProvider, "testKey");
-    const result = await useCase.execute({ level: 1 });
+    const result = SaveProgress.execute({ heroState: hero, storageAdapter: mockAdapter });
 
     assert.strictEqual(result.success, true);
   });
 
-  it("should return error if provider fails", async () => {
-    /** @type {any} */
-    const mockProvider = {
-      save: async () => {
-        return { success: false, error: "Storage full" };
+  it("should propagate adapter failure", () => {
+    const mockAdapter = {
+      save() {
+        return Result.failure("Storage full");
       },
     };
 
-    const useCase = new SaveProgress(mockProvider, "testKey");
-    const result = await useCase.execute({ level: 1 });
+    const result = SaveProgress.execute({ heroState: hero, storageAdapter: mockAdapter });
 
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "Storage full");
-  });
-
-  it("should return default error if provider fails without message", async () => {
-    /** @type {any} */
-    const mockProvider = {
-      save: async () => {
-        return { success: false };
-      },
-    };
-
-    const useCase = new SaveProgress(mockProvider, "testKey");
-    const result = await useCase.execute({ level: 1 });
-
-    assert.strictEqual(result.success, false);
-    assert.strictEqual(result.error, "Unknown error");
-  });
-
-  it("should catch exceptions and return failure result", async () => {
-    /** @type {any} */
-    const mockProvider = {
-      save: async () => {
-        throw new Error("Unexpected error");
-      },
-    };
-
-    const useCase = new SaveProgress(mockProvider, "testKey");
-    const result = await useCase.execute({ level: 1 });
-
-    assert.strictEqual(result.success, false);
-    assert.strictEqual(result.error, "Failed to save progress: Unexpected error");
   });
 });

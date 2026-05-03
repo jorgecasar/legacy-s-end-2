@@ -1,38 +1,23 @@
 import { Result } from "../domain/Result.js";
+import HeroState from "../domain/entities/HeroState.js";
 
 /**
  * LoadProgress
  *
- * Use case for loading game progress.
+ * Use case to retrieve saved game state.
  */
-export default class LoadProgress {
-  /** @typedef {import("./ports/PersistenceProvider.js").PersistenceProvider} PersistenceProvider */
-
-  /** @type {PersistenceProvider} */
-  #provider;
-  #key;
-
+export const LoadProgress = {
   /**
-   * @param {PersistenceProvider} provider
-   * @param {string} key
+   * @param {object} params
+   * @param {object} params.storageAdapter
+   * @returns {Result<HeroState>}
    */
-  constructor(provider, key = "legacy-s-end-progress") {
-    this.#provider = provider;
-    this.#key = key;
-  }
+  execute: (params) => {
+    const { storageAdapter } = params;
+    const loadResult = storageAdapter.load();
+    if (!loadResult.success) return Result.failure(loadResult.error);
+    if (!loadResult.value) return Result.failure("No save data found");
 
-  /**
-   * @returns {Promise<import("../domain/Result.js").Result<unknown>>}
-   */
-  async execute() {
-    try {
-      const result = await this.#provider.load(this.#key);
-      if (!result.success) {
-        return Result.failure(result.error || "Unknown error");
-      }
-      return Result.success(result.value);
-    } catch (error) {
-      return Result.failure(`Failed to load progress: ${error.message}`);
-    }
-  }
-}
+    return Result.success(HeroState.fromJSON(loadResult.value));
+  },
+};

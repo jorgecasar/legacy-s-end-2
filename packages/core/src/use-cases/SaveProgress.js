@@ -1,39 +1,20 @@
 import { Result } from "../domain/Result.js";
+import HeroState from "../domain/entities/HeroState.js";
 
 /**
  * SaveProgress
  *
- * Use case for saving game progress.
+ * Use case to persist the current game state.
  */
-export default class SaveProgress {
-  /** @typedef {import("./ports/PersistenceProvider.js").PersistenceProvider} PersistenceProvider */
-
-  /** @type {PersistenceProvider} */
-  #provider;
-  #key;
-
+export const SaveProgress = {
   /**
-   * @param {PersistenceProvider} provider
-   * @param {string} key
+   * @param {object} params
+   * @param {HeroState} params.heroState
+   * @param {object} params.storageAdapter
+   * @returns {Result<boolean>}
    */
-  constructor(provider, key = "legacy-s-end-progress") {
-    this.#provider = provider;
-    this.#key = key;
-  }
-
-  /**
-   * @param {Record<string, unknown>} data
-   * @returns {Promise<import("../domain/Result.js").Result<void>>}
-   */
-  async execute(data) {
-    try {
-      const result = await this.#provider.save(this.#key, data);
-      if (!result.success) {
-        return Result.failure(result.error || "Unknown error");
-      }
-      return Result.success();
-    } catch (error) {
-      return Result.failure(`Failed to save progress: ${error.message}`);
-    }
-  }
-}
+  execute: (params) => {
+    const { heroState, storageAdapter } = params;
+    return storageAdapter.save(heroState.toJSON());
+  },
+};
