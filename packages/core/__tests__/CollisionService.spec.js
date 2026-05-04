@@ -24,5 +24,12 @@ describe("Domain Service: CollisionService", () => {
       const obstacles = [{ x: 15, y: 15, width: 10, height: 10 }]; // Overlaps 20,20
       assert.strictEqual(CollisionService.checkCollision(pos, obstacles), true);
     });
+
+    it("should respect buffers for hero size", () => {
+      const pos = new Position(12, 5); // Outside (obs is at 15-25)
+      const obstacles = [{ x: 15, y: 0, width: 10, height: 10 }];
+      assert.strictEqual(CollisionService.checkCollision(pos, obstacles), false);
+      assert.strictEqual(CollisionService.checkCollision(pos, obstacles, { widthBuffer: 4 }), true);
+    });
   });
 });

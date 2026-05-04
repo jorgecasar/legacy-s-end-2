@@ -5,10 +5,12 @@ import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js
 import { provide } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
+import { setLocale } from "../../i18n/localization.js";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { GameStore } from "../../infrastructure/GameStore.js";
 import { StaticQuestRepository } from "../../infrastructure/StaticQuestRepository.js";
 import { ListAvailableQuestsInteractor } from "../../use-cases/ListAvailableQuestsInteractor.js";
+import { CompleteQuestInteractor } from "../../use-cases/CompleteQuestInteractor.js";
 import { gameStoreContext } from "./GameStore.context.js";
 import { appStyles } from "./LeApp.styles.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
@@ -40,6 +42,12 @@ export class LeApp extends SignalWatcher(LitElement) {
 
   constructor() {
     super();
+
+    // Initialize localization
+    const detectedLocale = navigator.language.split("-")[0];
+    if (detectedLocale === "es") {
+      setLocale("es");
+    }
 
     // Baseline mission data (Static for Phase 1)
     const baselineQuests = [
@@ -82,6 +90,17 @@ export class LeApp extends SignalWatcher(LitElement) {
     // Store setup
     this.gameStore = new GameStore();
 
+    const completeQuestUseCase = new CompleteQuestInteractor(questRepository);
+
+    // Event listeners
+    window.addEventListener("quest-completed", async (e) => {
+      const { questId } = /** @type {any} */ (e).detail;
+      await completeQuestUseCase.execute({ questId });
+      // Return to hub
+      this.gameStore.activeQuest.set(null);
+      this.requestUpdate();
+    });
+
     // Persistence setup
     const storageAdapter = new LocalStorageAdapter();
     const autoSaveService = new AutoSaveService(storageAdapter);
@@ -94,7 +113,13 @@ export class LeApp extends SignalWatcher(LitElement) {
     });
 
     // Keyboard controls
-    window.addEventListener("keydown", (e) => this.#handleKeyDown(e));
+    this._handleKeyDown = this._handleKeyDown.bind(this);
+    window.addEventListener("keydown", this._handleKeyDown);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener("keydown", this._handleKeyDown);
   }
 
   /** @type {Record<string, 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>} */
@@ -113,14 +138,20 @@ export class LeApp extends SignalWatcher(LitElement) {
    * Global keyboard handler for hero movement and interaction.
    * @param {KeyboardEvent} e
    */
-  #handleKeyDown(e) {
+  _handleKeyDown(e) {
     if (!this.gameStore.activeQuest.get()) return;
 
-    const direction = this.#KEY_MAP[e.key];
+    const key = e.key.toLowerCase();
+    const direction = this.#KEY_MAP[e.key] || this.#KEY_MAP[key];
+
     if (direction) {
       this.gameStore.moveHero(direction);
-    } else if (e.key === "e") {
+    } else if (key === "e") {
       this.gameStore.interact();
+    } else if (key === " " || key === "enter") {
+      if (this.gameStore.currentDialogue.get()) {
+        this.gameStore.advanceDialogue();
+      }
     }
   }
 

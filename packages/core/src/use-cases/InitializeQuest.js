@@ -42,6 +42,9 @@ export const InitializeQuest = {
       }
 
       const quest = loadResult.value;
+      if (!quest.chapters || quest.chapters.length === 0) {
+        return Result.failure("Quest has no chapters.");
+      }
       const firstChapter = quest.chapters[0];
 
       const startResult = StartQuest.execute({
@@ -51,6 +54,7 @@ export const InitializeQuest = {
         initialY: firstChapter.startPos.y,
         initialInventory: [],
         obstacles: firstChapter.obstacles,
+        chapterId: firstChapter.id,
       });
 
       if (!startResult.success) {
@@ -58,9 +62,11 @@ export const InitializeQuest = {
       }
 
       return Result.success({
+        quest,
         heroState: startResult.value.heroState,
         obstacles: startResult.value.obstacles,
         entities: firstChapter.entities,
+        exitZone: firstChapter.exitZone,
       });
     } catch (error) {
       return Result.failure(`Failed to initialize quest: ${error.message}`);

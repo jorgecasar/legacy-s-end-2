@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<file target-language="es" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+<body>
+<trans-unit id="s254ceed2d7a88a15">
+  <source>The Awakening</source>
+</trans-unit>
+<trans-unit id="s1c2201fc020df1dc">
+  <source>The Cleansed Forest</source>
+</trans-unit>
+<trans-unit id="s6bd4471a3977d6d7">
+  <source>Elder Alarion</source>
+</trans-unit>
+<trans-unit id="s30e30c0ef78f4146">
+  <source>Wake up, hero. The world is ending.</source>
+</trans-unit>
+<trans-unit id="sdbd7c79796fb9383">
+  <source>The void is consuming everything. You are our last hope.</source>
+</trans-unit>
+<trans-unit id="s62e36f8e3a3f110d">
+  <source>Spirit of Alarion</source>
+</trans-unit>
+<trans-unit id="s0c45c6724698a586">
+  <source>You have done well to reach the second chapter.</source>
+</trans-unit>
+<trans-unit id="sb445e559b651fab8">
+  <source>Alarion's Awakening</source>
+</trans-unit>
+<trans-unit id="s68d1f490f316240c">
+  <source>The first step into the corrupted code...</source>
+</trans-unit>
+<trans-unit id="s5033dab8c17f05f2">
+  <source>Completed</source>
+</trans-unit>
+<trans-unit id="sd158a5fc0f062f18">
+  <source>Available</source>
+</trans-unit>
+<trans-unit id="se3e714766f25ef93">
+  <source>Locked</source>
+</trans-unit>
+<trans-unit id="s25488e19b8cd6f11">
+  <source>Lvl</source>
+</trans-unit>
+<trans-unit id="sfc53e352afbca881">
+  <source>Review</source>
+</trans-unit>
+<trans-unit id="sae1c7f13b7c0c47f">
+  <source>Start</source>
+</trans-unit>
+</body>
+</file>
+</xliff>

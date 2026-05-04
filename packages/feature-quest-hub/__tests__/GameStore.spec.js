@@ -8,7 +8,7 @@ describe("Infrastructure: GameStore", () => {
   const setup = () => {
     const store = new GameStore();
     const pos = Position.create(10, 10).value;
-    const hero = HeroState.create(100, 100, pos, []).value;
+    const hero = HeroState.create(100, 100, pos, [], "chapter-1").value;
     const obstacles = [{ x: 50, y: 50, width: 10, height: 10 }];
     const entities = [
       {

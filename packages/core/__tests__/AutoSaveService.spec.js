@@ -6,7 +6,7 @@ import HeroState from "../src/domain/entities/HeroState.js";
 import Position from "../src/domain/entities/Position.js";
 
 describe("AutoSaveService", () => {
-  const hero = HeroState.create(100, 100, Position.create(1, 2).value, []).value;
+  const hero = HeroState.create(100, 100, Position.create(1, 2).value, [], "chap-01").value;
 
   beforeEach(() => {
     mock.timers.enable({ apis: ["setTimeout"] });

@@ -28,11 +28,23 @@ export const MoveHero = {
 
       const newPosition = movementResult.value;
 
-      if (CollisionService.checkCollision(newPosition, obstacles)) {
+      // Hero size is approx 4% width, 8% height. Use half as buffer.
+      if (
+        CollisionService.checkCollision(newPosition, obstacles, {
+          widthBuffer: 2.2,
+          heightBuffer: 4.2,
+        })
+      ) {
         return Result.failure("Move blocked by collision");
       }
 
-      return HeroState.create(heroState.hp, heroState.maxHp, newPosition, heroState.inventory);
+      return HeroState.create(
+        heroState.hp,
+        heroState.maxHp,
+        newPosition,
+        heroState.inventory,
+        heroState.chapterId,
+      );
     } catch (error) {
       return Result.failure(`Failed to move hero: ${error.message}`);
     }

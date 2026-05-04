@@ -13,6 +13,7 @@ describe("Use Case: StartQuest", () => {
       initialY: 5,
       initialInventory: ["map"],
       obstacles,
+      chapterId: "chap-01",
     });
 
     assert.strictEqual(result.success, true);

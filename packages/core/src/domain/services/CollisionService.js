@@ -33,15 +33,19 @@ export const CollisionService = {
    * Checks if a position collides with any solid obstacles.
    * @param {Position} position
    * @param {Array<{x: number, y: number, width: number, height: number}>} obstacles
+   * @param {object} [options]
+   * @param {number} [options.widthBuffer]
+   * @param {number} [options.heightBuffer]
    * @returns {boolean}
    */
-  checkCollision: (position, obstacles = []) => {
+  checkCollision: (position, obstacles = [], options = {}) => {
+    const { widthBuffer = 0, heightBuffer = 0 } = options;
     return obstacles.some((obs) => {
       return (
-        position.x >= obs.x &&
-        position.x <= obs.x + obs.width &&
-        position.y >= obs.y &&
-        position.y <= obs.y + obs.height
+        position.x + widthBuffer >= obs.x &&
+        position.x - widthBuffer <= obs.x + obs.width &&
+        position.y + heightBuffer >= obs.y &&
+        position.y - heightBuffer <= obs.y + obs.height
       );
     });
   },

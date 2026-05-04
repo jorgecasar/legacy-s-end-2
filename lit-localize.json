@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/lit/lit/main/packages/localize-tools/config.schema.json",
+  "sourceLocale": "en",
+  "targetLocales": [
+    "es"
+  ],
+  "inputFiles": [
+    "packages/core/src/**/*.js",
+    "packages/feature-quest-hub/src/**/*.js",
+    "packages/content/**/*.js"
+  ],
+  "output": {
+    "mode": "runtime",
+    "outputDir": "packages/feature-quest-hub/src/i18n/generated"
+  },
+  "interchange": {
+    "format": "xliff",
+    "xliffDir": "i18n/xliff"
+  }
+}

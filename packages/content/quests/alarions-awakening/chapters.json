@@ -19,6 +19,26 @@
           "visibility": "always"
         }
       ]
+    },
+    {
+      "id": "chap-02",
+      "background": "forest-cleansed",
+      "startPos": { "x": 10, "y": 10 },
+      "exitZone": { "x": 90, "y": 10, "radius": 5 },
+      "obstacles": [
+        { "x": 0, "y": 0, "width": 100, "height": 5 },
+        { "x": 0, "y": 95, "width": 100, "height": 5 },
+        { "x": 0, "y": 0, "width": 5, "height": 100 },
+        { "x": 95, "y": 0, "width": 5, "height": 100 }
+      ],
+      "entities": [
+        {
+          "id": "npc-alarion-spirit",
+          "type": "npc",
+          "position": { "x": 50, "y": 50 },
+          "visibility": "always"
+        }
+      ]
     }
   ]
 }

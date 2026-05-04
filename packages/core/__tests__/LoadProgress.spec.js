@@ -5,7 +5,13 @@ import { Result } from "../src/domain/Result.js";
 
 describe("LoadProgress", () => {
   it("should successfully load and reconstruct a HeroState", () => {
-    const savedData = { hp: 80, maxHp: 100, position: { x: 3, y: 4 }, inventory: ["sword"] };
+    const savedData = {
+      hp: 80,
+      maxHp: 100,
+      position: { x: 3, y: 4 },
+      inventory: ["sword"],
+      chapterId: "chap-01",
+    };
     const mockAdapter = {
       load() {
         return Result.success(savedData);

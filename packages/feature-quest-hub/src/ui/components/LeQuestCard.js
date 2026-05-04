@@ -3,6 +3,7 @@ import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/card/card.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/skeleton/skeleton.js";
+import { msg } from "@lit/localize";
 import { html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
@@ -68,7 +69,12 @@ export class LeQuestCard extends LitElement {
           ? "brand"
           : "neutral";
 
-    const statusLabel = this.status.charAt(0).toUpperCase() + this.status.slice(1).toLowerCase();
+    const statusLabel =
+      this.status === QuestStatus.COMPLETED
+        ? msg("Completed")
+        : this.status === QuestStatus.AVAILABLE
+          ? msg("Available")
+          : msg("Locked");
 
     return html`
       <wa-card class="card" @click=${this._handleQuestClick}>
@@ -76,7 +82,7 @@ export class LeQuestCard extends LitElement {
 
         <div slot="header" class="header-container">
           <h3 class="title">${this.quest.title}</h3>
-          ${this.quest.level ? html`<span class="level">Lvl ${this.quest.level}</span>` : ""}
+          ${this.quest.level ? html`<span class="level">${msg("Lvl")} ${this.quest.level}</span>` : ""}
         </div>
 
         <p class="description">${this.quest.description}</p>        
@@ -87,7 +93,7 @@ export class LeQuestCard extends LitElement {
             this.status !== QuestStatus.LOCKED
               ? html`
             <wa-button variant=${this.status === QuestStatus.COMPLETED ? "neutral" : "brand"} size="small">
-              ${this.status === QuestStatus.COMPLETED ? "Review" : "Start"}
+              ${this.status === QuestStatus.COMPLETED ? msg("Review") : msg("Start")}
               <wa-icon slot="prefix" name=${this.status === QuestStatus.COMPLETED ? "check" : "play"}></wa-icon>
             </wa-button>
           `

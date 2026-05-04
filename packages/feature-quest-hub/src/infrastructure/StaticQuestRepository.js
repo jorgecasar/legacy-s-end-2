@@ -49,6 +49,20 @@ export class StaticQuestRepository extends QuestRepository {
   }
 
   /**
+   * @param {Quest} quest
+   * @returns {Promise<Result<void>>}
+   */
+  async save(quest) {
+    const index = this.#quests.findIndex((q) => q.id.equals(quest.id));
+    if (index === -1) {
+      this.#quests.push(quest);
+    } else {
+      this.#quests[index] = quest;
+    }
+    return Result.success();
+  }
+
+  /**
    * Mocks a database lookup from raw data.
    * @param {any[]} data
    * @returns {Promise<Result<Quest[]>>}

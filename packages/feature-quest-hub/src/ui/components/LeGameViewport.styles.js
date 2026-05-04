@@ -18,6 +18,63 @@ export const gameViewportStyles = css`
     width: 100%;
     height: 100%;
     position: relative;
+    background-size: cover;
+    background-position: center;
+    transition: background-image 0.5s ease-in-out;
+  }
+
+  .viewport[data-background="forest-corrupted"] {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+      repeating-concentric-radial-gradient(
+        circle at 50% 50%,
+        #1a0f2e,
+        #1a0f2e 10px,
+        #2d1b4d 10px,
+        #2d1b4d 20px
+      );
+  }
+
+  .viewport[data-background="forest-cleansed"] {
+    background-image:
+      linear-gradient(rgba(0, 50, 0, 0.3), rgba(0, 50, 0, 0.3)),
+      repeating-concentric-radial-gradient(
+        circle at 50% 50%,
+        #1b4d2e,
+        #1b4d2e 10px,
+        #2e7d32 10px,
+        #2e7d32 20px
+      );
+  }
+
+  .exit-zone {
+    position: absolute;
+    border: 3px solid var(--wa-color-brand-500);
+    border-radius: 50%;
+    background-color: rgba(var(--wa-color-brand-rgb), 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: var(--wa-font-size-x-small);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px var(--wa-color-brand-500);
+    animation: pulse-exit 1.5s infinite ease-in-out;
+    text-shadow: 0 1px 2px black;
+    z-index: 5;
+  }
+
+  @keyframes pulse-exit {
+    0% {
+      box-shadow: 0 0 0 0 rgba(var(--wa-color-brand-rgb), 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 15px rgba(var(--wa-color-brand-rgb), 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(var(--wa-color-brand-rgb), 0);
+    }
   }
 
   le-hero {

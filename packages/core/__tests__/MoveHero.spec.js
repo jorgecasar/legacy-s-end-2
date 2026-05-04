@@ -9,7 +9,7 @@ describe("Use Case: MoveHero", () => {
 
   it("should move the hero to a valid position", () => {
     const initialPos = new Position(0, 0);
-    const heroState = new HeroState(100, 100, initialPos, []);
+    const heroState = new HeroState(100, 100, initialPos, [], "chap-01");
 
     const result = MoveHero.execute({
       heroState,
@@ -25,7 +25,7 @@ describe("Use Case: MoveHero", () => {
 
   it("should return an error if the move fails due to collision", () => {
     const initialPos = new Position(9, 10);
-    const heroState = new HeroState(100, 100, initialPos, []);
+    const heroState = new HeroState(100, 100, initialPos, [], "chap-01");
 
     const result = MoveHero.execute({
       heroState,
@@ -40,7 +40,7 @@ describe("Use Case: MoveHero", () => {
 
   it("should return an error if movement is out of bounds", () => {
     const initialPos = new Position(0, 0);
-    const heroState = new HeroState(100, 100, initialPos, []);
+    const heroState = new HeroState(100, 100, initialPos, [], "chap-01");
 
     const result = MoveHero.execute({
       heroState,

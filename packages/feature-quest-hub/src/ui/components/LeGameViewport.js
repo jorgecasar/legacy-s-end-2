@@ -29,12 +29,28 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
 
     const pos = this.gameStore.heroPosition.get();
     const outfit = this.gameStore.heroOutfit.get();
+    const background = this.gameStore.background.get();
 
     return html`
-      <div class="viewport">
+      <div class="viewport" data-background=${background}>
         ${this.#renderObstacles()}
         ${this.#renderNPCs()}
+        ${this.#renderExitZone()}
         <le-hero .outfit=${outfit} style="left: ${pos.x}%; top: ${pos.y}%;"></le-hero>
+      </div>
+    `;
+  }
+
+  #renderExitZone() {
+    const zone = this.gameStore.exitZone.get();
+    if (!zone) return "";
+
+    return html`
+      <div 
+        class="exit-zone" 
+        style="left: ${zone.x}%; top: ${zone.y}%; width: ${zone.radius * 2}%; height: ${zone.radius * 2 * 1.77}%;"
+      >
+        NEXT
       </div>
     `;
   }

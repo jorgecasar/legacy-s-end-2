@@ -6,7 +6,7 @@ import HeroState from "../src/domain/entities/HeroState.js";
 import Position from "../src/domain/entities/Position.js";
 
 describe("SaveProgress", () => {
-  const hero = HeroState.create(80, 100, Position.create(3, 4).value, ["sword"]).value;
+  const hero = HeroState.create(80, 100, Position.create(3, 4).value, ["sword"], "chap-01").value;
 
   it("should successfully save heroState via storageAdapter", () => {
     const mockAdapter = {

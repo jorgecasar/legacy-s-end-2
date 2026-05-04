@@ -30,4 +30,14 @@ export class QuestRepository {
   async getAll() {
     throw new Error("Method not implemented.");
   }
+
+  /**
+   * Saves or updates a quest in the repository.
+   * @param {Quest} _quest - The quest entity to save.
+   * @returns {Promise<import("@legacys-end/core/domain/Result.js").Result<void>>}
+   * @abstract
+   */
+  async save(_quest) {
+    throw new Error("Method not implemented.");
+  }
 }

@@ -19,7 +19,7 @@ describe("Persistence Use Cases", () => {
   };
 
   it("should save and load progress successfully", () => {
-    const hero = HeroState.create(100, 100, Position.create(1, 2).value, ["key"]).value;
+    const hero = HeroState.create(100, 100, Position.create(1, 2).value, ["key"], "chap-01").value;
 
     const result = SaveProgress.execute({ heroState: hero, storageAdapter: mockStorage });
     assert.strictEqual(result.success, true);
@@ -48,7 +48,12 @@ describe("Persistence Use Cases", () => {
   it("should handle missing fields in saved data", () => {
     const partialAdapter = {
       load() {
-        return Result.success({ hp: 50, maxHp: 100, position: { x: 0, y: 0 } });
+        return Result.success({
+          hp: 50,
+          maxHp: 100,
+          position: { x: 0, y: 0 },
+          chapterId: "chap-01",
+        });
       },
     };
 
@@ -71,7 +76,7 @@ describe("Persistence Use Cases", () => {
   });
 
   it("should propagate storage adapter errors on save", () => {
-    const hero = HeroState.create(50, 100, Position.create(0, 0).value, []).value;
+    const hero = HeroState.create(50, 100, Position.create(0, 0).value, [], "chap-01").value;
     const failAdapter = {
       save() {
         return Result.failure("QuotaExceededError");

@@ -4,6 +4,9 @@ export const chapterMessages = {
   "chap-01": {
     name: msg("The Awakening"),
   },
+  "chap-02": {
+    name: msg("The Cleansed Forest"),
+  },
 };
 
 export const entityDecks = {
@@ -30,6 +33,17 @@ export const entityDecks = {
         type: "narration",
         speaker: msg("Elder Alarion"),
         text: msg("Wake up, hero. The world is ending."),
+        nextId: null,
+      },
+    ],
+  },
+  "npc-alarion-spirit": {
+    talk: [
+      {
+        id: "spirit-1",
+        type: "narration",
+        speaker: msg("Spirit of Alarion"),
+        text: msg("You have done well to reach the second chapter."),
         nextId: null,
       },
     ],

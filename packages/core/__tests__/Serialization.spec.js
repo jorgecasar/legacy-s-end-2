@@ -19,7 +19,7 @@ describe("TDD: Entity Serialization", () => {
 
   it("should serialize and deserialize HeroState", () => {
     const pos = Position.create(10, 20).value;
-    const hero = HeroState.create(100, 100, pos, ["sword"]).value;
+    const hero = HeroState.create(100, 100, pos, ["sword"], "chap-01").value;
 
     const json = JSON.stringify(hero);
     const parsed = JSON.parse(json);
@@ -27,9 +27,11 @@ describe("TDD: Entity Serialization", () => {
     // RED: This will fail until toJSON and fromJSON are implemented
     assert.strictEqual(parsed.hp, 100);
     assert.strictEqual(parsed.inventory[0], "sword");
+    assert.strictEqual(parsed.chapterId, "chap-01");
 
     const restored = HeroState.fromJSON(parsed);
     assert.strictEqual(restored.hp, 100);
+    assert.strictEqual(restored.chapterId, "chap-01");
     assert.ok(restored.position.equals(pos));
   });
 });

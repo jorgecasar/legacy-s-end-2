@@ -1,5 +1,7 @@
 import { consume } from "@lit/context";
 import { html, LitElement } from "lit";
+import { SignalWatcher } from "@lit-labs/signals";
+import { msg } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
 
 import { gameLevelStyles } from "./LeGameLevel.styles.js";
@@ -26,7 +28,7 @@ import "./le-dialogue-overlay.js";
  *
  * @customElement le-game-level
  */
-export class LeGameLevel extends LitElement {
+export class LeGameLevel extends SignalWatcher(LitElement) {
   static styles = gameLevelStyles;
 
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */
@@ -66,18 +68,30 @@ export class LeGameLevel extends LitElement {
       return;
     }
 
-    const { obstacles, entities } = result.value;
+    const { obstacles, entities, quest, exitZone } = result.value;
     let { heroState } = result.value;
 
     // Try to restore saved progress
     const storageAdapter = new LocalStorageAdapter();
     const loadResult = LoadProgress.execute({ storageAdapter });
     if (loadResult.success) {
-      heroState = loadResult.value;
-      console.log("Restored saved progress.");
+      const savedHeroState = loadResult.value;
+      const firstChapterId = quest.chapters?.[0]?.id;
+
+      // Only restore if chapterId exists and matches
+      if (savedHeroState.chapterId && savedHeroState.chapterId === firstChapterId) {
+        heroState = savedHeroState;
+        console.log("Restored saved progress for chapter:", firstChapterId);
+      } else {
+        console.warn(
+          "Ignoring incompatible or old saved progress.",
+          savedHeroState.chapterId ? `Found: ${savedHeroState.chapterId}` : "No chapterId found",
+          `Expected: ${firstChapterId}`,
+        );
+      }
     }
 
-    this.gameStore.initialize(heroState, obstacles, entities);
+    this.gameStore.initialize(heroState, obstacles, entities, quest, exitZone);
 
     // Automatically trigger intro dialogue if no saved progress
     if (!loadResult.success) {
@@ -91,9 +105,25 @@ export class LeGameLevel extends LitElement {
   }
 
   render() {
+    const quest = this.gameStore.activeQuest.get();
+    const chapterIndex = this.gameStore.currentChapterIndex.get();
+    const chapters = quest?.chapters || [];
+    const chapter = chapters[chapterIndex];
+
     return html`
-      <le-game-viewport></le-game-viewport>
-      <le-dialogue-overlay></le-dialogue-overlay>
+      <header>
+        <div class="chapter-info">
+          <h2>${quest?.title || msg("Loading Quest...")}</h2>
+          <p>${chapter?.name || msg("Initializing...")} (${chapterIndex + 1}/${chapters.length || 1})</p>
+        </div>
+        <div class="controls-hint">
+          ${msg("WASD to move | E to interact")}
+        </div>
+      </header>
+      <main>
+        <le-game-viewport></le-game-viewport>
+        <le-dialogue-overlay></le-dialogue-overlay>
+      </main>
     `;
   }
 }

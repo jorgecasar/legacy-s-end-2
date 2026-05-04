@@ -20,7 +20,11 @@ export const dialogueOverlayStyles = css`
   }
 
   :host([hidden]) {
-    display: none;
+    display: none !important;
+  }
+
+  :host(:not([hidden])) {
+    display: flex !important;
   }
 
   .speaker {
