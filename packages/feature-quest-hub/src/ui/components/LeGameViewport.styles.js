@@ -79,8 +79,8 @@ export const gameViewportStyles = css`
 
   le-hero {
     position: absolute;
-    width: 4%; /* Approx size relative to viewport */
-    height: 8%;
+    width: 4.4%; /* Matches hitbox: 2.2 * 2 */
+    height: 8.4%; /* Matches hitbox: 4.2 * 2 */
     transform: translate(-50%, -50%); /* Center the hero on its coordinates */
     transition:
       left 0.1s linear,
