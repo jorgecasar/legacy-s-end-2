@@ -1,6 +1,3 @@
-import { Result } from "../domain/Result.js";
-import HeroState from "../domain/entities/HeroState.js";
-
 /**
  * SaveProgress
  *
@@ -9,9 +6,9 @@ import HeroState from "../domain/entities/HeroState.js";
 export const SaveProgress = {
   /**
    * @param {object} params
-   * @param {HeroState} params.heroState
+   * @param {import("../domain/entities/HeroState.js").default} params.heroState
    * @param {object} params.storageAdapter
-   * @returns {Result<boolean>}
+   * @returns {import("../domain/Result.js").Result<boolean>}
    */
   execute: (params) => {
     const { heroState, storageAdapter } = params;

@@ -20,7 +20,9 @@ const Template = () => {
   ];
 
   const posResult = Position.create(10, 50);
-  const heroResult = posResult.success ? HeroState.create(100, 100, posResult.value, []) : null;
+  const heroResult = posResult.success
+    ? HeroState.create(100, 100, posResult.value, [], "chap-01")
+    : null;
 
   if (heroResult?.success) {
     gameStore.initialize(heroResult.value, obstacles);
