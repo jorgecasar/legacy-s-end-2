@@ -7,7 +7,7 @@ export const dialogueOverlayStyles = css`
     left: var(--wa-spacing-large);
     right: var(--wa-spacing-large);
     background-color: var(--wa-color-surface-raised);
-    border: 2px solid var(--wa-color-surface-border);
+    border: var(--wa-border-width-m) solid var(--wa-color-surface-border);
     color: var(--wa-color-text-normal);
     padding: var(--wa-spacing-large);
     font-family: var(--wa-font-sans);
@@ -31,7 +31,7 @@ export const dialogueOverlayStyles = css`
     font-weight: var(--wa-font-weight-bold);
     color: var(--wa-color-brand-on-quiet);
     font-size: var(--wa-font-size-large);
-    border-bottom: 1px solid var(--wa-color-surface-border);
+    border-bottom: var(--wa-border-width-s) solid var(--wa-color-surface-border);
     padding-bottom: var(--wa-spacing-x-small);
   }
 

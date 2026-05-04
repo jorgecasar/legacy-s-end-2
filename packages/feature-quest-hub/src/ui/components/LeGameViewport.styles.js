@@ -6,11 +6,11 @@ export const gameViewportStyles = css`
     width: 100%;
     max-width: 1000px;
     aspect-ratio: 16 / 9;
-    background-color: var(--wa-color-neutral-900);
+    background-color: var(--wa-color-surface-default);
     position: relative;
     overflow: hidden;
     margin: var(--wa-spacing-medium) auto;
-    border: 4px solid var(--wa-color-surface-border);
+    border: var(--wa-border-width-m) solid var(--wa-color-surface-border);
     border-radius: var(--wa-border-radius-medium);
   }
 
@@ -49,17 +49,17 @@ export const gameViewportStyles = css`
 
   .exit-zone {
     position: absolute;
-    border: 3px solid var(--wa-color-brand-500);
+    border: var(--wa-border-width-m) solid var(--wa-color-brand-fill-normal);
     border-radius: 50%;
-    background-color: rgba(var(--wa-color-brand-rgb), 0.2);
+    background-color: var(--wa-color-brand-fill-quiet);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
+    color: var(--wa-color-brand-on-quiet);
+    font-weight: var(--wa-font-weight-bold);
     font-size: var(--wa-font-size-x-small);
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 20px var(--wa-color-brand-500);
+    box-shadow: 0 0 20px var(--wa-color-brand-fill-normal);
     animation: pulse-exit 1.5s infinite ease-in-out;
     text-shadow: 0 1px 2px black;
     z-index: 5;
@@ -67,13 +67,13 @@ export const gameViewportStyles = css`
 
   @keyframes pulse-exit {
     0% {
-      box-shadow: 0 0 0 0 rgba(var(--wa-color-brand-rgb), 0.4);
+      opacity: 0.8;
     }
     70% {
-      box-shadow: 0 0 0 15px rgba(var(--wa-color-brand-rgb), 0);
+      opacity: 0.4;
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(var(--wa-color-brand-rgb), 0);
+      opacity: 0.8;
     }
   }
 
@@ -93,7 +93,7 @@ export const gameViewportStyles = css`
     width: 4%;
     height: 8%;
     transform: translate(-50%, -50%);
-    color: var(--wa-color-brand-500);
+    color: var(--wa-color-brand-fill-normal);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -107,8 +107,8 @@ export const gameViewportStyles = css`
   .interaction-prompt {
     position: absolute;
     top: -30px;
-    background-color: var(--wa-color-brand-600);
-    color: white;
+    background-color: var(--wa-color-brand-fill-loud);
+    color: var(--wa-color-brand-on-loud);
     padding: 2px 8px;
     border-radius: var(--wa-border-radius-small);
     font-size: var(--wa-font-size-x-small);
@@ -128,7 +128,7 @@ export const gameViewportStyles = css`
 
   .obstacle {
     position: absolute;
-    background-color: var(--wa-color-danger-900);
+    background-color: var(--wa-color-danger-fill-normal);
     opacity: 0.3; /* Subtle debug visualization */
     pointer-events: none;
   }
