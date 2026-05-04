@@ -42,7 +42,7 @@
     "i18n:build": "lit-localize build"
   },
   "devDependencies": {
-    "@awesome.me/webawesome": "^3.2.1",
+    "@awesome.me/webawesome": "^3.6.0",
     "@chromatic-com/storybook": "^5.0.1",
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
