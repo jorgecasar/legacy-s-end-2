@@ -12,24 +12,24 @@ export const gameLevelStyles = css`
 
   header {
     padding: var(--wa-spacing-medium);
-    background-color: var(--wa-color-neutral-900);
-    border-bottom: 1px solid var(--wa-color-neutral-800);
+    background-color: var(--wa-color-surface-raised);
+    border-bottom: var(--wa-border-width-s) solid var(--wa-color-surface-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: white;
+    color: var(--wa-color-text-normal);
   }
 
   .chapter-info h2 {
     margin: 0;
     font-size: var(--wa-font-size-large);
-    color: var(--wa-color-brand-400);
+    color: var(--wa-color-brand-text-normal);
   }
 
   .chapter-info p {
     margin: 0;
     font-size: var(--wa-font-size-small);
-    color: var(--wa-color-neutral-400);
+    color: var(--wa-color-text-quiet);
   }
 
   main {

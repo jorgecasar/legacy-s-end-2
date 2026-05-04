@@ -47,12 +47,12 @@ export const dialogueOverlayStyles = css`
 
   button {
     background-color: var(--wa-color-brand-fill-normal);
-    color: var(--wa-color-brand-on-loud);
-    border: none;
+    color: var(--wa-color-brand-on-normal);
+    border: var(--wa-border-width-s) solid var(--wa-color-brand-border-normal);
     padding: var(--wa-spacing-small) var(--wa-spacing-medium);
     border-radius: var(--wa-border-radius-small);
     cursor: pointer;
-    font-weight: var(--wa-font-weight-bold);
+    font-weight: var(--wa-font-weight-semibold);
     transition: background-color var(--wa-transition-fast);
   }
 
