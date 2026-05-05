@@ -166,6 +166,8 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
     const { quest } = e.detail;
     if (this.gameStore) {
       this.gameStore.activateQuest(quest);
+      window.history.pushState(null, "", `/quest/${quest.id}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
     console.log("Quest selected and set as active:", quest.title);
   }

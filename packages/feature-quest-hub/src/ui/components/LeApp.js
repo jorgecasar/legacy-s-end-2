@@ -3,6 +3,7 @@ import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.
 import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
 import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js";
 import { provide } from "@lit/context";
+import { Router } from "@lit-labs/router";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
 import { setLocale } from "../../i18n/localization.js";
@@ -27,6 +28,25 @@ import "./le-game-level.js";
  */
 export class LeApp extends SignalWatcher(LitElement) {
   static styles = appStyles;
+
+  #router = new Router(this, [
+    {
+      path: "/",
+      render: () =>
+        html`
+          <le-quest-hub></le-quest-hub>
+        `,
+    },
+    {
+      path: "/quest/:id",
+      render: (params) => html`<le-game-level .questId=${params.id}></le-game-level>`,
+    },
+    {
+      path: "/quest/:id/chapter/:chapter",
+      render: (params) =>
+        html`<le-game-level .questId=${params.id} .chapterIndex=${Number(params.chapter)}></le-game-level>`,
+    },
+  ]);
 
   /** @type {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} */
   @provide({ context: questUseCaseContext })
@@ -98,7 +118,14 @@ export class LeApp extends SignalWatcher(LitElement) {
       await completeQuestUseCase.execute({ questId });
       // Return to hub
       this.gameStore.activeQuest.set(null);
-      this.requestUpdate();
+      window.history.pushState(null, "", "/");
+      this.#router.goto("/");
+    });
+
+    window.addEventListener("navigate-to-hub", () => {
+      this.gameStore.activeQuest.set(null);
+      window.history.pushState(null, "", "/");
+      this.#router.goto("/");
     });
 
     // Persistence setup
@@ -158,15 +185,7 @@ export class LeApp extends SignalWatcher(LitElement) {
   render() {
     return html`
       <main>
-        ${
-          this.gameStore.activeQuest.get()
-            ? html`
-                <le-game-level></le-game-level>
-              `
-            : html`
-                <le-quest-hub></le-quest-hub>
-              `
-        }
+        ${this.#router.outlet()}
       </main>
     `;
   }

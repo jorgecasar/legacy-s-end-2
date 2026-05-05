@@ -1,5 +1,6 @@
 import { consume } from "@lit/context";
 import { html, LitElement } from "lit";
+import { property } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/signals";
 import { msg } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
@@ -31,6 +32,12 @@ import "./le-dialogue-overlay.js";
 export class LeGameLevel extends SignalWatcher(LitElement) {
   static styles = gameLevelStyles;
 
+  @property({ type: String })
+  accessor questId;
+
+  @property({ type: Number })
+  accessor chapterIndex = 0;
+
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
   accessor gameStore;
@@ -50,6 +57,14 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   async _initializeGame() {
     this._gameInitialized = true;
     console.log("Initializing game level via InitializeQuest Use Case...");
+
+    // Ensure gameStore has the active quest if loaded directly by URL
+    if (!this.gameStore.activeQuest.get() && this.questId) {
+      console.log("Direct URL load detected, synchronizing active quest...");
+      // For now, we use a placeholder quest object to trigger initialization
+      // In a real app, we would fetch the quest details from a repository
+      this.gameStore.activeQuest.set({ id: this.questId });
+    }
 
     // Clear previous dialogue state
     this.gameStore.currentDialogue.set(null);
@@ -92,6 +107,7 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
     }
 
     this.gameStore.initialize(heroState, obstacles, entities, quest, exitZone);
+    this.gameStore.currentChapterIndex.set(this.chapterIndex);
 
     // Automatically trigger intro dialogue if no saved progress
     if (!loadResult.success) {
@@ -109,6 +125,14 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
     const chapterIndex = this.gameStore.currentChapterIndex.get();
     const chapters = quest?.chapters || [];
     const chapter = chapters[chapterIndex];
+
+    // Synchronize URL with current chapter index
+    if (quest && this._gameInitialized) {
+      const newUrl = `/quest/${quest.id}/chapter/${chapterIndex}`;
+      if (window.location.pathname !== newUrl) {
+        window.history.replaceState(null, "", newUrl);
+      }
+    }
 
     return html`
       <header>
