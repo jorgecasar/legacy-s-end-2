@@ -117,7 +117,7 @@ export class GameStore {
 
   /**
    * Sets the active quest.
-   * @param {import("../domain/entities/Quest.js").Quest} quest
+   * @param {import("@legacys-end/feature-quest-hub/domain/entities/Quest.js").Quest} quest
    */
   activateQuest(quest) {
     this.activeQuest.set(quest);

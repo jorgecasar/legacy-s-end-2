@@ -2,9 +2,9 @@ import { ContextProvider } from "@lit/context";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { StaticQuestRepository } from "../../infrastructure/StaticQuestRepository.js";
 import { ListAvailableQuestsInteractor } from "../../use-cases/ListAvailableQuestsInteractor.js";
-import { GameStore } from "../../infrastructure/GameStore.js";
+import { GameStore } from "@legacys-end/feature-gameplay/infrastructure/GameStore.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
-import { gameStoreContext } from "./GameStore.context.js";
+import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
 import "./le-quest-hub.js";
 
 export default {

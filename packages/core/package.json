@@ -9,7 +9,8 @@
     "./domain/services/*.js": "./src/domain/services/*.js",
     "./use-cases/*.js": "./src/use-cases/*.js",
     "./use-cases/ports/*.js": "./src/use-cases/ports/*.js",
-    "./infrastructure/*.js": "./src/infrastructure/*.js"
+    "./infrastructure/*.js": "./src/infrastructure/*.js",
+    "./i18n/*.js": "./src/i18n/*.js"
   },
   "scripts": {
     "test": "node --test __tests__/*.spec.js",

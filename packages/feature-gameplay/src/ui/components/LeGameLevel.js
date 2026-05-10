@@ -4,8 +4,8 @@ import { property } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/signals";
 import { msg } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
-import { questRepositoryContext } from "./QuestRepository.context.js";
-import { QuestId } from "../../domain/entities/QuestId.js";
+import { questRepositoryContext } from "@legacys-end/feature-quest-hub/ui/components/QuestRepository.context.js";
+import { QuestId } from "@legacys-end/feature-quest-hub/domain/entities/QuestId.js";
 
 import { gameLevelStyles } from "./LeGameLevel.styles.js";
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
@@ -51,7 +51,7 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   @consume({ context: contentAdapterContext, subscribe: true })
   accessor contentAdapter;
 
-  /** @type {import("../../infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
+  /** @type {import("@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
   @consume({ context: questRepositoryContext, subscribe: true })
   accessor questRepository;
 

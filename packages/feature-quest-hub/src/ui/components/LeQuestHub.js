@@ -3,14 +3,14 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { Task } from "@lit/task";
 import { html, LitElement } from "lit";
-import { gameStoreContext } from "./GameStore.context.js";
+import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
 import { questHubStyles } from "./LeQuestHub.styles.js";
 import "./le-quest-card.js";
 
 /** @typedef {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} ListAvailableQuests */
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
-/** @typedef {import("../../infrastructure/GameStore.js").GameStore} GameStore */
+/** @typedef {import("@legacys-end/feature-gameplay/infrastructure/GameStore.js").GameStore} GameStore */
 /** @typedef {import("lit").TemplateResult} TemplateResult */
 
 /**

@@ -1,27 +1,31 @@
-import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
-import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
-import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
-import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js";
 import { provide } from "@lit/context";
 import { Router } from "@lit-labs/router";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
-import { setLocale } from "../../i18n/localization.js";
-import { QuestStatus } from "../../domain/entities/QuestStatus.js";
-import { GameStore } from "../../infrastructure/GameStore.js";
-import { StaticQuestRepository } from "../../infrastructure/StaticQuestRepository.js";
-import { ListAvailableQuestsInteractor } from "../../use-cases/ListAvailableQuestsInteractor.js";
-import { CompleteQuestInteractor } from "../../use-cases/CompleteQuestInteractor.js";
-import { gameStoreContext } from "./GameStore.context.js";
+
+import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
+import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
+import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
+import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js";
+import { setLocale } from "@legacys-end/core/i18n/localization.js";
+
+import { QuestStatus } from "@legacys-end/feature-quest-hub/domain/entities/QuestStatus.js";
+import { StaticQuestRepository } from "@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js";
+import { ListAvailableQuestsInteractor } from "@legacys-end/feature-quest-hub/use-cases/ListAvailableQuestsInteractor.js";
+import { CompleteQuestInteractor } from "@legacys-end/feature-quest-hub/use-cases/CompleteQuestInteractor.js";
+import { questUseCaseContext } from "@legacys-end/feature-quest-hub/ui/components/LeQuestHub.context.js";
+import { questRepositoryContext } from "@legacys-end/feature-quest-hub/ui/components/QuestRepository.context.js";
+import "@legacys-end/feature-quest-hub/ui/components/le-quest-hub.js";
+
+import { GameStore } from "@legacys-end/feature-gameplay/infrastructure/GameStore.js";
+import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
+import "@legacys-end/feature-gameplay/ui/components/le-game-level.js";
+
 import { appStyles } from "./LeApp.styles.js";
-import { questUseCaseContext } from "./LeQuestHub.context.js";
-import { questRepositoryContext } from "./QuestRepository.context.js";
-import "./le-quest-hub.js";
-import "./le-game-level.js";
 
 /**
  * LeApp
- *
+...
  * Composition Root component that manages the lifecycle of shared services
  * and provides them to the rest of the application via @lit/context.
  *
@@ -58,15 +62,15 @@ export class LeApp extends SignalWatcher(LitElement) {
     },
   ]);
 
-  /** @type {import("../../infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
+  /** @type {import("@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
   @provide({ context: questRepositoryContext })
   accessor questRepository;
 
-  /** @type {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} */
+  /** @type {import("@legacys-end/feature-quest-hub/use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} */
   @provide({ context: questUseCaseContext })
   accessor listQuestsUseCase;
 
-  /** @type {import("../../infrastructure/GameStore.js").GameStore} */
+  /** @type {import("@legacys-end/feature-gameplay/infrastructure/GameStore.js").GameStore} */
   @provide({ context: gameStoreContext })
   accessor gameStore;
 
