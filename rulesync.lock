@@ -235,6 +235,82 @@
           "integrity": "sha256-27404a6ea2f98cc973c87cef4ebd6491c2f94755e5762b0ca8636a3cef94a481"
         }
       }
+    },
+    "addyosmani/agent-skills": {
+      "requestedRef": "main",
+      "resolvedRef": "3ff4b518b3cd3077ca27cf883aa21d21faf53802",
+      "resolvedAt": "2026-05-10T22:33:29.627Z",
+      "skills": {
+        "api-and-interface-design": {
+          "integrity": "sha256-0f762ddae2eb0c21141536d9fd755e39ce3306095fe8c63c999e1ab542db0f07"
+        },
+        "browser-testing-with-devtools": {
+          "integrity": "sha256-66abee9504a2cff1b14b0fff72535e72efafdf9f6c84c18d3b908efa518546e7"
+        },
+        "ci-cd-and-automation": {
+          "integrity": "sha256-706d42c02e056cfd0509172fa294ecbdec8509aac9dc25862310800892709d9d"
+        },
+        "code-review-and-quality": {
+          "integrity": "sha256-9b086a4c540ef77b4589307a1c165ab241b5adcb84f4ae70da67924fe8a83fb0"
+        },
+        "code-simplification": {
+          "integrity": "sha256-a6d4aba8358a46634487e1c4b612cd021a41f3227fbe0b131270e2ebaaea8440"
+        },
+        "context-engineering": {
+          "integrity": "sha256-cef1aaff58296275f7279284562b7501483913628e09d1269dbb1e69e73240f4"
+        },
+        "debugging-and-error-recovery": {
+          "integrity": "sha256-03cadb08513e6b6abf533d6a587d4e72e3271da4f1cfb247bb64a2acae2daf0e"
+        },
+        "deprecation-and-migration": {
+          "integrity": "sha256-e7c66efa744c344602e496822e47ace8313f644f20b29b19b19beeaef6d6c5a3"
+        },
+        "documentation-and-adrs": {
+          "integrity": "sha256-c0075d076299d574ce31d925493130c61c5fe50a45e0facbdd912c8e2e52bf6b"
+        },
+        "frontend-ui-engineering": {
+          "integrity": "sha256-58542bff1be0b719134d022ec0ec6f304808ef5e8c900ac426886716e80d3b76"
+        },
+        "git-workflow-and-versioning": {
+          "integrity": "sha256-fe0c66e7f81869266edbabaae225da0d4ec25f6ce146a0db07768c69aed1e7c3"
+        },
+        "idea-refine": {
+          "integrity": "sha256-e457f93237382c032570bf0270aa6da3e9c58de2c6e4f7465f573119841b1745"
+        },
+        "incremental-implementation": {
+          "integrity": "sha256-3a55804e2a3e5d8f49bae12893aff8a6551fcbb42f8bc24195a1a799354c7a80"
+        },
+        "performance-optimization": {
+          "integrity": "sha256-a0ed8ae6affa5e2e67f8739675ee774427401c70d0890c73af6b4f629a2ed2d7"
+        },
+        "planning-and-task-breakdown": {
+          "integrity": "sha256-44758184c486894656b8f438c5da56893108f7ac2b9fa7b45541be2ced668cca"
+        },
+        "security-and-hardening": {
+          "integrity": "sha256-2877b26f4495bc031348970756762aef69da49beeb45ed0f661c3fd2cf02cdcf"
+        },
+        "shipping-and-launch": {
+          "integrity": "sha256-982ef292ae1ac29c7344303dedfe45f099e14497349fe946ee5d0d11f05e6dc2"
+        },
+        "source-driven-development": {
+          "integrity": "sha256-4b9caeb329c2fcad7f5fbfff1b16d094d378e6c34d631d6fe488835c111375ac"
+        },
+        "spec-driven-development": {
+          "integrity": "sha256-a36c75ed0692abbebfd26adfbc549ff7a82e676455c972ec59bdbb7cd978e6c7"
+        },
+        "test-driven-development": {
+          "integrity": "sha256-6c8e03bc2f631799c1c3c29f9f525193596781213f7fd24ece5a8ddf6a8d773e"
+        },
+        "using-agent-skills": {
+          "integrity": "sha256-47b31d9b7932a0130885705230be1003626aab9c8c7e78608034c524c7f97e16"
+        }
+      }
+    },
+    "crystian/skills": {
+      "requestedRef": "main",
+      "resolvedRef": "125f924fb2d0b268b6c25a4f3656e48412ea2b11",
+      "resolvedAt": "2026-05-10T22:33:30.376Z",
+      "skills": {}
     }
   }
 }

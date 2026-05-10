@@ -62,6 +62,12 @@
 	},
 	"sources": [
 		{
+			"source": ".",
+			"commands": ["*"],
+			"subagents": ["*"],
+			"skills": ["*"]
+		},
+		{
 			"source": "addyosmani/agent-skills",
 			"commands": [
 				"build",
