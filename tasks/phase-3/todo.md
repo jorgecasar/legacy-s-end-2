@@ -35,8 +35,8 @@
 
 ## Task 6: Real-world Routing
 
-- [ ] Install and configure `@lit-labs/router`.
-- [ ] Implement URL-based navigation for Quest Hub (`/`) and Quest Levels (`/quest/:id`).
-- [ ] Synchronize `GameStore` active quest with URL parameters on direct load.
-- [ ] **Acceptance Criteria**: Navigating to `/quest/q1` directly loads the mission. Browser "Back" button works.
-- [ ] **Verification**: E2E test with Playwright for deep-linking.
+- [x] Install and configure `@lit-labs/router`.
+- [x] Implement URL-based navigation for Quest Hub (`/`) and Quest Levels (`/quest/:id`).
+- [x] Synchronize `GameStore` active quest with URL parameters on direct load.
+- [x] **Acceptance Criteria**: Navigating to `/quest/alarions-awakening` directly loads the mission. Browser "Back" button works.
+- [x] **Verification**: E2E test with Playwright for deep-linking.

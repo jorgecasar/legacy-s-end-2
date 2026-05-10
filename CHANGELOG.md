@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
 ### Added
 
+- **Real-world Routing**: Integrated `@lit-labs/router` for deep-linking and state-to-URL synchronization.
+- **Persistence Layer**: Implemented `LocalStorageAdapter` and `AutoSaveService` for automatic progress tracking.
+- **Multi-Chapter Support**: Enhanced `GameStore` and `LeGameLevel` to handle sequential chapters and level transitions.
+- **Robust E2E/BDD Testing**: Fixed synchronization issues in tests and updated Playwright config for reliable application-level verification.
 - Configured **CI/CD pipeline** with GitHub Actions (`ci.yml`) including automated linting, unit tests, and E2E/BDD tests.
+...
 - Implemented **Active Mission** state management in `GameStore` and UI in `LeQuestHub`.
 - Integrated **Cucumber BDD** into the E2E infrastructure with Playwright and Storybook.
 - Created `quest-selection-flow.feature` to validate the full user journey from quest selection to mission activation.

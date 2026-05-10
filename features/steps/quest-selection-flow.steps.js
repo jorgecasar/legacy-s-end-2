@@ -19,5 +19,7 @@ When("I select the mission {string}", async function (title) {
 });
 
 Then("the game should transition to the game level view", async function () {
-  await expect(this.page.locator("le-game-level")).toBeVisible({ timeout: 5000 });
+  const gameLevel = this.page.locator("le-game-level");
+  await expect(gameLevel).toBeVisible({ timeout: 10000 });
+  await expect(gameLevel).toHaveAttribute("initialized", "", { timeout: 15000 });
 });

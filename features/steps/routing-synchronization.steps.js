@@ -3,7 +3,7 @@ import { Given, Then, When } from "@cucumber/cucumber";
 
 const BASE_URL = "http://localhost:3000";
 
-Given("I am on the home page", async function () {
+Given("I am on the application home page", async function () {
   await this.page.goto(BASE_URL);
 });
 

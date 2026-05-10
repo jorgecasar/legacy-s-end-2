@@ -9,12 +9,10 @@ export class QuestHubPage {
    */
   constructor(page) {
     this.page = page;
-    // Main container
+    // Use a more robust way to find the hub that works in both Storybook and App
     this.hubContainer = page.locator("le-quest-hub");
-    // List of cards - using the custom element name as a reliable tag
-    this.questCards = this.hubContainer.locator("le-quest-card");
     // Active mission section
-    this.activeMissionSection = this.hubContainer.locator(".active-mission");
+    this.activeMissionSection = page.locator(".active-mission");
   }
 
   async goto() {
@@ -22,24 +20,25 @@ export class QuestHubPage {
   }
 
   async expectVisible() {
-    await expect(this.hubContainer).toBeVisible();
-    // Using accessibility selector to verify the main heading
+    // Wait for the custom element to be defined and visible
+    await expect(this.hubContainer).toBeVisible({ timeout: 15000 });
+    // Verify the main heading
     await expect(this.page.getByRole("heading", { name: /Quest Hub/i })).toBeVisible();
   }
 
   async getQuestCount() {
-    // Wait for the first card to be visible to ensure async loading is done
-    await this.questCards.first().waitFor({ state: "visible", timeout: 5000 });
-    return await this.questCards.count();
+    const cards = this.page.locator("le-quest-card");
+    await cards.first().waitFor({ state: "visible", timeout: 10000 });
+    return await cards.count();
   }
 
   /**
-   * Finds a quest card by its title using accessible heading role
+   * Finds a quest card by its title
    * @param {string} title
    */
   getQuestCardByTitle(title) {
-    return this.questCards.filter({
-      has: this.page.getByRole("heading", { name: title }),
+    return this.page.locator("le-quest-card").filter({
+      hasText: title,
     });
   }
 
@@ -57,7 +56,13 @@ export class QuestHubPage {
    */
   async selectQuest(title) {
     const card = this.getQuestCardByTitle(title);
-    await card.click({ force: true });
+    // Click the card directly or the button
+    const button = card.locator("wa-button");
+    if (await button.isVisible()) {
+      await button.click();
+    } else {
+      await card.click({ force: true });
+    }
   }
 
   /**

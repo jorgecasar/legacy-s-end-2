@@ -160,15 +160,12 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
 
   /**
    * Handles the selection of a quest card.
+   * The actual navigation is handled by the parent (LeApp) via event delegation.
    * @param {CustomEvent} e - The custom event from the card.
    */
   #onQuestSelected(e) {
     const { quest } = e.detail;
-    if (this.gameStore) {
-      this.gameStore.activateQuest(quest);
-      window.history.pushState(null, "", `/quest/${quest.id}`);
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    }
-    console.log("Quest selected and set as active:", quest.title);
+    console.log("Quest selected in Hub:", quest.title);
+    // No manual navigation here; we let the QuestSelectedEvent bubble up to LeApp.
   }
 }

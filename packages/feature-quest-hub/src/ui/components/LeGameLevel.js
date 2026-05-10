@@ -4,6 +4,8 @@ import { property } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/signals";
 import { msg } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
+import { questRepositoryContext } from "./QuestRepository.context.js";
+import { QuestId } from "../../domain/entities/QuestId.js";
 
 import { gameLevelStyles } from "./LeGameLevel.styles.js";
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
@@ -38,6 +40,9 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   @property({ type: Number })
   accessor chapterIndex = 0;
 
+  @property({ type: Boolean, reflect: true })
+  accessor initialized = false;
+
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
   accessor gameStore;
@@ -46,10 +51,14 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   @consume({ context: contentAdapterContext, subscribe: true })
   accessor contentAdapter;
 
+  /** @type {import("../../infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
+  @consume({ context: questRepositoryContext, subscribe: true })
+  accessor questRepository;
+
   _gameInitialized = false;
 
   willUpdate(_changedProperties) {
-    if (this.contentAdapter && !this._gameInitialized) {
+    if ((this.contentAdapter || this.questRepository) && !this._gameInitialized) {
       this._initializeGame();
     }
   }
@@ -59,11 +68,17 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
     console.log("Initializing game level via InitializeQuest Use Case...");
 
     // Ensure gameStore has the active quest if loaded directly by URL
-    if (!this.gameStore.activeQuest.get() && this.questId) {
-      console.log("Direct URL load detected, synchronizing active quest...");
-      // For now, we use a placeholder quest object to trigger initialization
-      // In a real app, we would fetch the quest details from a repository
-      this.gameStore.activeQuest.set({ id: this.questId });
+    if (!this.gameStore.activeQuest.get() && this.questId && this.questRepository) {
+      console.log(
+        `Direct URL load detected for quest ${this.questId}, synchronizing active quest...`,
+      );
+      const questIdResult = QuestId.create(this.questId);
+      if (questIdResult.success) {
+        const questResult = await this.questRepository.getById(questIdResult.value);
+        if (questResult.success) {
+          this.gameStore.activeQuest.set(questResult.value);
+        }
+      }
     }
 
     // Clear previous dialogue state
@@ -118,6 +133,7 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
     }
 
     console.log("Game level initialized successfully.");
+    this.initialized = true;
   }
 
   render() {

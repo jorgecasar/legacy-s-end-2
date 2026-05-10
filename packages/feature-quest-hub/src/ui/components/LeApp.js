@@ -15,6 +15,7 @@ import { CompleteQuestInteractor } from "../../use-cases/CompleteQuestInteractor
 import { gameStoreContext } from "./GameStore.context.js";
 import { appStyles } from "./LeApp.styles.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
+import { questRepositoryContext } from "./QuestRepository.context.js";
 import "./le-quest-hub.js";
 import "./le-game-level.js";
 
@@ -29,9 +30,18 @@ import "./le-game-level.js";
 export class LeApp extends SignalWatcher(LitElement) {
   static styles = appStyles;
 
+  /** @type {Router} */
   #router = new Router(this, [
     {
       path: "/",
+      render: () =>
+        html`
+          <le-quest-hub></le-quest-hub>
+        `,
+    },
+    {
+      // Fallback for Storybook iframe environment
+      path: "/iframe.html",
       render: () =>
         html`
           <le-quest-hub></le-quest-hub>
@@ -47,6 +57,10 @@ export class LeApp extends SignalWatcher(LitElement) {
         html`<le-game-level .questId=${params.id} .chapterIndex=${Number(params.chapter)}></le-game-level>`,
     },
   ]);
+
+  /** @type {import("../../infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
+  @provide({ context: questRepositoryContext })
+  accessor questRepository;
 
   /** @type {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} */
   @provide({ context: questUseCaseContext })
@@ -69,10 +83,10 @@ export class LeApp extends SignalWatcher(LitElement) {
       setLocale("es");
     }
 
-    // Baseline mission data (Static for Phase 1)
+    // Baseline mission data (Synchronized with content IDs)
     const baselineQuests = [
       {
-        id: "q1",
+        id: "alarions-awakening",
         title: "Story: Awakening",
         status: QuestStatus.AVAILABLE,
         description: "Wake up, hero. The world is ending.",
@@ -81,7 +95,7 @@ export class LeApp extends SignalWatcher(LitElement) {
         level: 1,
       },
       {
-        id: "q2",
+        id: "syntax-mastery",
         title: "Story: Syntax",
         status: QuestStatus.LOCKED,
         description: "Master the ancient syntax of the world.",
@@ -89,42 +103,37 @@ export class LeApp extends SignalWatcher(LitElement) {
         image: "",
         level: 2,
       },
-      {
-        id: "q3",
-        title: "Story: Master",
-        status: QuestStatus.LOCKED,
-        description: "The ultimate challenge awaits.",
-        objective: "Defeat the void.",
-        image: "",
-        level: 3,
-      },
     ];
 
     // Infrastructure setup
-    const questRepository = new StaticQuestRepository(baselineQuests);
+    this.questRepository = new StaticQuestRepository(baselineQuests);
     this.contentAdapter = new ContentAdapter();
 
     // Use Case setup
-    this.listQuestsUseCase = new ListAvailableQuestsInteractor(questRepository);
+    this.listQuestsUseCase = new ListAvailableQuestsInteractor(this.questRepository);
 
     // Store setup
     this.gameStore = new GameStore();
 
-    const completeQuestUseCase = new CompleteQuestInteractor(questRepository);
+    const completeQuestUseCase = new CompleteQuestInteractor(this.questRepository);
 
     // Event listeners
+    window.addEventListener("quest-selected", (e) => {
+      const { quest } = /** @type {any} */ (e).detail;
+      this.gameStore.activateQuest(quest);
+      this.#router.goto(`/quest/${quest.id}`);
+    });
+
     window.addEventListener("quest-completed", async (e) => {
       const { questId } = /** @type {any} */ (e).detail;
       await completeQuestUseCase.execute({ questId });
       // Return to hub
       this.gameStore.activeQuest.set(null);
-      window.history.pushState(null, "", "/");
       this.#router.goto("/");
     });
 
     window.addEventListener("navigate-to-hub", () => {
       this.gameStore.activeQuest.set(null);
-      window.history.pushState(null, "", "/");
       this.#router.goto("/");
     });
 
