@@ -2,8 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { SaveProgress } from "../src/use-cases/SaveProgress.js";
 import { Result } from "../src/domain/Result.js";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("SaveProgress", () => {
   const hero = HeroState.create(80, 100, Position.create(3, 4).value, ["sword"], "chap-01").value;

@@ -1,6 +1,6 @@
 import { Result } from "../domain/Result.js";
-import HeroState from "../domain/entities/HeroState.js";
-import Position from "../domain/entities/Position.js";
+import { HeroState } from "../domain/entities/HeroState.js";
+import { Position } from "../domain/entities/Position.js";
 
 /**
  * AdvanceChapter

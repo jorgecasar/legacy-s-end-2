@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import Position from "../src/domain/entities/Position.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("Domain: Position Value Object", () => {
   it("should create a valid Position using factory", () => {

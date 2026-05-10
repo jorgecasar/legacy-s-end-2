@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import HeroState from "@legacys-end/core/domain/entities/HeroState.js";
-import Position from "@legacys-end/core/domain/entities/Position.js";
+import { HeroState } from "@legacys-end/core/domain/entities/HeroState.js";
+import { Position } from "@legacys-end/core/domain/entities/Position.js";
 import { GameStore } from "../src/infrastructure/GameStore.js";
 
 describe("Infrastructure: GameStore", () => {

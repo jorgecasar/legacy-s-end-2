@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { Result } from "../src/domain/Result.js";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 import { SaveProgress } from "../src/use-cases/SaveProgress.js";
 import { LoadProgress } from "../src/use-cases/LoadProgress.js";
 

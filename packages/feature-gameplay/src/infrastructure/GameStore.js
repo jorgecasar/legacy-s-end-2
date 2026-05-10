@@ -3,8 +3,8 @@ import { MoveHero } from "@legacys-end/core/use-cases/MoveHero.js";
 import { AdvanceDialogue } from "@legacys-end/core/use-cases/AdvanceDialogue.js";
 import { AdvanceChapter } from "@legacys-end/core/use-cases/AdvanceChapter.js";
 import { CollisionService } from "@legacys-end/core/domain/services/CollisionService.js";
-import DialogueNode from "@legacys-end/core/domain/entities/DialogueNode.js";
-import Position from "@legacys-end/core/domain/entities/Position.js";
+import { DialogueNode } from "@legacys-end/core/domain/entities/DialogueNode.js";
+import { Position } from "@legacys-end/core/domain/entities/Position.js";
 
 /**
  * GameStore
@@ -13,7 +13,7 @@ import Position from "@legacys-end/core/domain/entities/Position.js";
  * It acts as an adapter between the pure Domain layer and the UI.
  */
 export class GameStore {
-  /** @type {import("@legacys-end/core/infrastructure/AutoSaveService.js").default | null} */
+  /** @type {import("@legacys-end/core/infrastructure/AutoSaveService.js").AutoSaveService | null} */
   #autoSaveService = null;
   /** @type {import("@lit-labs/signals").State<any>} */
   heroState = signal(null);
@@ -61,12 +61,12 @@ export class GameStore {
     return nearby?.id || null;
   });
 
-  /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").default[]} */
+  /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").DialogueNode[]} */
   #dialogueNodes = [];
 
   /**
    * Sets the AutoSaveService for automatic persistence.
-   * @param {import("@legacys-end/core/infrastructure/AutoSaveService.js").default} service
+   * @param {import("@legacys-end/core/infrastructure/AutoSaveService.js").AutoSaveService} service
    */
   setAutoSaveService(service) {
     this.#autoSaveService = service;
@@ -74,7 +74,7 @@ export class GameStore {
 
   /**
    * Initializes the game state.
-   * @param {import("@legacys-end/core/domain/entities/HeroState.js").default} heroState
+   * @param {import("@legacys-end/core/domain/entities/HeroState.js").HeroState} heroState
    * @param {Array<{x: number, y: number, width: number, height: number}>} obstacles
    * @param {any[]} entities
    * @param {object} quest
@@ -161,7 +161,7 @@ export class GameStore {
 
   /**
    * Checks if hero is in the exit zone to advance chapter.
-   * @param {import("@legacys-end/core/domain/entities/Position.js").default} position
+   * @param {import("@legacys-end/core/domain/entities/Position.js").Position} position
    */
   #checkExitZone(position) {
     const zone = this.exitZone.get();

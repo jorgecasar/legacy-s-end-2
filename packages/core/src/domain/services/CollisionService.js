@@ -1,4 +1,4 @@
-/** @typedef {import("../entities/Position.js").default} Position */
+/** @typedef {import("../entities/Position.js").Position} Position */
 
 /**
  * CollisionService

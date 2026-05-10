@@ -5,7 +5,7 @@ import { Result } from "../Result.js";
  *
  * Value Object representing a 2D coordinate in the game.
  */
-export default class Position {
+export class Position {
   #x;
   #y;
 

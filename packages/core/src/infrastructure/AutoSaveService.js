@@ -5,7 +5,7 @@ import { SaveProgress } from "../use-cases/SaveProgress.js";
  *
  * Debounced auto-save that persists HeroState via a storage adapter.
  */
-export default class AutoSaveService {
+export class AutoSaveService {
   #storageAdapter;
   #timeoutId;
   #delay;
@@ -24,7 +24,7 @@ export default class AutoSaveService {
    * Requests an auto-save. The actual save will happen after the delay
    * if no other requests are made in between.
    *
-   * @param {import("../domain/entities/HeroState.js").default} heroState
+   * @param {import("../domain/entities/HeroState.js").HeroState} heroState
    */
   requestSave(heroState) {
     if (this.#timeoutId) {
@@ -45,7 +45,7 @@ export default class AutoSaveService {
 
   /**
    * Force an immediate save and clear pending timeouts.
-   * @param {import("../domain/entities/HeroState.js").default} heroState
+   * @param {import("../domain/entities/HeroState.js").HeroState} heroState
    * @returns {import("../domain/Result.js").Result<boolean>}
    */
   forceSave(heroState) {

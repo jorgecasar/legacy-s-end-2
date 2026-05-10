@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("Domain: HeroState Entity", () => {
   it("should create a valid HeroState using factory", () => {
@@ -59,5 +59,24 @@ describe("Domain: HeroState Entity", () => {
     assert.deepStrictEqual(hero.position, pos);
     assert.deepStrictEqual(hero.inventory, ["sword"]);
     assert.strictEqual(hero.chapterId, "chap-01");
+  });
+
+  it("should add an item to the inventory via addItem", () => {
+    const pos = new Position(10, 10);
+    const hero = HeroState.create(100, 100, pos, [], "chap-01").value;
+    const result = hero.addItem("potion");
+
+    assert.ok(result.success);
+    assert.ok(result.value.inventory.includes("potion"));
+    assert.notStrictEqual(result.value, hero); // Immutable
+  });
+
+  it("should fail to add a duplicate item via addItem", () => {
+    const pos = new Position(10, 10);
+    const hero = HeroState.create(100, 100, pos, ["potion"], "chap-01").value;
+    const result = hero.addItem("potion");
+
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Item already in inventory.");
   });
 });

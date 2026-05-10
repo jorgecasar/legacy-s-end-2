@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 import { MoveHero } from "../src/use-cases/MoveHero.js";
 
 describe("Use Case: MoveHero", () => {

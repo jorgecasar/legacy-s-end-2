@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import DialogueNode from "../src/domain/entities/DialogueNode.js";
+import { DialogueNode } from "../src/domain/entities/DialogueNode.js";
 
 describe("Domain: DialogueNode Entity", () => {
   it("should create a valid DialogueNode using factory", () => {

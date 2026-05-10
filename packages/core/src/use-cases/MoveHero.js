@@ -1,7 +1,7 @@
 import { Result } from "../domain/Result.js";
 import { CollisionService } from "../domain/services/CollisionService.js";
 import { MovementService } from "../domain/services/MovementService.js";
-import HeroState from "../domain/entities/HeroState.js";
+import { HeroState } from "../domain/entities/HeroState.js";
 
 /**
  * MoveHero

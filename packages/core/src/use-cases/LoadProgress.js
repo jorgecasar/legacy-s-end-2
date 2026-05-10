@@ -1,5 +1,5 @@
 import { Result } from "../domain/Result.js";
-import HeroState from "../domain/entities/HeroState.js";
+import { HeroState } from "../domain/entities/HeroState.js";
 
 /**
  * LoadProgress

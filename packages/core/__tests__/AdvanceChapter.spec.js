@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { AdvanceChapter } from "../src/use-cases/AdvanceChapter.js";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("Use Case: AdvanceChapter", () => {
   const quest = {

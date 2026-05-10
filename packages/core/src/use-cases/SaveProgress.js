@@ -6,7 +6,7 @@
 export const SaveProgress = {
   /**
    * @param {object} params
-   * @param {import("../domain/entities/HeroState.js").default} params.heroState
+   * @param {import("../domain/entities/HeroState.js").HeroState} params.heroState
    * @param {object} params.storageAdapter
    * @returns {import("../domain/Result.js").Result<boolean>}
    */

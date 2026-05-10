@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import Position from "../src/domain/entities/Position.js";
-import HeroState from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
 
 describe("TDD: Entity Serialization", () => {
   it("should serialize and deserialize Position", () => {

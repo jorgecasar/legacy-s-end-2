@@ -1,12 +1,12 @@
 import { Result } from "../Result.js";
-import Position from "./Position.js";
+import { Position } from "./Position.js";
 
 /**
  * HeroState
  *
  * Aggregate representing the current state of the hero.
  */
-export default class HeroState {
+export class HeroState {
   #hp;
   #maxHp;
   #position;
@@ -59,6 +59,25 @@ export default class HeroState {
   }
   get chapterId() {
     return this.#chapterId;
+  }
+
+  /**
+   * Adds an item to the inventory.
+   * @param {string} item
+   * @returns {Result<HeroState>}
+   */
+  addItem(item) {
+    if (this.#inventory.includes(item)) {
+      return Result.failure("Item already in inventory.");
+    }
+
+    return HeroState.create(
+      this.#hp,
+      this.#maxHp,
+      this.#position,
+      [...this.#inventory, item],
+      this.#chapterId,
+    );
   }
 
   toJSON() {

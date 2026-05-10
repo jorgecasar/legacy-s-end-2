@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { MovementService } from "../src/domain/services/MovementService.js";
-import Position from "../src/domain/entities/Position.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("Domain Service: MovementService", () => {
   it("should calculate new position correctly for UP direction", () => {

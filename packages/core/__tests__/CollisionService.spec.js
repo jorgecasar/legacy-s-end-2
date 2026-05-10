@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { CollisionService } from "../src/domain/services/CollisionService.js";
-import Position from "../src/domain/entities/Position.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("Domain Service: CollisionService", () => {
   describe("Euclidean Distance", () => {

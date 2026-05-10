@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { AdvanceDialogue } from "../src/use-cases/AdvanceDialogue.js";
-import DialogueNode from "../src/domain/entities/DialogueNode.js";
+import { DialogueNode } from "../src/domain/entities/DialogueNode.js";
 
 describe("Use Case: AdvanceDialogue", () => {
   const node1 = DialogueNode.create("1", "S1", "T1", "2").value;

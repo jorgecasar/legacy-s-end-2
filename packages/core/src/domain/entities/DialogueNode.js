@@ -5,7 +5,7 @@ import { Result } from "../Result.js";
  *
  * Entity representing a single step in a dialogue tree.
  */
-export default class DialogueNode {
+export class DialogueNode {
   #id;
   #speaker;
   #text;

@@ -1,7 +1,7 @@
 import { html } from "lit";
 import { gameStore } from "../../infrastructure/GameStore.js";
-import HeroState from "@legacys-end/core/domain/entities/HeroState.js";
-import Position from "@legacys-end/core/domain/entities/Position.js";
+import { HeroState } from "@legacys-end/core/domain/entities/HeroState.js";
+import { Position } from "@legacys-end/core/domain/entities/Position.js";
 import "./le-game-viewport.js";
 import "./le-game-level-decorator.js";
 

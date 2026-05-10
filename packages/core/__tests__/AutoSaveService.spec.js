@@ -1,9 +1,9 @@
 import { describe, it, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert";
-import AutoSaveService from "../src/infrastructure/AutoSaveService.js";
+import { AutoSaveService } from "../src/infrastructure/AutoSaveService.js";
 import { Result } from "../src/domain/Result.js";
-import HeroState from "../src/domain/entities/HeroState.js";
-import Position from "../src/domain/entities/Position.js";
+import { HeroState } from "../src/domain/entities/HeroState.js";
+import { Position } from "../src/domain/entities/Position.js";
 
 describe("AutoSaveService", () => {
   const hero = HeroState.create(100, 100, Position.create(1, 2).value, [], "chap-01").value;

@@ -6,7 +6,7 @@ import { html, LitElement } from "lit";
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
 import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
 import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
-import AutoSaveService from "@legacys-end/core/infrastructure/AutoSaveService.js";
+import { AutoSaveService } from "@legacys-end/core/infrastructure/AutoSaveService.js";
 import { setLocale } from "@legacys-end/core/i18n/localization.js";
 
 import { QuestStatus } from "@legacys-end/feature-quest-hub/domain/entities/QuestStatus.js";

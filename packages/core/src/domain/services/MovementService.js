@@ -1,5 +1,5 @@
 import { Result } from "../Result.js";
-import Position from "../entities/Position.js";
+import { Position } from "../entities/Position.js";
 
 /**
  * MovementService

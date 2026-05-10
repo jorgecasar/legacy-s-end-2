@@ -1,6 +1,6 @@
 import { Result } from "../domain/Result.js";
 
-/** @typedef {import("../domain/entities/DialogueNode.js").default} DialogueNode */
+/** @typedef {import("../domain/entities/DialogueNode.js").DialogueNode} DialogueNode */
 
 /**
  * AdvanceDialogue
