@@ -1,3 +1,5 @@
+import "@awesome.me/webawesome/dist/components/icon/icon.js";
+import "@awesome.me/webawesome/dist/components/callout/callout.js";
 import { consume } from "@lit/context";
 import { html, LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
@@ -204,7 +206,10 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
         ${
           this._toastMessage
             ? html`
-                <div class="toast">${this._toastMessage}</div>
+                <wa-callout variant="danger" class="toast">
+                  <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
+                  ${this._toastMessage}
+                </wa-callout>
               `
             : ""
         }

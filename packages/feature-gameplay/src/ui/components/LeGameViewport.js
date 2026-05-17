@@ -1,4 +1,5 @@
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
+import "@awesome.me/webawesome/dist/components/badge/badge.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
@@ -81,7 +82,7 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
           ${
             nearbyId === ent.id
               ? html`
-                  <div class="interaction-prompt">Press E</div>
+                  <wa-badge variant="brand" pill class="interaction-prompt">Press E</wa-badge>
                 `
               : ""
           }

@@ -42,25 +42,4 @@ export const inventoryStyles = css`
   .slot.occupied:hover {
     transform: scale(1.1);
   }
-
-  .item-name {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--wa-color-surface-loud);
-    color: var(--wa-color-text-on-loud);
-    padding: 2px 8px;
-    border-radius: var(--wa-border-radius-small);
-    font-size: var(--wa-font-size-x-small);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    margin-bottom: 8px;
-  }
-
-  .slot:hover .item-name {
-    opacity: 1;
-  }
 `;

@@ -1,4 +1,5 @@
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
+import "@awesome.me/webawesome/dist/components/tooltip/tooltip.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
@@ -33,11 +34,12 @@ export class LeInventory extends SignalWatcher(LitElement) {
               ${
                 item
                   ? html`
-                      <wa-icon name="gift"></wa-icon>
+                      <wa-tooltip content=${item}>
+                        <wa-icon name="gift"></wa-icon>
+                      </wa-tooltip>
                     `
                   : ""
               }
-              ${item ? html`<div class="item-name">${item}</div>` : ""}
             </div>
           `;
         })}

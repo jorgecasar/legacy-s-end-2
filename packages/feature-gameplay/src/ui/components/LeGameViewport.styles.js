@@ -117,11 +117,6 @@ export const gameViewportStyles = css`
   .interaction-prompt {
     position: absolute;
     top: -30px;
-    background-color: var(--wa-color-brand-fill-loud);
-    color: var(--wa-color-brand-on-loud);
-    padding: 2px 8px;
-    border-radius: var(--wa-border-radius-small);
-    font-size: var(--wa-font-size-x-small);
     white-space: nowrap;
     animation: bounce 1s infinite;
   }

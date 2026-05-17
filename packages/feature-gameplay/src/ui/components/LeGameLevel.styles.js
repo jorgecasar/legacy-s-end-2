@@ -45,15 +45,11 @@ export const gameLevelStyles = css`
     bottom: var(--wa-spacing-x-large);
     left: 50%;
     transform: translateX(-50%);
-    background-color: var(--wa-color-danger-fill-loud);
-    color: var(--wa-color-danger-on-loud);
-    padding: var(--wa-spacing-medium) var(--wa-spacing-large);
-    border-radius: var(--wa-border-radius-medium);
     box-shadow: var(--wa-shadow-large);
     z-index: 2000;
     animation: fade-in-out 3s ease-in-out forwards;
     pointer-events: none;
-    font-weight: var(--wa-font-weight-bold);
+    min-width: 300px;
   }
 
   @keyframes fade-in-out {
