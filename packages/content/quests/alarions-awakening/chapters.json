@@ -4,7 +4,12 @@
       "id": "chap-01",
       "background": "forest-corrupted",
       "startPos": { "x": 10, "y": 50 },
-      "exitZone": { "x": 90, "y": 90, "radius": 5 },
+      "exitZone": {
+        "x": 90,
+        "y": 90,
+        "radius": 5,
+        "requiredObjectives": ["talk-alarion", "item-relic"]
+      },
       "obstacles": [
         { "x": 0, "y": 0, "width": 100, "height": 5 },
         { "x": 0, "y": 95, "width": 100, "height": 5 },
@@ -18,7 +23,13 @@
           "type": "npc",
           "position": { "x": 30, "y": 50 },
           "visibility": "always",
-          "persona": "A wise and weary elder who has seen the world end many times. He speaks in riddles and is desperate for a hero."
+          "persona": "A wise and weary elder who has seen the world end many times. He speaks in riddles and is desperate for a hero.",
+          "gives": {
+            "type": "item",
+            "id": "item-relic",
+            "name": "Strange Relic",
+            "position": { "x": 40, "y": 30 }
+          }
         }
       ]
     },

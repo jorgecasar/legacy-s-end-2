@@ -39,4 +39,37 @@ export const gameLevelStyles = css`
     align-items: center;
     justify-content: center;
   }
+
+  .toast {
+    position: fixed;
+    bottom: var(--wa-spacing-x-large);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--wa-color-danger-fill-loud);
+    color: var(--wa-color-danger-on-loud);
+    padding: var(--wa-spacing-medium) var(--wa-spacing-large);
+    border-radius: var(--wa-border-radius-medium);
+    box-shadow: var(--wa-shadow-large);
+    z-index: 2000;
+    animation: fade-in-out 3s ease-in-out forwards;
+    pointer-events: none;
+    font-weight: var(--wa-font-weight-bold);
+  }
+
+  @keyframes fade-in-out {
+    0% {
+      opacity: 0;
+      bottom: 0;
+    }
+    10% {
+      opacity: 1;
+      bottom: var(--wa-spacing-x-large);
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 `;

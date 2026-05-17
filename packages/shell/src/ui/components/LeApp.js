@@ -198,8 +198,19 @@ export class LeApp extends SignalWatcher(LitElement) {
   #handleGlobalKeys(e) {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
-    const key = e.key.toLowerCase();
-    const direction = this.#KEY_MAP[e.key] || this.#KEY_MAP[key];
+    const key = e.key;
+
+    // Toggle Menu on Escape
+    if (key === "Escape") {
+      const level = this.renderRoot.querySelector("le-game-level");
+      const menu = /** @type {any} */ (level?.shadowRoot?.querySelector("le-menu"));
+      if (menu) {
+        menu.open = !menu.open;
+        return;
+      }
+    }
+
+    const direction = this.#KEY_MAP[key] || this.#KEY_MAP[key.toLowerCase()];
 
     if (direction) {
       this.gameStore.moveHero(direction);

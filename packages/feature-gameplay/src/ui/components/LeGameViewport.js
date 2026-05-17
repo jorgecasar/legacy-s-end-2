@@ -3,7 +3,9 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { gameViewportStyles } from "./LeGameViewport.styles.js";
+import { EntityViewRegistry } from "./EntityViewRegistry.js";
 import "./le-hero.js";
+import "./le-inventory.js";
 
 /**
  * LeGameViewport
@@ -34,9 +36,10 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
     return html`
       <div class="viewport" data-background=${background}>
         ${this.#renderObstacles()}
-        ${this.#renderNPCs()}
+        ${this.#renderEntities()}
         ${this.#renderExitZone()}
         <le-hero .outfit=${outfit} style="left: ${pos.x}%; top: ${pos.y}%;"></le-hero>
+        <le-inventory></le-inventory>
       </div>
     `;
   }
@@ -66,12 +69,14 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
     );
   }
 
-  #renderNPCs() {
+  #renderEntities() {
     const nearbyId = this.gameStore.nearbyEntityId.get();
-    return this.gameStore.entities.get().map(
-      (ent) => html`
-        <div class="npc" style="left: ${ent.position.x}%; top: ${ent.position.y}%;">
-          <wa-icon name="person"></wa-icon>
+    return this.gameStore.entities.get().map((ent) => {
+      const { icon, className } = EntityViewRegistry.getView(ent.type);
+
+      return html`
+        <div class=${className} style="left: ${ent.position.x}%; top: ${ent.position.y}%;">
+          <wa-icon name=${icon}></wa-icon>
           ${
             nearbyId === ent.id
               ? html`
@@ -80,7 +85,7 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
               : ""
           }
         </div>
-      `,
-    );
+      `;
+    });
   }
 }

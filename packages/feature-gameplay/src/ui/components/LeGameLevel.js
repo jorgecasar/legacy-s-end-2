@@ -1,6 +1,6 @@
 import { consume } from "@lit/context";
 import { html, LitElement } from "lit";
-import { property } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/signals";
 import { msg } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
@@ -22,6 +22,7 @@ import {
 } from "@legacys-end/content/quests/alarions-awakening/chapters.messages.js";
 import "./le-game-viewport.js";
 import "./le-dialogue-overlay.js";
+import "./le-menu.js";
 
 /**
  * LeGameLevel
@@ -42,6 +43,9 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
 
   @property({ type: Boolean, reflect: true })
   accessor initialized = false;
+
+  @state()
+  accessor _toastMessage = "";
 
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
@@ -135,6 +139,23 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
 
     console.log("Game level initialized successfully.");
     this.initialized = true;
+
+    // Listen for menu actions
+    this.addEventListener("quit-to-hub", () => {
+      window.dispatchEvent(new CustomEvent("navigate-to-hub"));
+    });
+
+    window.addEventListener("objectives-missing", (e) => {
+      const { missing } = /** @type {any} */ (e).detail;
+      this._showToast(msg("Objectives missing: ") + missing.join(", "));
+    });
+  }
+
+  _showToast(message) {
+    this._toastMessage = message;
+    setTimeout(() => {
+      this._toastMessage = "";
+    }, 3000);
   }
 
   render() {
@@ -164,6 +185,14 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
       <main>
         <le-game-viewport></le-game-viewport>
         <le-dialogue-overlay></le-dialogue-overlay>
+        <le-menu id="game-menu"></le-menu>
+        ${
+          this._toastMessage
+            ? html`
+                <div class="toast">${this._toastMessage}</div>
+              `
+            : ""
+        }
       </main>
     `;
   }

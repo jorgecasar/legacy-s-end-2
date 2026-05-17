@@ -48,9 +48,9 @@ describe("Infrastructure: GameStore", () => {
     assert.strictEqual(store.nearbyEntityId.get(), "npc-1");
   });
 
-  it("should trigger interaction with the nearby entity", () => {
+  it("should trigger interaction with the nearby entity", async () => {
     const { store } = setup();
-    store.interact();
+    await store.interact();
     assert.strictEqual(store.currentDialogue.get().id, "d1");
   });
 
@@ -89,5 +89,28 @@ describe("Infrastructure: GameStore", () => {
     ];
     store.setDialogue(invalidDialogues);
     assert.strictEqual(store.currentDialogue.get(), null);
+  });
+
+  it("should handle item pickup interaction", async () => {
+    const store = new GameStore();
+    const pos = Position.create(10, 10).value;
+    const hero = HeroState.create(100, 100, pos, [], "chapter-1").value;
+    const entities = [
+      {
+        id: "item-1",
+        type: "item",
+        name: "Test Item",
+        position: { x: 12, y: 12 },
+      },
+    ];
+    store.initialize(hero, [], entities);
+
+    assert.strictEqual(store.nearbyEntityId.get(), "item-1");
+
+    await store.interact();
+
+    const finalHero = store.heroState.get();
+    assert.ok(finalHero.inventory.includes("item-1"));
+    assert.strictEqual(store.entities.get().length, 0, "Item should be removed from world");
   });
 });

@@ -2,8 +2,8 @@ import { signal, computed } from "@lit-labs/signals";
 import { MoveHero } from "@legacys-end/core/use-cases/MoveHero.js";
 import { AdvanceDialogue } from "@legacys-end/core/use-cases/AdvanceDialogue.js";
 import { AdvanceChapter } from "@legacys-end/core/use-cases/AdvanceChapter.js";
-import { GenerateNPCDialogue } from "@legacys-end/core/use-cases/GenerateNPCDialogue.js";
-import { CollisionService } from "@legacys-end/core/domain/services/CollisionService.js";
+import { PerformInteraction } from "@legacys-end/core/use-cases/PerformInteraction.js";
+import { SensorService } from "@legacys-end/core/domain/services/SensorService.js";
 import { DialogueNode } from "@legacys-end/core/domain/entities/DialogueNode.js";
 import { Position } from "@legacys-end/core/domain/entities/Position.js";
 
@@ -42,6 +42,11 @@ export class GameStore {
   /** @type {import("@lit-labs/signals").State<any[]>} */
   entities = signal([]);
 
+  /** Event signals */
+  lastCollision = signal(null);
+  /** @type {import("@lit-labs/signals").State<Set<string>>} */
+  objectivesMet = signal(new Set());
+
   /** AI Settings */
   npcVoiceEnabled = signal(false);
   aiDialogueEnabled = signal(false);
@@ -62,18 +67,17 @@ export class GameStore {
   nearbyEntityId = computed(() => {
     const pos = this.heroPosition.get();
     const currentEntities = this.entities.get();
-    if (!pos || !currentEntities.length) return null;
-
     const INTERACTION_THRESHOLD = 5; // 5%
-    const nearby = currentEntities.find((ent) =>
-      CollisionService.isNearby(pos, ent.position, INTERACTION_THRESHOLD),
-    );
 
+    const nearby = SensorService.getNearbyEntity(pos, currentEntities, INTERACTION_THRESHOLD);
     return nearby?.id || null;
   });
 
   /** @type {import("@legacys-end/core/domain/entities/DialogueNode.js").DialogueNode[]} */
   #dialogueNodes = [];
+
+  /** @type {{metObjective?: string, spawnedEntity?: any} | null} */
+  #pendingConsequences = null;
 
   /**
    * Sets the AutoSaveService for automatic persistence.
@@ -120,53 +124,98 @@ export class GameStore {
    * Triggers interaction with the nearby entity if one exists.
    */
   async interact() {
+    if (this.currentDialogue.get()) return;
+
     const entityId = this.nearbyEntityId.get();
     if (!entityId) return;
 
     const entity = this.entities.get().find((e) => e.id === entityId);
     if (!entity) return;
 
-    // AI Dynamic Dialogue Integration
-    if (this.aiDialogueEnabled.get() && this.#aiGenerationPort && entity.persona) {
-      const staticDialogue = entity.decks?.talk;
-      const baseMessage = Array.isArray(staticDialogue)
-        ? staticDialogue[0]?.text
-        : typeof staticDialogue === "object"
-          ? staticDialogue.text
-          : "Hello";
+    const quest = this.activeQuest.get();
+    const chapter = quest?.chapters?.[this.currentChapterIndex.get()];
 
+    // Show loading state if AI is enabled
+    if (this.aiDialogueEnabled.get() && this.#aiGenerationPort && entity.persona) {
       this.currentDialogue.set({
         id: "ai-loading",
         speaker: entity.name || entity.id,
         text: "...",
       });
+    }
 
-      const quest = this.activeQuest.get();
-      const chapter = quest?.chapters?.[this.currentChapterIndex.get()];
-      const context = `Location: ${chapter?.name || "World"}. Situation: Player approach.`;
+    const result = await PerformInteraction.execute({
+      entity,
+      heroState: this.heroState.get(),
+      aiDialogueEnabled: this.aiDialogueEnabled.get(),
+      aiGenerationPort: this.#aiGenerationPort,
+      chapterName: chapter?.name || "World",
+    });
 
-      const result = await GenerateNPCDialogue.execute({
-        npcId: entity.id,
-        npcPersona: entity.persona,
-        playerContext: context,
-        baseMessage: baseMessage || "Hello",
-        aiPort: this.#aiGenerationPort,
-      });
+    if (!result.success) {
+      console.warn("[GameStore] Interaction failed:", result.error);
+      if (this.currentDialogue.get()?.id === "ai-loading") {
+        this.currentDialogue.set(null);
+      }
+      return;
+    }
 
-      if (result.success) {
+    const { type, value, updatedHero, metObjective, spawnedEntity } = result.value;
+
+    // Queue consequences for dialogues
+    if (type === "AI_DIALOGUE" || type === "STATIC_DIALOGUE") {
+      this.#pendingConsequences = { metObjective, spawnedEntity };
+    }
+
+    switch (type) {
+      case "ITEM_PICKUP":
+        console.log(`[GameStore] Item picked up: ${entity.name || entity.id}`);
+        this.heroState.set(updatedHero);
+        this.#autoSaveService?.requestSave(updatedHero);
+
+        // Apply pickup objectives immediately
+        if (metObjective) this.#applyObjective(metObjective);
+
+        // Remove from world
+        this.entities.set(this.entities.get().filter((e) => e.id !== entityId));
+        break;
+
+      case "AI_DIALOGUE":
         this.currentDialogue.set({
           id: `ai-${Date.now()}`,
           speaker: entity.name || entity.id,
-          text: result.value,
+          text: value,
         });
-        return;
-      } else {
-        console.warn("[GameStore] AI Dialogue failed, falling back to static:", result.error);
-      }
-    }
+        break;
 
-    if (entity.decks) {
-      this.setDialogue(entity.decks.talk);
+      case "STATIC_DIALOGUE":
+        this.setDialogue(value);
+        break;
+    }
+  }
+
+  /**
+   * Applies an objective to the met set.
+   * @param {string} objectiveId
+   */
+  #applyObjective(objectiveId) {
+    const current = this.objectivesMet.get();
+    if (!current.has(objectiveId)) {
+      console.log(`[GameStore] Objective met: ${objectiveId}`);
+      this.objectivesMet.set(new Set([...current, objectiveId]));
+    }
+  }
+
+  /**
+   * Spawns a new entity in the world.
+   * @param {any} entity
+   */
+  #spawnEntity(entity) {
+    if (!entity) return;
+    const currentEntities = this.entities.get();
+    if (!currentEntities.some((e) => e.id === entity.id)) {
+      console.log(`[GameStore] Entity spawned: ${entity.name}`);
+      this.entities.set([...currentEntities, entity]);
     }
   }
 
@@ -220,10 +269,15 @@ export class GameStore {
 
     if (result.success) {
       this.heroState.set(result.value);
+      this.lastCollision.set(null);
       this.#autoSaveService?.requestSave(result.value);
       this.#checkExitZone(result.value.position);
     } else {
       console.warn("[GameStore] Movement blocked:", result.error);
+      this.lastCollision.set({
+        direction,
+        time: Date.now(),
+      });
     }
   }
 
@@ -236,7 +290,7 @@ export class GameStore {
     if (!zone) return;
 
     const zonePos = Position.create(zone.x, zone.y).value;
-    if (CollisionService.isNearby(position, zonePos, zone.radius)) {
+    if (SensorService.getNearbyEntity(position, [{ id: "exit", position: zonePos }], zone.radius)) {
       this.advanceChapter();
     }
   }
@@ -246,6 +300,24 @@ export class GameStore {
    */
   advanceChapter() {
     const quest = this.activeQuest.get();
+    const zone = this.exitZone.get();
+
+    // Check completion objectives from the exitZone signal (loaded by InitializeQuest)
+    const required = zone?.requiredObjectives || [];
+    const met = this.objectivesMet.get();
+    const missing = SensorService.getMissingObjectives(required, met);
+
+    if (missing.length > 0) {
+      console.warn("[GameStore] Cannot advance chapter. Missing objectives:", missing);
+      // Dispatch event to show feedback in UI
+      window.dispatchEvent(
+        new CustomEvent("objectives-missing", {
+          detail: { missing },
+        }),
+      );
+      return;
+    }
+
     const nextIndex = this.currentChapterIndex.get() + 1;
     const heroState = this.heroState.get();
 
@@ -306,21 +378,31 @@ export class GameStore {
     const currentNode = this.currentDialogue.get();
     if (!currentNode) return;
 
+    let nextNode = null;
+
     // If it's an AI-generated node, we just close it on advance (no next node)
     if (currentNode.id.startsWith("ai-")) {
-      this.currentDialogue.set(null);
-      return;
+      nextNode = null;
+    } else {
+      const result = AdvanceDialogue.execute({
+        currentNodeId: currentNode.id,
+        dialogueNodes: this.#dialogueNodes,
+      });
+      if (result.success) {
+        nextNode = result.value;
+      } else {
+        console.error(result.error);
+      }
     }
 
-    const result = AdvanceDialogue.execute({
-      currentNodeId: currentNode.id,
-      dialogueNodes: this.#dialogueNodes,
-    });
+    this.currentDialogue.set(nextNode);
 
-    if (result.success) {
-      this.currentDialogue.set(result.value);
-    } else {
-      console.error(result.error);
+    // If dialogue ended, apply consequences
+    if (!nextNode && this.#pendingConsequences) {
+      const { metObjective, spawnedEntity } = this.#pendingConsequences;
+      if (metObjective) this.#applyObjective(metObjective);
+      if (spawnedEntity) this.#spawnEntity(spawnedEntity);
+      this.#pendingConsequences = null;
     }
   }
 }

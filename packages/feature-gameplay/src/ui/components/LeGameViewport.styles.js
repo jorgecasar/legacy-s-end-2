@@ -88,19 +88,28 @@ export const gameViewportStyles = css`
     z-index: 10;
   }
 
-  .npc {
+  .npc,
+  .item {
     position: absolute;
     width: 4%;
     height: 8%;
     transform: translate(-50%, -50%);
-    color: var(--wa-color-brand-fill-normal);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
-  .npc wa-icon {
+  .npc {
+    color: var(--wa-color-brand-fill-normal);
+  }
+
+  .item {
+    color: var(--wa-color-success-fill-normal);
+  }
+
+  .npc wa-icon,
+  .item wa-icon {
     font-size: 2rem;
   }
 

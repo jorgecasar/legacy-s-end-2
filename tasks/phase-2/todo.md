@@ -35,3 +35,10 @@
 ---
 **Phase 2 Completion Status**: ✅ 100%
 
+## Phase 2.5: Interactive Polish & Inventory
+- [x] Implement visual inventory HUD (`<le-inventory>`).
+- [x] Add support for collectible item entities in `GameStore` and `LeGameViewport`.
+- [x] Implement item pickup logic in `interact()` method.
+- [x] **Acceptance Criteria**: Items appear in the world, can be picked up with 'E', and appear in the inventory bar.
+- [x] **Verification**: Unit test in `GameStore.spec.js` and manual verification.
+
