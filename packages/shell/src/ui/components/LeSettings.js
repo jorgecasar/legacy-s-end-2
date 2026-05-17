@@ -1,5 +1,6 @@
 import "@awesome.me/webawesome/dist/components/switch/switch.js";
 import "@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js";
+import "@awesome.me/webawesome/dist/components/button/button.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
@@ -94,9 +95,9 @@ export class LeSettings extends SignalWatcher(LitElement) {
     return html`
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="margin: 0;">AI Settings</h2>
-        <button class="status-badge" @click=${this.#recheck} style="cursor: pointer;">
+        <wa-button variant="neutral" size="small" @click=${this.#recheck}>
           Re-check Status
-        </button>
+        </wa-button>
       </div>
       <div class="setting-group">
         ${this.#renderSetting({
@@ -197,7 +198,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
         <div class="info">
           Gemini Nano needs to be downloaded.
           <span class="status-badge">Download required</span>
-          <button @click=${this.#startDownload} style="margin-left: 8px">Download Now</button>
+          <wa-button variant="brand" size="small" @click=${this.#startDownload} style="margin-left: 8px">Download Now</wa-button>
         </div>
       `;
     }

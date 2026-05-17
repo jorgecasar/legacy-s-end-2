@@ -5,8 +5,6 @@ export const gameViewportStyles = css`
     display: block;
     width: 90vmin;
     height: 90vmin;
-    max-width: 800px;
-    max-height: 800px;
     aspect-ratio: 1 / 1;
     background-color: var(--wa-color-surface-default);
     position: relative;

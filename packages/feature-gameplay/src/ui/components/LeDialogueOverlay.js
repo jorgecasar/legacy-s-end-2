@@ -1,3 +1,4 @@
+import "@awesome.me/webawesome/dist/components/button/button.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
@@ -76,7 +77,7 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
       <div class="speaker">${dialogue.speaker}</div>
       <div class="text">${dialogue.text}</div>
       <div class="actions">
-        <button @click=${this._handleNext}>Next</button>
+        <wa-button variant="brand" @click=${this._handleNext}>Next</wa-button>
       </div>
     `;
   }
