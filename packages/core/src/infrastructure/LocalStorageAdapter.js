@@ -15,9 +15,11 @@ export class LocalStorageAdapter {
    */
   save(data) {
     try {
+      console.log(`[LocalStorageAdapter] Saving to "${this.#key}":`, data);
       localStorage.setItem(this.#key, JSON.stringify(data));
       return Result.success(true);
     } catch (e) {
+      console.error(`[LocalStorageAdapter] Save failed:`, e);
       return Result.failure(`Failed to save: ${e.message}`);
     }
   }
@@ -29,8 +31,13 @@ export class LocalStorageAdapter {
   load() {
     try {
       const data = localStorage.getItem(this.#key);
+      console.log(
+        `[LocalStorageAdapter] Loaded from "${this.#key}":`,
+        data ? JSON.parse(data) : null,
+      );
       return Result.success(data ? JSON.parse(data) : null);
     } catch (e) {
+      console.error(`[LocalStorageAdapter] Load failed:`, e);
       return Result.failure(`Failed to load: ${e.message}`);
     }
   }

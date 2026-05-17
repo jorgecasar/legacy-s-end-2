@@ -7,6 +7,7 @@ import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/Ga
 import { questUseCaseContext } from "./LeQuestHub.context.js";
 import { questHubStyles } from "./LeQuestHub.styles.js";
 import "./le-quest-card.js";
+import "@legacys-end/shell/ui/components/le-settings.js";
 
 /** @typedef {import("../../use-cases/ports/ListAvailableQuests.js").ListAvailableQuests} ListAvailableQuests */
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
@@ -155,6 +156,7 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
             `,
           )}
         </div>
+        <le-settings></le-settings>
     `;
   }
 

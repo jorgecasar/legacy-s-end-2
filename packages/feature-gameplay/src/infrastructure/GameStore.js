@@ -2,6 +2,7 @@ import { signal, computed } from "@lit-labs/signals";
 import { MoveHero } from "@legacys-end/core/use-cases/MoveHero.js";
 import { AdvanceDialogue } from "@legacys-end/core/use-cases/AdvanceDialogue.js";
 import { AdvanceChapter } from "@legacys-end/core/use-cases/AdvanceChapter.js";
+import { GenerateNPCDialogue } from "@legacys-end/core/use-cases/GenerateNPCDialogue.js";
 import { CollisionService } from "@legacys-end/core/domain/services/CollisionService.js";
 import { DialogueNode } from "@legacys-end/core/domain/entities/DialogueNode.js";
 import { Position } from "@legacys-end/core/domain/entities/Position.js";
@@ -15,6 +16,11 @@ import { Position } from "@legacys-end/core/domain/entities/Position.js";
 export class GameStore {
   /** @type {import("@legacys-end/core/infrastructure/AutoSaveService.js").AutoSaveService | null} */
   #autoSaveService = null;
+  /** @type {any} */
+  #storageAdapter = null;
+  /** @type {import("@legacys-end/core/use-cases/ports/AIGenerationPort.js").AIGenerationPort | null} */
+  #aiGenerationPort = null;
+
   /** @type {import("@lit-labs/signals").State<any>} */
   heroState = signal(null);
 
@@ -35,6 +41,11 @@ export class GameStore {
 
   /** @type {import("@lit-labs/signals").State<any[]>} */
   entities = signal([]);
+
+  /** AI Settings */
+  npcVoiceEnabled = signal(false);
+  aiDialogueEnabled = signal(false);
+  voiceCommandsEnabled = signal(false);
 
   /** Granular signals for UI performance */
   heroPosition = computed(() => this.heroState.get()?.position || { x: 0, y: 0 });
@@ -73,6 +84,22 @@ export class GameStore {
   }
 
   /**
+   * Sets the StorageAdapter for settings persistence.
+   * @param {any} adapter
+   */
+  setStorageAdapter(adapter) {
+    this.#storageAdapter = adapter;
+  }
+
+  /**
+   * Sets the AI Generation Port.
+   * @param {import("@legacys-end/core/use-cases/ports/AIGenerationPort.js").AIGenerationPort} port
+   */
+  setAIGenerationPort(port) {
+    this.#aiGenerationPort = port;
+  }
+
+  /**
    * Initializes the game state.
    * @param {import("@legacys-end/core/domain/entities/HeroState.js").HeroState} heroState
    * @param {Array<{x: number, y: number, width: number, height: number}>} obstacles
@@ -92,12 +119,53 @@ export class GameStore {
   /**
    * Triggers interaction with the nearby entity if one exists.
    */
-  interact() {
+  async interact() {
     const entityId = this.nearbyEntityId.get();
     if (!entityId) return;
 
     const entity = this.entities.get().find((e) => e.id === entityId);
-    if (entity?.decks) {
+    if (!entity) return;
+
+    // AI Dynamic Dialogue Integration
+    if (this.aiDialogueEnabled.get() && this.#aiGenerationPort && entity.persona) {
+      const staticDialogue = entity.decks?.talk;
+      const baseMessage = Array.isArray(staticDialogue)
+        ? staticDialogue[0]?.text
+        : typeof staticDialogue === "object"
+          ? staticDialogue.text
+          : "Hello";
+
+      this.currentDialogue.set({
+        id: "ai-loading",
+        speaker: entity.name || entity.id,
+        text: "...",
+      });
+
+      const quest = this.activeQuest.get();
+      const chapter = quest?.chapters?.[this.currentChapterIndex.get()];
+      const context = `Location: ${chapter?.name || "World"}. Situation: Player approach.`;
+
+      const result = await GenerateNPCDialogue.execute({
+        npcId: entity.id,
+        npcPersona: entity.persona,
+        playerContext: context,
+        baseMessage: baseMessage || "Hello",
+        aiPort: this.#aiGenerationPort,
+      });
+
+      if (result.success) {
+        this.currentDialogue.set({
+          id: `ai-${Date.now()}`,
+          speaker: entity.name || entity.id,
+          text: result.value,
+        });
+        return;
+      } else {
+        console.warn("[GameStore] AI Dialogue failed, falling back to static:", result.error);
+      }
+    }
+
+    if (entity.decks) {
       this.setDialogue(entity.decks.talk);
     }
   }
@@ -216,11 +284,33 @@ export class GameStore {
   }
 
   /**
+   * Saves AI settings to the storage adapter if available.
+   */
+  saveSettings() {
+    if (!this.#storageAdapter) return;
+
+    const settings = {
+      npcVoiceEnabled: this.npcVoiceEnabled.get(),
+      aiDialogueEnabled: this.aiDialogueEnabled.get(),
+      voiceCommandsEnabled: this.voiceCommandsEnabled.get(),
+    };
+
+    const currentData = this.#storageAdapter.load().value || {};
+    this.#storageAdapter.save({ ...currentData, settings });
+  }
+
+  /**
    * Advances the current dialogue.
    */
   advanceDialogue() {
     const currentNode = this.currentDialogue.get();
     if (!currentNode) return;
+
+    // If it's an AI-generated node, we just close it on advance (no next node)
+    if (currentNode.id.startsWith("ai-")) {
+      this.currentDialogue.set(null);
+      return;
+    }
 
     const result = AdvanceDialogue.execute({
       currentNodeId: currentNode.id,

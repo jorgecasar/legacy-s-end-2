@@ -28,6 +28,29 @@ describe("LoadProgress", () => {
     assert.deepStrictEqual(result.value.inventory, ["sword"]);
   });
 
+  it("should successfully load from nested structure", () => {
+    const savedData = {
+      heroState: {
+        hp: 90,
+        maxHp: 100,
+        position: { x: 5, y: 6 },
+        inventory: ["shield"],
+        chapterId: "chap-02",
+      },
+    };
+    const mockAdapter = {
+      load() {
+        return Result.success(savedData);
+      },
+    };
+
+    const result = LoadProgress.execute({ storageAdapter: mockAdapter });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.hp, 90);
+    assert.strictEqual(result.value.chapterId, "chap-02");
+  });
+
   it("should return failure when adapter fails", () => {
     const mockAdapter = {
       load() {
@@ -52,5 +75,21 @@ describe("LoadProgress", () => {
 
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "No save data found");
+  });
+
+  it("should return failure when heroState is missing but settings exist", () => {
+    const savedData = {
+      settings: { npcVoiceEnabled: true },
+    };
+    const mockAdapter = {
+      load() {
+        return Result.success(savedData);
+      },
+    };
+
+    const result = LoadProgress.execute({ storageAdapter: mockAdapter });
+
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Invalid or missing hero state in save data");
   });
 });

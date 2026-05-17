@@ -12,6 +12,7 @@ export const SaveProgress = {
    */
   execute: (params) => {
     const { heroState, storageAdapter } = params;
-    return storageAdapter.save(heroState.toJSON());
+    const currentData = storageAdapter.load().value || {};
+    return storageAdapter.save({ ...currentData, heroState: heroState.toJSON() });
   },
 };

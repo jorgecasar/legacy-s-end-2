@@ -14,9 +14,11 @@
       "entities": [
         {
           "id": "npc-alarion",
+          "name": "Elder Alarion",
           "type": "npc",
           "position": { "x": 30, "y": 50 },
-          "visibility": "always"
+          "visibility": "always",
+          "persona": "A wise and weary elder who has seen the world end many times. He speaks in riddles and is desperate for a hero."
         }
       ]
     },
@@ -34,9 +36,11 @@
       "entities": [
         {
           "id": "npc-alarion-spirit",
+          "name": "Spirit of Alarion",
           "type": "npc",
           "position": { "x": 50, "y": 50 },
-          "visibility": "always"
+          "visibility": "always",
+          "persona": "The ethereal form of Alarion. He is more hopeful now but still mysterious. He encourages the player to continue."
         }
       ]
     }

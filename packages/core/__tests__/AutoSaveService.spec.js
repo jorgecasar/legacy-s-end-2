@@ -19,6 +19,7 @@ describe("AutoSaveService", () => {
   it("should debounce save requests", () => {
     let saveCount = 0;
     const mockAdapter = {
+      load: () => Result.success(null),
       save() {
         saveCount++;
         return Result.success(true);
@@ -40,6 +41,7 @@ describe("AutoSaveService", () => {
   it("should immediately save on forceSave", () => {
     let saveCount = 0;
     const mockAdapter = {
+      load: () => Result.success(null),
       save() {
         saveCount++;
         return Result.success(true);
@@ -61,6 +63,7 @@ describe("AutoSaveService", () => {
   it("should handle failed auto-save gracefully", () => {
     let saveCount = 0;
     const mockAdapter = {
+      load: () => Result.success(null),
       save() {
         saveCount++;
         return Result.failure("Disk full");
@@ -77,6 +80,7 @@ describe("AutoSaveService", () => {
   it("should stop pending saves", () => {
     let saveCount = 0;
     const mockAdapter = {
+      load: () => Result.success(null),
       save() {
         saveCount++;
         return Result.success(true);
@@ -92,7 +96,10 @@ describe("AutoSaveService", () => {
   });
 
   it("should do nothing when stop is called and no save is pending", () => {
-    const mockAdapter = { save: () => Result.success(true) };
+    const mockAdapter = {
+      load: () => Result.success(null),
+      save: () => Result.success(true),
+    };
     const service = new AutoSaveService(mockAdapter, 100);
     service.stop();
     assert.ok(true);

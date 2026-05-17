@@ -51,6 +51,9 @@ export class Position {
   }
 
   static fromJSON(json) {
+    if (!json || typeof json.x !== "number" || typeof json.y !== "number") {
+      return null;
+    }
     return new Position(json.x, json.y);
   }
 }

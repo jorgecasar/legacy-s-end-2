@@ -15,9 +15,10 @@ export const AdvanceChapter = {
    * @param {HeroState} params.heroState - Current hero state
    * @returns {Result<object>}
    */
-  execute: ({ quest, nextChapterIndex, heroState }) => {
+  execute: (params) => {
     try {
-      if (!quest.chapters || !quest.chapters[nextChapterIndex]) {
+      const { quest, nextChapterIndex, heroState } = params || {};
+      if (!quest || !quest.chapters || !quest.chapters[nextChapterIndex]) {
         return Result.failure("Next chapter not found.");
       }
 

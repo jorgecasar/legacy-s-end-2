@@ -45,4 +45,26 @@ describe("Domain Service: MovementService", () => {
     assert.strictEqual(result.success, false);
     assert.match(result.error, /out of bounds/i);
   });
+
+  it("should fail if current position is missing", () => {
+    const result = MovementService.move(null, "UP", 5);
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Current position is required.");
+  });
+
+  it("should fail if step is invalid", () => {
+    const current = new Position(50, 50);
+    // @ts-ignore
+    assert.strictEqual(MovementService.move(current, "UP", "5").success, false);
+    assert.strictEqual(MovementService.move(current, "UP", -1).success, false);
+    assert.strictEqual(MovementService.move(current, "UP", NaN).success, false);
+  });
+
+  it("should fail if direction is invalid", () => {
+    const current = new Position(50, 50);
+    // @ts-ignore
+    const result = MovementService.move(current, "DANCE", 5);
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid direction/);
+  });
 });

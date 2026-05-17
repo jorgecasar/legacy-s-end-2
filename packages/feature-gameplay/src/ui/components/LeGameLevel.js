@@ -91,6 +91,7 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
       chaptersData,
       chaptersMessages: chapterMessages,
       entityDecks,
+      chapterIndex: this.chapterIndex,
     });
 
     if (!result.success) {
@@ -100,23 +101,23 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
 
     const { obstacles, entities, quest, exitZone } = result.value;
     let { heroState } = result.value;
+    const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
 
     // Try to restore saved progress
     const storageAdapter = new LocalStorageAdapter();
     const loadResult = LoadProgress.execute({ storageAdapter });
     if (loadResult.success) {
       const savedHeroState = loadResult.value;
-      const firstChapterId = quest.chapters?.[0]?.id;
 
-      // Only restore if chapterId exists and matches
-      if (savedHeroState.chapterId && savedHeroState.chapterId === firstChapterId) {
+      // Restore if the saved state is exactly for this chapter
+      if (savedHeroState.chapterId && savedHeroState.chapterId === currentChapterId) {
         heroState = savedHeroState;
-        console.log("Restored saved progress for chapter:", firstChapterId);
+        console.log("Restored saved progress for chapter:", currentChapterId);
       } else {
         console.warn(
           "Ignoring incompatible or old saved progress.",
           savedHeroState.chapterId ? `Found: ${savedHeroState.chapterId}` : "No chapterId found",
-          `Expected: ${firstChapterId}`,
+          `Expected: ${currentChapterId}`,
         );
       }
     }

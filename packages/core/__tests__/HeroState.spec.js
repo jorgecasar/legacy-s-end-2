@@ -79,4 +79,22 @@ describe("Domain: HeroState Entity", () => {
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "Item already in inventory.");
   });
+
+  it("should handle fromJSON correctly", () => {
+    const validJson = {
+      hp: 100,
+      maxHp: 100,
+      position: { x: 5, y: 5 },
+      inventory: [],
+      chapterId: "c1",
+    };
+    const valid = HeroState.fromJSON(validJson);
+    assert.strictEqual(valid.hp, 100);
+    assert.strictEqual(valid.position.x, 5);
+
+    assert.strictEqual(HeroState.fromJSON(null), null);
+    assert.strictEqual(HeroState.fromJSON({}), null);
+    assert.strictEqual(HeroState.fromJSON({ hp: 100 }), null);
+    assert.strictEqual(HeroState.fromJSON({ hp: 100, position: { x: 1 } }), null); // Invalid position
+  });
 });

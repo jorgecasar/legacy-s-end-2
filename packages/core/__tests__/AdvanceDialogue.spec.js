@@ -44,4 +44,10 @@ describe("Use Case: AdvanceDialogue", () => {
     assert.strictEqual(result.success, false);
     assert.match(result.error, /Next dialogue node.*not found/);
   });
+
+  it("should catch unexpected errors", () => {
+    const result = AdvanceDialogue.execute(null);
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("Failed to advance dialogue"));
+  });
 });

@@ -39,10 +39,9 @@ describe("Persistence Use Cases", () => {
       },
     };
 
-    // fromJSON won't throw but Position.fromJSON will fail on null
-    assert.throws(() => {
-      LoadProgress.execute({ storageAdapter: corruptAdapter });
-    });
+    const result = LoadProgress.execute({ storageAdapter: corruptAdapter });
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Invalid or missing hero state in save data");
   });
 
   it("should handle missing fields in saved data", () => {
@@ -78,6 +77,7 @@ describe("Persistence Use Cases", () => {
   it("should propagate storage adapter errors on save", () => {
     const hero = HeroState.create(50, 100, Position.create(0, 0).value, [], "chap-01").value;
     const failAdapter = {
+      load: () => Result.success(null),
       save() {
         return Result.failure("QuotaExceededError");
       },

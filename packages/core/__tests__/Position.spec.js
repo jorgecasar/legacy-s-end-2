@@ -25,4 +25,15 @@ describe("Domain: Position Value Object", () => {
     assert.strictEqual(pos1.equals(pos2), true);
     assert.strictEqual(pos1.equals(pos3), false);
   });
+
+  it("should handle fromJSON correctly", () => {
+    const valid = Position.fromJSON({ x: 1, y: 2 });
+    assert.strictEqual(valid.x, 1);
+    assert.strictEqual(valid.y, 2);
+
+    assert.strictEqual(Position.fromJSON(null), null);
+    assert.strictEqual(Position.fromJSON({ x: 1 }), null);
+    assert.strictEqual(Position.fromJSON({ y: 1 }), null);
+    assert.strictEqual(Position.fromJSON({ x: "1", y: 1 }), null);
+  });
 });

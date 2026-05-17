@@ -10,8 +10,9 @@ describe("SaveProgress", () => {
 
   it("should successfully save heroState via storageAdapter", () => {
     const mockAdapter = {
+      load: () => Result.success(null),
       save(data) {
-        assert.deepStrictEqual(data, hero.toJSON());
+        assert.deepStrictEqual(data, { heroState: hero.toJSON() });
         return Result.success(true);
       },
     };
@@ -23,6 +24,7 @@ describe("SaveProgress", () => {
 
   it("should propagate adapter failure", () => {
     const mockAdapter = {
+      load: () => Result.success(null),
       save() {
         return Result.failure("Storage full");
       },
@@ -32,5 +34,21 @@ describe("SaveProgress", () => {
 
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "Storage full");
+  });
+
+  it("should merge heroState with existing settings in storage (Regression Test)", () => {
+    const existingSettings = { npcVoiceEnabled: true, aiDialogueEnabled: false };
+    const mockAdapter = {
+      load: () => Result.success({ settings: existingSettings }),
+      save(data) {
+        assert.deepStrictEqual(data.settings, existingSettings);
+        assert.deepStrictEqual(data.heroState, hero.toJSON());
+        return Result.success(true);
+      },
+    };
+
+    const result = SaveProgress.execute({ heroState: hero, storageAdapter: mockAdapter });
+
+    assert.strictEqual(result.success, true);
   });
 });

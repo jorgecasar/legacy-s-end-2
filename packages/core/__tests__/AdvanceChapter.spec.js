@@ -62,4 +62,62 @@ describe("Use Case: AdvanceChapter", () => {
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.error, "Next chapter not found.");
   });
+
+  it("should fail if quest is missing", () => {
+    const result = AdvanceChapter.execute({ quest: null, nextChapterIndex: 0, heroState: {} });
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Next chapter not found.");
+  });
+
+  it("should fail if quest chapters are missing", () => {
+    const result = AdvanceChapter.execute({ quest: {}, nextChapterIndex: 0, heroState: {} });
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "Next chapter not found.");
+  });
+
+  it("should fail if position creation fails", () => {
+    const invalidQuest = {
+      chapters: [{ startPos: { x: "invalid", y: 10 } }],
+    };
+    const heroState = HeroState.create(100, 100, Position.create(0, 0).value, [], "c1").value;
+
+    const result = AdvanceChapter.execute({
+      quest: invalidQuest,
+      nextChapterIndex: 0,
+      heroState,
+    });
+
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("number"));
+  });
+
+  it("should fail if hero state creation fails", () => {
+    const nextQuest = {
+      chapters: [{ id: "c2", startPos: { x: 10, y: 10 } }],
+    };
+    // Make hero state invalid by passing 0 HP
+    const heroState = { hp: 0, maxHp: 100, inventory: [] };
+
+    const result = AdvanceChapter.execute({
+      quest: nextQuest,
+      nextChapterIndex: 0,
+      heroState,
+    });
+
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("dead"));
+  });
+
+  it("should catch unexpected errors", () => {
+    // Pass something that will throw inside the try block but after params || {}
+    // e.g. nextChapterIndex that is not a number but would be accessed
+    const result = AdvanceChapter.execute({
+      quest: { chapters: [] },
+      get nextChapterIndex() {
+        throw new Error("Trigger Catch");
+      },
+    });
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("Trigger Catch"));
+  });
 });

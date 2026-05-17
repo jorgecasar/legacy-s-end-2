@@ -58,4 +58,10 @@ describe("Use Case: StartQuest", () => {
     assert.strictEqual(result.success, false);
     assert.ok(result.error.startsWith("Failed to start quest:"));
   });
+
+  it("should handle null params", () => {
+    const result = StartQuest.execute(null);
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error.includes("numbers"));
+  });
 });

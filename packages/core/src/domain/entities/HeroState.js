@@ -91,12 +91,12 @@ export class HeroState {
   }
 
   static fromJSON(json) {
-    return new HeroState(
-      json.hp,
-      json.maxHp,
-      Position.fromJSON(json.position),
-      json.inventory || [],
-      json.chapterId,
-    );
+    if (!json || json.hp === undefined || !json.position) {
+      return null;
+    }
+    const position = Position.fromJSON(json.position);
+    if (!position) return null;
+
+    return new HeroState(json.hp, json.maxHp, position, json.inventory || [], json.chapterId);
   }
 }
