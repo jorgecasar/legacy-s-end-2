@@ -54,7 +54,7 @@ export class TranslatorAdapter extends TranslatorPort {
    * @param {string} targetLanguage
    * @returns {Promise<'readily'|'after-download'|'unavailable'>}
    */
-  async getAvailability(_sourceLanguage, _targetLanguage) {
+  async getAvailability(sourceLanguage, targetLanguage) {
     try {
       const api = /** @type {any} */ (self).ai?.translator;
       if (!api) {
@@ -63,8 +63,8 @@ export class TranslatorAdapter extends TranslatorPort {
 
       return await AIUtils.withTimeout(
         api.availability({
-          sourceLanguage: _sourceLanguage,
-          targetLanguage: _targetLanguage,
+          sourceLanguage,
+          targetLanguage,
         }),
         2000,
         "unavailable",
