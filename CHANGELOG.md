@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Storage Port Interface**: Introduced `StoragePort` to formalize the persistence contract.
+- **Chapter Objectives**: Added support for required objectives in `GameStore` and `MoveHero` use case.
+- **Quest Completion Events**: Added custom events for chapter transitions and quest completion.
+
+### Changed
+
+- **Architectural Alignment**: Decoupled `LeGameLevel` from `LocalStorageAdapter` using Lit Context and dependency injection.
+- **UI Side-Effect Optimization**: Moved URL synchronization from `render()` to `updated()` in `LeGameLevel` to adhere to pure rendering principles.
+- **Initialization Refactoring**: Split complex game initialization logic in `LeGameLevel` into smaller, single-responsibility methods.
+- **Responsive Viewport**: Updated `<le-game-viewport>` to use `vmin` units for improved cross-device layout consistency.
 - **Real-world Routing**: Integrated `@lit-labs/router` for deep-linking and state-to-URL synchronization.
 - **Persistence Layer**: Implemented `LocalStorageAdapter` and `AutoSaveService` for automatic progress tracking.
 - **Multi-Chapter Support**: Enhanced `GameStore` and `LeGameLevel` to handle sequential chapters and level transitions.

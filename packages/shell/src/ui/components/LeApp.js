@@ -4,6 +4,7 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
 
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
+import { storageAdapterContext } from "@legacys-end/core/infrastructure/StorageAdapter.context.js";
 import { ContentAdapter } from "@legacys-end/core/infrastructure/ContentAdapter.js";
 import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
 import { BrowserAICapabilityAdapter } from "@legacys-end/core/infrastructure/BrowserAICapabilityAdapter.js";
@@ -64,6 +65,10 @@ export class LeApp extends SignalWatcher(LitElement) {
   @provide({ context: contentAdapterContext })
   accessor contentAdapter;
 
+  /** @type {import("@legacys-end/core/use-cases/ports/StoragePort.js").StoragePort} */
+  @provide({ context: storageAdapterContext })
+  accessor storageAdapter;
+
   /** @type {import("@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
   @provide({ context: questRepositoryContext })
   accessor questRepository;
@@ -94,6 +99,7 @@ export class LeApp extends SignalWatcher(LitElement) {
     // Infrastructure setup
     this.questRepository = new StaticQuestRepository(baselineQuests);
     this.contentAdapter = new ContentAdapter();
+    this.storageAdapter = new LocalStorageAdapter();
     this.aiCapabilityPort = new BrowserAICapabilityAdapter();
     this.ttsPort = new SpeechSynthesisAdapter();
     this.speechRecognitionPort = new WebSpeechAdapter();

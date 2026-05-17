@@ -9,9 +9,9 @@ import { QuestId } from "@legacys-end/feature-quest-hub/domain/entities/QuestId.
 
 import { gameLevelStyles } from "./LeGameLevel.styles.js";
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
+import { storageAdapterContext } from "@legacys-end/core/infrastructure/StorageAdapter.context.js";
 import { InitializeQuest } from "@legacys-end/core/use-cases/InitializeQuest.js";
 import { LoadProgress } from "@legacys-end/core/use-cases/LoadProgress.js";
-import { LocalStorageAdapter } from "@legacys-end/core/infrastructure/LocalStorageAdapter.js";
 // Raw data imports (to be passed to adapter)
 import questData from "@legacys-end/content/quests/alarions-awakening/quest.json" with { type: "json" };
 import { questMessages } from "@legacys-end/content/quests/alarions-awakening/quest.messages.js";
@@ -55,6 +55,10 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   @consume({ context: contentAdapterContext, subscribe: true })
   accessor contentAdapter;
 
+  /** @type {import("@legacys-end/core/use-cases/ports/StoragePort.js").StoragePort} */
+  @consume({ context: storageAdapterContext, subscribe: true })
+  accessor storageAdapter;
+
   /** @type {import("@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
   @consume({ context: questRepositoryContext, subscribe: true })
   accessor questRepository;
@@ -72,76 +76,87 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   }
 
   async _initializeGame() {
-    if (this._initializationPromise) return; // Prevent concurrent init
+    if (this._initializationPromise || !this.storageAdapter) return;
 
     this._initializationPromise = (async () => {
       console.log(
         `[LeGameLevel] Initializing quest: ${this.questId}, chapter: ${this.chapterIndex}`,
       );
 
-      // 1. Sync Active Quest if missing
-      if (!this.gameStore.activeQuest.get() && this.questId) {
-        const questIdResult = QuestId.create(this.questId);
-        if (questIdResult.success) {
-          const questResult = await this.questRepository.getById(questIdResult.value);
-          if (questResult.success) {
-            this.gameStore.activeQuest.set(questResult.value);
-          }
-        }
-      }
-
-      // 2. Clear state
+      await this._syncActiveQuest();
       this.gameStore.currentDialogue.set(null);
 
-      // 3. Load Chapter Data
-      const result = await InitializeQuest.execute({
-        contentAdapter: this.contentAdapter,
-        questData,
-        questMessages,
-        chaptersData,
-        chaptersMessages: chapterMessages,
-        entityDecks,
-        chapterIndex: this.chapterIndex,
-      });
-
+      const result = await this._loadChapterData();
       if (!result.success) {
         console.error(`[LeGameLevel] Failed to initialize quest: ${result.error}`);
         this._initializationPromise = null;
         return;
       }
 
-      const { obstacles, entities, quest, exitZone } = result.value;
-      let { heroState } = result.value;
-      const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
+      const { quest, exitZone, entities } = result.value;
+      const heroState = this._restoreProgress(result.value);
 
-      // 4. Restore Progress
-      const storageAdapter = new LocalStorageAdapter();
-      const loadResult = LoadProgress.execute({ storageAdapter });
-      if (loadResult.success) {
-        const savedHeroState = loadResult.value;
-        if (savedHeroState.chapterId === currentChapterId) {
-          heroState = savedHeroState;
-          console.log("[LeGameLevel] Restored progress for chapter:", currentChapterId);
-        }
-      }
-
-      // 5. Finalize Store
-      this.gameStore.initialize(heroState, obstacles, entities, quest, exitZone);
+      this.gameStore.initialize(heroState, result.value.obstacles, entities, quest, exitZone);
       this.gameStore.currentChapterIndex.set(this.chapterIndex);
 
-      // 6. Start Intro Dialogue (if new game)
-      if (!loadResult.success || loadResult.value.chapterId !== currentChapterId) {
-        const firstNPC = entities[0];
-        if (firstNPC?.decks) {
-          this.gameStore.setDialogue(firstNPC.decks.talk);
-        }
-      }
+      this._triggerIntroDialogue(entities, heroState, quest);
 
       this._gameInitialized = true;
       this.initialized = true;
       this._initializationPromise = null;
       console.log("[LeGameLevel] Initialization complete.");
     })();
+  }
+
+  async _syncActiveQuest() {
+    if (!this.gameStore.activeQuest.get() && this.questId) {
+      const questIdResult = QuestId.create(this.questId);
+      if (questIdResult.success) {
+        const questResult = await this.questRepository.getById(questIdResult.value);
+        if (questResult.success) {
+          this.gameStore.activeQuest.set(questResult.value);
+        }
+      }
+    }
+  }
+
+  async _loadChapterData() {
+    return await InitializeQuest.execute({
+      contentAdapter: this.contentAdapter,
+      questData,
+      questMessages,
+      chaptersData,
+      chaptersMessages: chapterMessages,
+      entityDecks,
+      chapterIndex: this.chapterIndex,
+    });
+  }
+
+  _restoreProgress({ quest, heroState: initialHeroState }) {
+    const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
+    const loadResult = LoadProgress.execute({ storageAdapter: this.storageAdapter });
+
+    if (loadResult.success) {
+      const savedHeroState = loadResult.value;
+      if (savedHeroState.chapterId === currentChapterId) {
+        console.log("[LeGameLevel] Restored progress for chapter:", currentChapterId);
+        return savedHeroState;
+      }
+    }
+    return initialHeroState;
+  }
+
+  _triggerIntroDialogue(entities, heroState, quest) {
+    const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
+    const loadResult = LoadProgress.execute({ storageAdapter: this.storageAdapter });
+    const isNewChapter = !loadResult.success || loadResult.value.chapterId !== currentChapterId;
+
+    if (isNewChapter) {
+      const firstNPC = entities[0];
+      if (firstNPC?.decks) {
+        this.gameStore.setDialogue(firstNPC.decks.talk);
+      }
+    }
   }
 
   _showToast(message) {
@@ -151,19 +166,26 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
     }, 3000);
   }
 
-  render() {
-    const quest = this.gameStore.activeQuest.get();
-    const chapterIndex = this.gameStore.currentChapterIndex.get();
-    const chapters = quest?.chapters || [];
-    const chapter = chapters[chapterIndex];
+  updated(changedProperties) {
+    super.updated(changedProperties);
 
     // Synchronize URL with current chapter index
+    const quest = this.gameStore.activeQuest.get();
+    const chapterIndex = this.gameStore.currentChapterIndex.get();
+
     if (quest && this._gameInitialized) {
       const newUrl = `/quest/${quest.id}/chapter/${chapterIndex}`;
       if (window.location.pathname !== newUrl) {
         window.history.replaceState(null, "", newUrl);
       }
     }
+  }
+
+  render() {
+    const quest = this.gameStore.activeQuest.get();
+    const chapterIndex = this.gameStore.currentChapterIndex.get();
+    const chapters = quest?.chapters || [];
+    const chapter = chapters[chapterIndex];
 
     return html`
       <header>
