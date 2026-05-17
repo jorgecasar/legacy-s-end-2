@@ -1,3 +1,4 @@
+import "@awesome.me/webawesome/dist/components/button/button.js";
 import { LitElement, html } from "lit";
 import { property } from "lit/decorators.js";
 import { msg } from "@lit/localize";

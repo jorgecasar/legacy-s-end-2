@@ -1,3 +1,4 @@
+import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
