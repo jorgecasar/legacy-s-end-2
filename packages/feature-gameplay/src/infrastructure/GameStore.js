@@ -124,14 +124,20 @@ export class GameStore {
    * Triggers interaction with the nearby entity if one exists.
    */
   async interact() {
-    if (this.currentDialogue.get()) return;
+    console.log("[GameStore] Attempting interaction...");
+    if (this.currentDialogue.get()) {
+      console.log("[GameStore] Interaction blocked: Dialogue is active.");
+      return;
+    }
 
     const entityId = this.nearbyEntityId.get();
+    console.log("[GameStore] Nearby entity ID:", entityId);
     if (!entityId) return;
 
     const entity = this.entities.get().find((e) => e.id === entityId);
     if (!entity) return;
 
+    console.log(`[GameStore] Interacting with entity: ${entity.id} (${entity.type})`);
     const quest = this.activeQuest.get();
     const chapter = quest?.chapters?.[this.currentChapterIndex.get()];
 
@@ -378,6 +384,7 @@ export class GameStore {
    */
   advanceDialogue() {
     const currentNode = this.currentDialogue.get();
+    console.log("[GameStore] Advancing dialogue. Current node ID:", currentNode?.id);
     if (!currentNode) return;
 
     let nextNode = null;
@@ -397,11 +404,16 @@ export class GameStore {
       }
     }
 
+    console.log("[GameStore] Next node ID:", nextNode?.id || "null (closing)");
     this.currentDialogue.set(nextNode);
 
     // If dialogue ended, apply consequences
     if (!nextNode && this.#pendingConsequences) {
       const { metObjective, spawnedEntity } = this.#pendingConsequences;
+      console.log("[GameStore] Dialogue ended. Applying consequences:", {
+        metObjective,
+        spawnedEntity,
+      });
       if (metObjective) this.#applyObjective(metObjective);
       if (spawnedEntity) this.#spawnEntity(spawnedEntity);
       this.#pendingConsequences = null;

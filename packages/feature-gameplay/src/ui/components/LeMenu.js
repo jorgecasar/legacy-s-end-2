@@ -44,6 +44,6 @@ export class LeMenu extends LitElement {
 
   #quit() {
     this.open = false;
-    this.dispatchEvent(new CustomEvent("quit-to-hub", { bubbles: true, composed: true }));
+    this.dispatchEvent(new CustomEvent("navigate-to-hub", { bubbles: true, composed: true }));
   }
 }

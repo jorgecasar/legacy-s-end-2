@@ -226,7 +226,15 @@ export class LeApp extends SignalWatcher(LitElement) {
     if (direction) {
       this.gameStore.moveHero(direction);
     } else if (key === "e") {
-      this.gameStore.interact();
+      console.log(
+        "[LeApp] 'E' key pressed. Current dialogue:",
+        !!this.gameStore.currentDialogue.get(),
+      );
+      if (this.gameStore.currentDialogue.get()) {
+        this.gameStore.advanceDialogue();
+      } else {
+        this.gameStore.interact();
+      }
     } else if (key === " " || key === "enter") {
       if (this.gameStore.currentDialogue.get()) {
         this.gameStore.advanceDialogue();
