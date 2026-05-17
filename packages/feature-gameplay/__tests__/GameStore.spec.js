@@ -113,4 +113,49 @@ describe("Infrastructure: GameStore", () => {
     assert.ok(finalHero.inventory.includes("item-1"));
     assert.strictEqual(store.entities.get().length, 0, "Item should be removed from world");
   });
+
+  it("should block chapter advancement if objectives are missing", () => {
+    const store = new GameStore();
+    const pos = Position.create(10, 10).value;
+    const hero = HeroState.create(100, 100, pos, [], "chapter-1").value;
+    const exitZone = { x: 90, y: 90, radius: 5, requiredObjectives: ["talk-npc"] };
+    const quest = {
+      id: "q1",
+      chapters: [
+        { id: "c1", startPos: { x: 0, y: 0 }, obstacles: [], entities: [] },
+        { id: "c2", startPos: { x: 50, y: 50 }, obstacles: [], entities: [] },
+      ],
+    };
+
+    store.initialize(hero, [], [], quest, exitZone);
+
+    // Try to advance
+    store.advanceChapter();
+
+    assert.strictEqual(store.currentChapterIndex.get(), 0, "Should NOT advance without objective");
+  });
+
+  it("should allow chapter advancement if all objectives are met", () => {
+    const store = new GameStore();
+    const pos = Position.create(10, 10).value;
+    const hero = HeroState.create(100, 100, pos, [], "chapter-1").value;
+    const exitZone = { x: 90, y: 90, radius: 5, requiredObjectives: ["talk-npc"] };
+    const quest = {
+      id: "q1",
+      chapters: [
+        { id: "c1", startPos: { x: 0, y: 0 }, obstacles: [], entities: [] },
+        { id: "c2", startPos: { x: 50, y: 50 }, obstacles: [], entities: [] },
+      ],
+    };
+
+    store.initialize(hero, [], [], quest, exitZone);
+
+    // Meet objective
+    store.objectivesMet.set(new Set(["talk-npc"]));
+
+    // Try to advance
+    store.advanceChapter();
+
+    assert.strictEqual(store.currentChapterIndex.get(), 1, "Should advance when objective met");
+  });
 });

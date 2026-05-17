@@ -59,96 +59,89 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   @consume({ context: questRepositoryContext, subscribe: true })
   accessor questRepository;
 
-  _gameInitialized = false;
+  _initializationPromise = null;
 
-  willUpdate(_changedProperties) {
-    if ((this.contentAdapter || this.questRepository) && !this._gameInitialized) {
+  willUpdate(changedProperties) {
+    // Re-initialize if critical properties change or dependencies become available
+    const depsAvailable = this.contentAdapter && this.questRepository;
+    const propsChanged = changedProperties.has("questId") || changedProperties.has("chapterIndex");
+
+    if (depsAvailable && (propsChanged || !this._gameInitialized)) {
       this._initializeGame();
     }
   }
 
   async _initializeGame() {
-    this._gameInitialized = true;
-    console.log("Initializing game level via InitializeQuest Use Case...");
+    if (this._initializationPromise) return; // Prevent concurrent init
 
-    // Ensure gameStore has the active quest if loaded directly by URL
-    if (!this.gameStore.activeQuest.get() && this.questId && this.questRepository) {
+    this._initializationPromise = (async () => {
       console.log(
-        `Direct URL load detected for quest ${this.questId}, synchronizing active quest...`,
+        `[LeGameLevel] Initializing quest: ${this.questId}, chapter: ${this.chapterIndex}`,
       );
-      const questIdResult = QuestId.create(this.questId);
-      if (questIdResult.success) {
-        const questResult = await this.questRepository.getById(questIdResult.value);
-        if (questResult.success) {
-          this.gameStore.activeQuest.set(questResult.value);
+
+      // 1. Sync Active Quest if missing
+      if (!this.gameStore.activeQuest.get() && this.questId) {
+        const questIdResult = QuestId.create(this.questId);
+        if (questIdResult.success) {
+          const questResult = await this.questRepository.getById(questIdResult.value);
+          if (questResult.success) {
+            this.gameStore.activeQuest.set(questResult.value);
+          }
         }
       }
-    }
 
-    // Clear previous dialogue state
-    this.gameStore.currentDialogue.set(null);
+      // 2. Clear state
+      this.gameStore.currentDialogue.set(null);
 
-    const result = await InitializeQuest.execute({
-      contentAdapter: this.contentAdapter,
-      questData,
-      questMessages,
-      chaptersData,
-      chaptersMessages: chapterMessages,
-      entityDecks,
-      chapterIndex: this.chapterIndex,
-    });
+      // 3. Load Chapter Data
+      const result = await InitializeQuest.execute({
+        contentAdapter: this.contentAdapter,
+        questData,
+        questMessages,
+        chaptersData,
+        chaptersMessages: chapterMessages,
+        entityDecks,
+        chapterIndex: this.chapterIndex,
+      });
 
-    if (!result.success) {
-      console.error(`Failed to initialize quest: ${result.error}`);
-      return;
-    }
-
-    const { obstacles, entities, quest, exitZone } = result.value;
-    let { heroState } = result.value;
-    const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
-
-    // Try to restore saved progress
-    const storageAdapter = new LocalStorageAdapter();
-    const loadResult = LoadProgress.execute({ storageAdapter });
-    if (loadResult.success) {
-      const savedHeroState = loadResult.value;
-
-      // Restore if the saved state is exactly for this chapter
-      if (savedHeroState.chapterId && savedHeroState.chapterId === currentChapterId) {
-        heroState = savedHeroState;
-        console.log("Restored saved progress for chapter:", currentChapterId);
-      } else {
-        console.warn(
-          "Ignoring incompatible or old saved progress.",
-          savedHeroState.chapterId ? `Found: ${savedHeroState.chapterId}` : "No chapterId found",
-          `Expected: ${currentChapterId}`,
-        );
+      if (!result.success) {
+        console.error(`[LeGameLevel] Failed to initialize quest: ${result.error}`);
+        this._initializationPromise = null;
+        return;
       }
-    }
 
-    this.gameStore.initialize(heroState, obstacles, entities, quest, exitZone);
-    this.gameStore.currentChapterIndex.set(this.chapterIndex);
+      const { obstacles, entities, quest, exitZone } = result.value;
+      let { heroState } = result.value;
+      const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
 
-    // Automatically trigger intro dialogue if no saved progress
-    if (!loadResult.success) {
-      const firstNPC = entities[0];
-      if (firstNPC?.decks) {
-        this.gameStore.setDialogue(firstNPC.decks.talk);
+      // 4. Restore Progress
+      const storageAdapter = new LocalStorageAdapter();
+      const loadResult = LoadProgress.execute({ storageAdapter });
+      if (loadResult.success) {
+        const savedHeroState = loadResult.value;
+        if (savedHeroState.chapterId === currentChapterId) {
+          heroState = savedHeroState;
+          console.log("[LeGameLevel] Restored progress for chapter:", currentChapterId);
+        }
       }
-    }
 
-    console.log("Game level initialized successfully.");
-    this.initialized = true;
+      // 5. Finalize Store
+      this.gameStore.initialize(heroState, obstacles, entities, quest, exitZone);
+      this.gameStore.currentChapterIndex.set(this.chapterIndex);
 
-    // Listen for menu actions
-    this.addEventListener("quit-to-hub", () => {
-      window.dispatchEvent(new CustomEvent("navigate-to-hub"));
-    });
+      // 6. Start Intro Dialogue (if new game)
+      if (!loadResult.success || loadResult.value.chapterId !== currentChapterId) {
+        const firstNPC = entities[0];
+        if (firstNPC?.decks) {
+          this.gameStore.setDialogue(firstNPC.decks.talk);
+        }
+      }
 
-    window.addEventListener("objectives-missing", (e) => {
-      const { missing } = /** @type {any} */ (e).detail;
-      this._showToast(msg("Objectives missing: ") + missing.join(", "));
-    });
+      this._gameInitialized = true;
+      this.initialized = true;
+      this._initializationPromise = null;
+      console.log("[LeGameLevel] Initialization complete.");
+    })();
   }
 
   _showToast(message) {

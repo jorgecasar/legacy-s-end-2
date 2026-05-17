@@ -3,15 +3,18 @@ import { css } from "lit";
 export const gameViewportStyles = css`
   :host {
     display: block;
-    width: 100%;
-    max-width: 1000px;
-    aspect-ratio: 16 / 9;
+    width: 90vmin;
+    height: 90vmin;
+    max-width: 800px;
+    max-height: 800px;
+    aspect-ratio: 1 / 1;
     background-color: var(--wa-color-surface-default);
     position: relative;
     overflow: hidden;
     margin: var(--wa-spacing-medium) auto;
     border: var(--wa-border-width-m) solid var(--wa-color-surface-border);
     border-radius: var(--wa-border-radius-medium);
+    box-shadow: var(--wa-shadow-large);
   }
 
   .viewport {
@@ -79,8 +82,8 @@ export const gameViewportStyles = css`
 
   le-hero {
     position: absolute;
-    width: 4.4%; /* Matches hitbox: 2.2 * 2 */
-    height: 8.4%; /* Matches hitbox: 4.2 * 2 */
+    width: 5%;
+    height: 5%;
     transform: translate(-50%, -50%); /* Center the hero on its coordinates */
     transition:
       left 0.1s linear,
@@ -91,8 +94,8 @@ export const gameViewportStyles = css`
   .npc,
   .item {
     position: absolute;
-    width: 4%;
-    height: 8%;
+    width: 5%;
+    height: 5%;
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;

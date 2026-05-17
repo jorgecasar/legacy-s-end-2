@@ -28,11 +28,11 @@ export const MoveHero = {
 
       const newPosition = movementResult.value;
 
-      // Hero size is approx 4% width, 8% height. Use half as buffer.
+      // Hero size is 5% width, 5% height. Use half as buffer.
       if (
         CollisionService.checkCollision(newPosition, obstacles, {
-          widthBuffer: 2.2,
-          heightBuffer: 4.2,
+          widthBuffer: 2.5,
+          heightBuffer: 2.5,
         })
       ) {
         return Result.failure("Move blocked by collision");

@@ -310,11 +310,13 @@ export class GameStore {
     if (missing.length > 0) {
       console.warn("[GameStore] Cannot advance chapter. Missing objectives:", missing);
       // Dispatch event to show feedback in UI
-      window.dispatchEvent(
-        new CustomEvent("objectives-missing", {
-          detail: { missing },
-        }),
-      );
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("objectives-missing", {
+            detail: { missing },
+          }),
+        );
+      }
       return;
     }
 

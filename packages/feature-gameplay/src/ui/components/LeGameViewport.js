@@ -49,9 +49,9 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
     if (!zone) return "";
 
     return html`
-      <div 
-        class="exit-zone" 
-        style="left: ${zone.x}%; top: ${zone.y}%; width: ${zone.radius * 2}%; height: ${zone.radius * 2 * 1.77}%;"
+      <div
+        class="exit-zone"
+        style="left: ${zone.x}%; top: ${zone.y}%; width: ${zone.radius * 2}%; height: ${zone.radius * 2}%;"
       >
         NEXT
       </div>

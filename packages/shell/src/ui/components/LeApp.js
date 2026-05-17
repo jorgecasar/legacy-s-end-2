@@ -25,6 +25,7 @@ import { InitializeQuest } from "@legacys-end/core/use-cases/InitializeQuest.js"
 import { CompleteQuestInteractor } from "@legacys-end/feature-quest-hub/use-cases/CompleteQuestInteractor.js";
 import { GameStore } from "@legacys-end/feature-gameplay/infrastructure/GameStore.js";
 import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
+import { questRepositoryContext } from "@legacys-end/feature-quest-hub/ui/components/QuestRepository.context.js";
 
 import { appStyles } from "./LeApp.styles.js";
 
@@ -62,6 +63,10 @@ export class LeApp extends SignalWatcher(LitElement) {
   /** @type {import("@legacys-end/core/infrastructure/ContentAdapter.js").ContentAdapter} */
   @provide({ context: contentAdapterContext })
   accessor contentAdapter;
+
+  /** @type {import("@legacys-end/feature-quest-hub/infrastructure/StaticQuestRepository.js").StaticQuestRepository} */
+  @provide({ context: questRepositoryContext })
+  accessor questRepository;
 
   /** @type {import("@legacys-end/core/use-cases/ports/AICapabilityPort.js").AICapabilityPort} */
   @provide({ context: aiCapabilityPortContext })
