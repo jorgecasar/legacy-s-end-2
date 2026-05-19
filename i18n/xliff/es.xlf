@@ -4,48 +4,243 @@
 <body>
 <trans-unit id="s254ceed2d7a88a15">
   <source>The Awakening</source>
+  <target>El Despertar</target>
 </trans-unit>
 <trans-unit id="s1c2201fc020df1dc">
   <source>The Cleansed Forest</source>
+  <target>El Bosque Purificado</target>
 </trans-unit>
 <trans-unit id="s6bd4471a3977d6d7">
   <source>Elder Alarion</source>
+  <target>Anciano Alarion</target>
 </trans-unit>
 <trans-unit id="s30e30c0ef78f4146">
   <source>Wake up, hero. The world is ending.</source>
+  <target>Despierta, héroe. El mundo se está acabando.</target>
 </trans-unit>
 <trans-unit id="sdbd7c79796fb9383">
   <source>The void is consuming everything. You are our last hope.</source>
+  <target>El vacío lo está consumiendo todo. Eres nuestra última esperanza.</target>
 </trans-unit>
 <trans-unit id="s62e36f8e3a3f110d">
   <source>Spirit of Alarion</source>
+  <target>Espíritu de Alarion</target>
 </trans-unit>
 <trans-unit id="s0c45c6724698a586">
   <source>You have done well to reach the second chapter.</source>
+  <target>Lo has hecho bien al llegar al segundo capítulo.</target>
 </trans-unit>
 <trans-unit id="sb445e559b651fab8">
   <source>Alarion's Awakening</source>
+  <target>El Despertar de Alarion</target>
 </trans-unit>
 <trans-unit id="s68d1f490f316240c">
   <source>The first step into the corrupted code...</source>
+  <target>El primer paso dentro del código corrupto...</target>
 </trans-unit>
 <trans-unit id="s5033dab8c17f05f2">
   <source>Completed</source>
+  <target>Completado</target>
 </trans-unit>
 <trans-unit id="sd158a5fc0f062f18">
   <source>Available</source>
+  <target>Disponible</target>
 </trans-unit>
 <trans-unit id="se3e714766f25ef93">
   <source>Locked</source>
+  <target>Bloqueado</target>
 </trans-unit>
 <trans-unit id="s25488e19b8cd6f11">
   <source>Lvl</source>
+  <target>Niv</target>
 </trans-unit>
 <trans-unit id="sfc53e352afbca881">
   <source>Review</source>
+  <target>Repasar</target>
 </trans-unit>
 <trans-unit id="sae1c7f13b7c0c47f">
   <source>Start</source>
+  <target>Comenzar</target>
+</trans-unit>
+<trans-unit id="sfdf94f54c555d3cc">
+  <source>Relic</source>
+  <target>Reliquia</target>
+</trans-unit>
+<trans-unit id="s52cfa1d198476806">
+  <source>Item</source>
+  <target>Objeto</target>
+</trans-unit>
+<trans-unit id="s0fbf6dc6a1966408">
+  <source>Next</source>
+  <target>Siguiente</target>
+</trans-unit>
+<trans-unit id="sb3ef9e1784e55b24">
+  <source>Talk to Elder Alarion</source>
+  <target>Habla con el Anciano Alarion</target>
+</trans-unit>
+<trans-unit id="s56874db784630ce5">
+  <source>Collect the Strange Relic</source>
+  <target>Recoge la Reliquia Extraña</target>
+</trans-unit>
+<trans-unit id="sbf53b0594354c8b1">
+  <source>Missing objectives:</source>
+  <target>Objetivos pendientes:</target>
+</trans-unit>
+<trans-unit id="s94b45426c7ba0561">
+  <source>Loading Quest...</source>
+  <target>Cargando Misión...</target>
+</trans-unit>
+<trans-unit id="sbdec8bdd7765af42">
+  <source>Initializing...</source>
+  <target>Inicializando...</target>
+</trans-unit>
+<trans-unit id="se765c99cd8b281e6">
+  <source>WASD to move | E to interact</source>
+  <target>WASD para moverse | E para interactuar</target>
+</trans-unit>
+<trans-unit id="sefb1fd617d7a06fc">
+  <source>Loading store...</source>
+  <target>Cargando almacén de estado...</target>
+</trans-unit>
+<trans-unit id="sfa236dc6043a5fe8">
+  <source>NEXT</source>
+  <target>SIGUIENTE</target>
+</trans-unit>
+<trans-unit id="s85afd0bb021b97fb">
+  <source>Press E</source>
+  <target>Presiona E</target>
+</trans-unit>
+<trans-unit id="s186f40a7bd0e092e">
+  <source>Empty Slot</source>
+  <target>Espacio Vacío</target>
+</trans-unit>
+<trans-unit id="sd4c1f322c89b6bda">
+  <source>Game Menu</source>
+  <target>Menú del Juego</target>
+</trans-unit>
+<trans-unit id="sc3e258037d7ce57a">
+  <source>Continue Playing</source>
+  <target>Continuar Jugando</target>
+</trans-unit>
+<trans-unit id="sfeb997822697437c">
+  <source>Quit to Hub</source>
+  <target>Salir al Nexo</target>
+</trans-unit>
+<trans-unit id="sccc8720f6ca8aed5">
+  <source>Press ESC to resume</source>
+  <target>Presiona ESC para continuar</target>
+</trans-unit>
+<trans-unit id="s8e6225a417053d90">
+  <source>AI Settings</source>
+  <target>Ajustes de IA</target>
+</trans-unit>
+<trans-unit id="s95ed2af56503e13d">
+  <source>Re-check Status</source>
+  <target>Volver a comprobar estado</target>
+</trans-unit>
+<trans-unit id="s0433dba415c512de">
+  <source>NPC Voice (TTS)</source>
+  <target>Voz de NPC (TTS)</target>
+</trans-unit>
+<trans-unit id="s12ce0d6430c5d413">
+  <source>Read NPC dialogue aloud.</source>
+  <target>Leer el diálogo del NPC en voz alta.</target>
+</trans-unit>
+<trans-unit id="s2554a29a756c9bff">
+  <source>Speech Synthesis API not available.</source>
+  <target>La API de síntesis de voz no está disponible.</target>
+</trans-unit>
+<trans-unit id="s0b71255c0472401d">
+  <source>Voice Commands (STT)</source>
+  <target>Comandos de voz (STT)</target>
+</trans-unit>
+<trans-unit id="sa065ad664c6b003e">
+  <source>Use your voice to control the hero.</source>
+  <target>Usa tu voz para controlar al héroe.</target>
+</trans-unit>
+<trans-unit id="s2d383f145ef53cac">
+  <source>Speech Recognition API not available.</source>
+  <target>La API de reconocimiento de voz no está disponible.</target>
+</trans-unit>
+<trans-unit id="s286efd6f2becea40">
+  <source>AI Dynamic Dialogue</source>
+  <target>Diálogo dinámico con IA</target>
+</trans-unit>
+<trans-unit id="sef4e9478d252c482">
+  <source>Reset All Progress</source>
+  <target>Reiniciar todo el progreso</target>
+</trans-unit>
+<trans-unit id="scef30d647784339f">
+  <source>Clears inventory, objectives, and returns to Hub.</source>
+  <target>Limpia el inventario, los objetivos y vuelve al Nexo.</target>
+</trans-unit>
+<trans-unit id="s1c92dcc93059b26b">
+  <source>Prompt API (Gemini Nano) not available.</source>
+  <target>La Prompt API (Gemini Nano) no está disponible.</target>
+</trans-unit>
+<trans-unit id="s917ae704fbc14d21">
+  <source>Troubleshooting Checklist:</source>
+  <target>Lista de comprobación de problemas:</target>
+</trans-unit>
+<trans-unit id="s0cbd53cc44eb0582">
+  <source>Flags:</source>
+  <target>Opciones (Flags):</target>
+</trans-unit>
+<trans-unit id="s5c515e8f9aeb21eb">
+  <source>Enabled BypassPref</source>
+  <target>Habilitado BypassPref</target>
+</trans-unit>
+<trans-unit id="se6f79719051ff286">
+  <source>and</source>
+  <target>y</target>
+</trans-unit>
+<trans-unit id="s965c503c3e42fdfe">
+  <source>Enabled</source>
+  <target>Habilitado</target>
+</trans-unit>
+<trans-unit id="see47313083bbe7f5">
+  <source>Hardware: Chrome requires at least 4GB of RAM and a capable GPU for local AI.</source>
+  <target>Hardware: Chrome requiere al menos 4GB de RAM y una GPU compatible para la IA local.</target>
+</trans-unit>
+<trans-unit id="sf2f4d37564e613ec">
+  <source>Power: If you are on a laptop,</source>
+  <target>Energía: Si estás en un portátil,</target>
+</trans-unit>
+<trans-unit id="s2dd9b45952873bb5">
+  <source>plug in the charger</source>
+  <target>conecta el cargador</target>
+</trans-unit>
+<trans-unit id="se9cdf11b808969f0">
+  <source>Chrome often disables AI on battery.</source>
+  <target>Chrome suele desactivar la IA cuando está con batería.</target>
+</trans-unit>
+<trans-unit id="sb2a40b5c3b62babd">
+  <source>Components: Check</source>
+  <target>Componentes: Comprueba</target>
+</trans-unit>
+<trans-unit id="s5e3ca5d72e3a3afb">
+  <source>for "Optimization Guide" version &gt; 0.0.0.0.</source>
+  <target>que la versión de "Optimization Guide" sea superior a 0.0.0.0.</target>
+</trans-unit>
+<trans-unit id="sdf7eeb66abc70260">
+  <source>Downloading model:</source>
+  <target>Descargando modelo:</target>
+</trans-unit>
+<trans-unit id="sea35ce55832d606a">
+  <source>Gemini Nano needs to be downloaded.</source>
+  <target>Es necesario descargar Gemini Nano.</target>
+</trans-unit>
+<trans-unit id="s9ae39e5ad62093c6">
+  <source>Download required</source>
+  <target>Descarga requerida</target>
+</trans-unit>
+<trans-unit id="sf1af788523eecd55">
+  <source>Download Now</source>
+  <target>Descargar ahora</target>
+</trans-unit>
+<trans-unit id="s49faadffa99e2859">
+  <source>Generate unique NPC responses via Gemini Nano.</source>
+  <target>Genera respuestas de NPC únicas mediante Gemini Nano.</target>
 </trans-unit>
 </body>
 </file>

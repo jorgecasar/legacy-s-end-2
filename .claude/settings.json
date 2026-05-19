@@ -16,12 +16,25 @@
         "hooks": [
           {
             "type": "command",
+            "command": "squeezr status || (squeezr start && sleep 2)"
+          },
+          {
+            "type": "command",
             "command": "git fetch origin main --quiet"
           }
         ]
       }
     ],
     "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"{{command}}\" != rtk* ]] && [[ \"{{command}}\" != squeezr* ]] && [[ \"{{command}}\" != npx\\ rulesync* ]]; then echo '{\"decision\": \"ask\", \"reason\": \"All shell commands should be prefixed with rtk for token optimization.\"}'; else echo '{\"decision\": \"allow\"}'; fi"
+          }
+        ]
+      },
       {
         "matcher": ".*(write_file|replace|rm|delete_file).*",
         "hooks": [

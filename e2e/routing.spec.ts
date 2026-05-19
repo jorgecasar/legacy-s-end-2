@@ -47,4 +47,46 @@ test.describe("Routing and Deep-linking", () => {
 
     expect(chapterIndex).toBe(1);
   });
+
+  test("should automatically redirect and restore progress in saved chapter when entering the quest", async ({
+    page,
+  }) => {
+    await page.goto("http://localhost:3000/");
+
+    // Setup saved progress in local storage for chapter 1 (index 1)
+    await page.evaluate(() => {
+      const savedData = {
+        hp: 95,
+        maxHp: 100,
+        position: { x: 40, y: 60 },
+        inventory: ["item-relic"],
+        chapterId: "chap-02",
+        objectivesMet: ["talk-alarion", "item-relic"],
+      };
+      localStorage.setItem("legacys_end_save", JSON.stringify(savedData));
+    });
+
+    // Click the first quest to enter (which normally targets chapter 0)
+    const questCard = page.locator("le-quest-card").first();
+    await questCard.locator("wa-button").click();
+
+    // Verify that the level component automatically redirected us to chapter 1!
+    await expect(page).toHaveURL(/\/quest\/alarions-awakening\/chapter\/1/);
+
+    // Verify the game state is correctly restored to the saved state
+    const gameState = await page.evaluate(() => {
+      const app = document.querySelector("le-app") as any;
+      return {
+        chapterIndex: app.gameStore.currentChapterIndex.get(),
+        heroHp: app.gameStore.heroState.get().hp,
+        heroInventory: app.gameStore.heroState.get().inventory,
+        heroPos: app.gameStore.heroState.get().position.toJSON(),
+      };
+    });
+
+    expect(gameState.chapterIndex).toBe(1);
+    expect(gameState.heroHp).toBe(95);
+    expect(gameState.heroInventory).toContain("item-relic");
+    expect(gameState.heroPos).toEqual({ x: 40, y: 60 });
+  });
 });

@@ -1,6 +1,15 @@
 {
   "version": 1,
   "mcpServers": {
+    "squeezr": {
+      "description": "AI context compressor for token savings (real-time stats and status)",
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/jorgecasar/.nvm/versions/node/v24.11.0/lib/node_modules/squeezr-ai/dist/mcp.js"
+      ],
+      "env": {}
+    },
     "serena": {
       "description": "Semantic code analysis and search (symbols, references, definitions)",
       "type": "stdio",

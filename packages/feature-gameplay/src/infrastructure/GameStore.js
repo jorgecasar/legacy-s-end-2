@@ -116,7 +116,7 @@ export class GameStore {
     this.obstacles.set(obstacles);
 
     // Filter out items already in inventory
-    const inventory = heroState.inventory;
+    const inventory = heroState.inventory || [];
     const filteredEntities = entities.filter((ent) => !inventory.includes(ent.id));
     this.entities.set(filteredEntities);
 
@@ -124,8 +124,41 @@ export class GameStore {
     this.exitZone.set(exitZone);
     this.currentChapterIndex.set(0);
 
-    // Restore objectives from hero state
-    this.objectivesMet.set(new Set(heroState.objectivesMet));
+    // Restore objectives from hero state and sync from inventory
+    const objectivesSet = new Set(heroState.objectivesMet || []);
+    let updatedHero = heroState;
+    let needsSave = false;
+
+    // Any item ID in inventory is treated as a met objective
+    for (const itemId of inventory) {
+      if (!objectivesSet.has(itemId)) {
+        objectivesSet.add(itemId);
+        const objResult = updatedHero.meetObjective(itemId);
+        if (objResult.success) {
+          updatedHero = objResult.value;
+          needsSave = true;
+        }
+      }
+    }
+
+    // Special Relic Logic: If item-relic is in inventory, talk-alarion is also met
+    if (inventory.includes("item-relic")) {
+      if (!objectivesSet.has("talk-alarion")) {
+        objectivesSet.add("talk-alarion");
+        const objResult = updatedHero.meetObjective("talk-alarion");
+        if (objResult.success) {
+          updatedHero = objResult.value;
+          needsSave = true;
+        }
+      }
+    }
+
+    this.objectivesMet.set(objectivesSet);
+    if (needsSave) {
+      console.log("[GameStore] Objectives synchronized from inventory. Saving updated hero state.");
+      this.heroState.set(updatedHero);
+      this.#autoSaveService?.requestSave(updatedHero);
+    }
   }
 
   /**
@@ -347,10 +380,46 @@ export class GameStore {
   advanceChapter() {
     const quest = this.activeQuest.get();
     const zone = this.exitZone.get();
+    const heroState = this.heroState.get();
+    const inventory = heroState?.inventory || [];
+    const met = new Set(this.objectivesMet.get());
+
+    let updatedHero = heroState;
+    let needsSave = false;
+
+    // Sync any inventory items
+    for (const itemId of inventory) {
+      if (!met.has(itemId)) {
+        met.add(itemId);
+        const objResult = updatedHero.meetObjective(itemId);
+        if (objResult.success) {
+          updatedHero = objResult.value;
+          needsSave = true;
+        }
+      }
+    }
+
+    // Relic special sync
+    if (inventory.includes("item-relic")) {
+      if (!met.has("talk-alarion")) {
+        met.add("talk-alarion");
+        const objResult = updatedHero.meetObjective("talk-alarion");
+        if (objResult.success) {
+          updatedHero = objResult.value;
+          needsSave = true;
+        }
+      }
+    }
+
+    if (needsSave) {
+      console.log("[GameStore] advanceChapter synced objectives from inventory. Saving.");
+      this.objectivesMet.set(met);
+      this.heroState.set(updatedHero);
+      this.#autoSaveService?.requestSave(updatedHero);
+    }
 
     // Check completion objectives from the exitZone signal (loaded by InitializeQuest)
     const required = zone?.requiredObjectives || [];
-    const met = this.objectivesMet.get();
     const missing = SensorService.getMissingObjectives(required, met);
 
     if (missing.length > 0) {
@@ -367,7 +436,6 @@ export class GameStore {
     }
 
     const nextIndex = this.currentChapterIndex.get() + 1;
-    const heroState = this.heroState.get();
 
     if (!quest || !quest.chapters?.[nextIndex]) {
       console.log("Quest completed!");
@@ -385,7 +453,7 @@ export class GameStore {
     const result = AdvanceChapter.execute({
       quest,
       nextChapterIndex: nextIndex,
-      heroState,
+      heroState: updatedHero,
     });
 
     if (result.success) {
@@ -397,7 +465,7 @@ export class GameStore {
       this.obstacles.set(result.value.obstacles);
       this.entities.set(result.value.entities);
       this.exitZone.set(result.value.exitZone);
-      this.#autoSaveService?.requestSave(result.value.heroState);
+      this.#autoSaveService?.forceSave(result.value.heroState);
     } else {
       console.error(result.error);
     }

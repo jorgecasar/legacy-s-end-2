@@ -7,11 +7,13 @@
   "inputFiles": [
     "packages/core/src/**/*.js",
     "packages/feature-quest-hub/src/**/*.js",
+    "packages/feature-gameplay/src/**/*.js",
+    "packages/shell/src/**/*.js",
     "packages/content/**/*.js"
   ],
   "output": {
     "mode": "runtime",
-    "outputDir": "packages/feature-quest-hub/src/i18n/generated"
+    "outputDir": "packages/core/src/i18n/generated"
   },
   "interchange": {
     "format": "xliff",

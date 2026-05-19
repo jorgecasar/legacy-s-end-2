@@ -2,6 +2,7 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/badge/badge.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
+import { msg } from "@lit/localize";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { gameViewportStyles } from "./LeGameViewport.styles.js";
@@ -27,7 +28,7 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
   render() {
     if (!this.gameStore) {
       return html`
-        <div class="loading">Loading store...</div>
+        <div class="loading">${msg("Loading store...")}</div>
       `;
     }
 
@@ -55,7 +56,7 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
         class="exit-zone"
         style="left: ${zone.x}%; top: ${zone.y}%; width: ${zone.radius * 2}%; height: ${zone.radius * 2}%;"
       >
-        NEXT
+        ${msg("NEXT")}
       </div>
     `;
   }
@@ -82,7 +83,7 @@ export class LeGameViewport extends SignalWatcher(LitElement) {
           ${
             nearbyId === ent.id
               ? html`
-                  <wa-badge variant="brand" pill class="interaction-prompt">Press E</wa-badge>
+                  <wa-badge variant="brand" pill class="interaction-prompt">${msg("Press E")}</wa-badge>
                 `
               : ""
           }

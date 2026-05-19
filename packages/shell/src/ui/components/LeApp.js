@@ -112,13 +112,29 @@ export class LeApp extends SignalWatcher(LitElement) {
     this.speechRecognitionPort = new WebSpeechAdapter();
     this.aiGenerationPort = new ChromePromptAdapter();
 
-    // Use Case setup
-    this.listQuestsUseCase = new ListAvailableQuestsInteractor(this.questRepository);
-
     // Store setup
     this.gameStore = new GameStore();
     this.gameStore.setAIGenerationPort(this.aiGenerationPort);
 
+    // Persistence setup
+    const autoSaveService = new AutoSaveService(this.storageAdapter);
+    this.gameStore.setAutoSaveService(autoSaveService);
+    this.gameStore.setStorageAdapter(this.storageAdapter);
+
+    // Load AI settings
+    const savedData = this.storageAdapter.load();
+    if (savedData.success && savedData.value?.settings) {
+      const { settings } = savedData.value;
+      if (settings.npcVoiceEnabled !== undefined)
+        this.gameStore.npcVoiceEnabled.set(settings.npcVoiceEnabled);
+      if (settings.aiDialogueEnabled !== undefined)
+        this.gameStore.aiDialogueEnabled.set(settings.aiDialogueEnabled);
+      if (settings.voiceCommandsEnabled !== undefined)
+        this.gameStore.voiceCommandsEnabled.set(settings.voiceCommandsEnabled);
+    }
+
+    // Use Case setup
+    this.listQuestsUseCase = new ListAvailableQuestsInteractor(this.questRepository);
     const completeQuestUseCase = new CompleteQuestInteractor(this.questRepository);
 
     // Event listeners
@@ -144,30 +160,16 @@ export class LeApp extends SignalWatcher(LitElement) {
 
     window.addEventListener("navigate-to-hub", () => {
       console.log("[LeApp] navigate-to-hub event received.");
+      const heroState = this.gameStore.heroState.get();
+      if (heroState) {
+        autoSaveService.forceSave(heroState);
+      }
       this.gameStore.activeQuest.set(null);
       this.#router.goto("/");
     });
 
     // Key handlers for rapid prototyping/testing
     window.addEventListener("keydown", (e) => this.#handleGlobalKeys(e));
-
-    // Persistence setup
-    const storageAdapter = new LocalStorageAdapter();
-    const autoSaveService = new AutoSaveService(storageAdapter);
-    this.gameStore.setAutoSaveService(autoSaveService);
-    this.gameStore.setStorageAdapter(storageAdapter);
-
-    // Load AI settings
-    const savedData = storageAdapter.load();
-    if (savedData.success && savedData.value?.settings) {
-      const { settings } = savedData.value;
-      if (settings.npcVoiceEnabled !== undefined)
-        this.gameStore.npcVoiceEnabled.set(settings.npcVoiceEnabled);
-      if (settings.aiDialogueEnabled !== undefined)
-        this.gameStore.aiDialogueEnabled.set(settings.aiDialogueEnabled);
-      if (settings.voiceCommandsEnabled !== undefined)
-        this.gameStore.voiceCommandsEnabled.set(settings.voiceCommandsEnabled);
-    }
 
     // Force save on page unload
     window.addEventListener("beforeunload", () => {

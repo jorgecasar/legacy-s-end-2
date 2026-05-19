@@ -5,6 +5,8 @@
  * Follows Open/Closed Principle.
  */
 
+import { msg } from "@lit/localize";
+
 const registry = {
   npc: { icon: "person", className: "npc" },
   item: { icon: "gift", className: "item" },
@@ -31,8 +33,18 @@ export const EntityViewRegistry = {
 };
 
 const itemRegistry = {
-  "item-relic": { icon: "gift", label: "Relic" },
-  default: { icon: "box", label: "Item" },
+  "item-relic": {
+    icon: "gift",
+    get label() {
+      return msg("Relic");
+    },
+  },
+  default: {
+    icon: "box",
+    get label() {
+      return msg("Item");
+    },
+  },
 };
 
 export const ItemViewRegistry = {

@@ -2,6 +2,7 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/tooltip/tooltip.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
+import { msg } from "@lit/localize";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { inventoryStyles } from "./LeInventory.styles.js";
@@ -48,7 +49,7 @@ export class LeInventory extends SignalWatcher(LitElement) {
             <div 
               class="slot ${hasItem ? "occupied" : "empty"}" 
               data-slot-index=${i}
-              title=${hasItem ? itemView.label : "Empty Slot"}
+              title=${hasItem ? itemView.label : msg("Empty Slot")}
             >
               ${
                 hasItem

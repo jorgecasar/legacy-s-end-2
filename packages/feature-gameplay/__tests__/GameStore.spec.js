@@ -158,4 +158,38 @@ describe("Infrastructure: GameStore", () => {
 
     assert.strictEqual(store.currentChapterIndex.get(), 1, "Should advance when objective met");
   });
+
+  it("should automatically sync objectives when initialized with item-relic in inventory", () => {
+    const store = new GameStore();
+    const pos = Position.create(10, 10).value;
+    const hero = HeroState.create(100, 100, pos, ["item-relic"], "chapter-1").value;
+    const exitZone = {
+      x: 90,
+      y: 90,
+      radius: 5,
+      requiredObjectives: ["talk-alarion", "item-relic"],
+    };
+    const quest = {
+      id: "q1",
+      chapters: [
+        { id: "c1", startPos: { x: 0, y: 0 }, obstacles: [], entities: [] },
+        { id: "c2", startPos: { x: 50, y: 50 }, obstacles: [], entities: [] },
+      ],
+    };
+
+    store.initialize(hero, [], [], quest, exitZone);
+
+    // Verify objectives are auto-filled
+    const met = store.objectivesMet.get();
+    assert.ok(met.has("item-relic"), "item-relic objective should be met");
+    assert.ok(met.has("talk-alarion"), "talk-alarion objective should be met");
+
+    // Also assert that it allows chapter advancement since both required are auto-synced
+    store.advanceChapter();
+    assert.strictEqual(
+      store.currentChapterIndex.get(),
+      1,
+      "Should advance when objectives are auto-synced",
+    );
+  });
 });

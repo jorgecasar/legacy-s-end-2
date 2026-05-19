@@ -67,6 +67,29 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
 
   _initializationPromise = null;
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._onObjectivesMissing = (e) => {
+      const { missing } = e.detail;
+      const formatted = missing
+        .map((m) =>
+          m === "talk-alarion"
+            ? msg("Talk to Elder Alarion")
+            : m === "item-relic"
+              ? msg("Collect the Strange Relic")
+              : m,
+        )
+        .join(", ");
+      this._showToast(`${msg("Missing objectives:")} ${formatted}`);
+    };
+    window.addEventListener("objectives-missing", this._onObjectivesMissing);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener("objectives-missing", this._onObjectivesMissing);
+  }
+
   willUpdate(changedProperties) {
     // Re-initialize if critical properties change or dependencies become available
     const depsAvailable = this.contentAdapter && this.questRepository;
@@ -96,6 +119,34 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
       }
 
       const { quest, exitZone, entities } = result.value;
+
+      // Check if we need to redirect to a different saved chapter
+      const loadResult = LoadProgress.execute({ storageAdapter: this.storageAdapter });
+      const savedHeroState = loadResult.success ? loadResult.value : null;
+
+      if (savedHeroState && quest && quest.chapters) {
+        const savedChapterIndex = quest.chapters.findIndex(
+          (ch) => ch.id === savedHeroState.chapterId,
+        );
+
+        if (savedChapterIndex !== -1 && savedChapterIndex !== this.chapterIndex) {
+          console.log(
+            `[LeGameLevel] Redirecting from chapter ${this.chapterIndex} to saved chapter ${savedChapterIndex}`,
+          );
+          this.chapterIndex = savedChapterIndex;
+
+          // Synchronize URL with the new chapter index
+          const newUrl = `/quest/${quest.id}/chapter/${savedChapterIndex}`;
+          if (window.location.pathname !== newUrl) {
+            window.history.replaceState(null, "", newUrl);
+          }
+
+          this._initializationPromise = null;
+          this._initializeGame();
+          return;
+        }
+      }
+
       const heroState = this._restoreProgress(result.value);
       console.log("[LeGameLevel] Initializing GameStore with heroState:", heroState.toJSON());
 

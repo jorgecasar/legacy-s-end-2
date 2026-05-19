@@ -4,6 +4,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
+import { msg } from "@lit/localize";
 import { ReadDialogueAloud } from "@legacys-end/core/use-cases/ReadDialogueAloud.js";
 import { ttsPortContext } from "@legacys-end/core/infrastructure/TextToSpeechPort.context.js";
 import { gameStoreContext } from "./GameStore.context.js";
@@ -82,7 +83,7 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
         <div slot="header" class="speaker">${dialogue.speaker}</div>
         <div class="text">${dialogue.text}</div>
         <div slot="footer" class="actions">
-          <wa-button variant="brand" @click=${this._handleNext}>Next</wa-button>
+          <wa-button variant="brand" @click=${this._handleNext}>${msg("Next")}</wa-button>
         </div>
       </wa-card>
     `;

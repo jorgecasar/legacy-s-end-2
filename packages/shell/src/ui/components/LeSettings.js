@@ -5,6 +5,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
+import { msg } from "@lit/localize";
 import { aiCapabilityPortContext } from "@legacys-end/core/infrastructure/AICapabilityPort.context.js";
 import { aiGenerationPortContext } from "@legacys-end/core/infrastructure/AIGenerationPort.context.js";
 import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
@@ -94,33 +95,33 @@ export class LeSettings extends SignalWatcher(LitElement) {
 
     return html`
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="margin: 0;">AI Settings</h2>
+        <h2 style="margin: 0;">${msg("AI Settings")}</h2>
         <wa-button variant="neutral" size="small" @click=${this.#recheck}>
-          Re-check Status
+          ${msg("Re-check Status")}
         </wa-button>
       </div>
       <div class="setting-group">
         ${this.#renderSetting({
           id: "npc-voice",
-          label: "NPC Voice (TTS)",
-          info: "Read NPC dialogue aloud.",
-          unavailableInfo: "Speech Synthesis API not available.",
+          label: msg("NPC Voice (TTS)"),
+          info: msg("Read NPC dialogue aloud."),
+          unavailableInfo: msg("Speech Synthesis API not available."),
           isAvailable: this.#capabilities.speechSynthesis,
           signal: this.gameStore.npcVoiceEnabled,
         })}
 
         ${this.#renderSetting({
           id: "voice-commands",
-          label: "Voice Commands (STT)",
-          info: "Use your voice to control the hero.",
-          unavailableInfo: "Speech Recognition API not available.",
+          label: msg("Voice Commands (STT)"),
+          info: msg("Use your voice to control the hero."),
+          unavailableInfo: msg("Speech Recognition API not available."),
           isAvailable: this.#capabilities.speechRecognition,
           signal: this.gameStore.voiceCommandsEnabled,
         })}
 
         ${this.#renderSetting({
           id: "ai-dialogue",
-          label: "AI Dynamic Dialogue",
+          label: msg("AI Dynamic Dialogue"),
           info: "", // Handled by #renderPromptAPIInfo
           unavailableInfo: "",
           isAvailable: this.#capabilities.promptAPI !== "unavailable",
@@ -131,9 +132,9 @@ export class LeSettings extends SignalWatcher(LitElement) {
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--wa-color-surface-border);">
           <wa-button variant="danger" @click=${() => this.gameStore.resetProgress()} fill>
             <wa-icon slot="prefix" name="trash"></wa-icon>
-            Reset All Progress
+            ${msg("Reset All Progress")}
           </wa-button>
-          <div class="info" style="margin-top: 8px;">Clears inventory, objectives, and returns to Hub.</div>
+          <div class="info" style="margin-top: 8px;">${msg("Clears inventory, objectives, and returns to Hub.")}</div>
         </div>
       </div>
     `;
@@ -166,22 +167,20 @@ export class LeSettings extends SignalWatcher(LitElement) {
     if (status === "unavailable") {
       return html`
         <div class="info unavailable">
-          Prompt API (Gemini Nano) not available.
+          ${msg("Prompt API (Gemini Nano) not available.")}
           <div style="margin-top: 8px">
-            <strong>Troubleshooting Checklist:</strong>
+            <strong>${msg("Troubleshooting Checklist:")}</strong>
             <ol style="margin: 4px 0; padding-left: 20px">
               <li>
-                Flags: <code>#optimization-guide-on-device-model</code> (Enabled BypassPref) and
-                <code>#prompt-api-for-gemini-nano</code> (Enabled).
+                ${msg("Flags:")} <code>#optimization-guide-on-device-model</code> (${msg("Enabled BypassPref")}) ${msg("and")}
+                <code>#prompt-api-for-gemini-nano</code> (${msg("Enabled")}).
               </li>
-              <li>Hardware: Chrome requires at least 4GB of RAM and a capable GPU for local AI.</li>
+              <li>${msg("Hardware: Chrome requires at least 4GB of RAM and a capable GPU for local AI.")}</li>
               <li>
-                Power: If you are on a laptop, <strong>plug in the charger</strong>. Chrome often disables
-                AI on battery.
+                ${msg("Power: If you are on a laptop,")} <strong>${msg("plug in the charger")}</strong>. ${msg("Chrome often disables AI on battery.")}
               </li>
               <li>
-                Components: Check <code>chrome://components</code> for "Optimization Guide" version >
-                0.0.0.0.
+                ${msg("Components: Check")} <code>chrome://components</code> ${msg('for "Optimization Guide" version > 0.0.0.0.')}
               </li>
             </ol>
           </div>
@@ -195,7 +194,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
         : 0;
       return html`
         <div class="info">
-          Downloading model: ${percent}%
+          ${msg("Downloading model:")} ${percent}%
           <wa-progress-bar value=${percent}></wa-progress-bar>
         </div>
       `;
@@ -204,14 +203,14 @@ export class LeSettings extends SignalWatcher(LitElement) {
     if (status === "after-download") {
       return html`
         <div class="info">
-          Gemini Nano needs to be downloaded.
-          <span class="status-badge">Download required</span>
-          <wa-button variant="brand" size="small" @click=${this.#startDownload} style="margin-left: 8px">Download Now</wa-button>
+          ${msg("Gemini Nano needs to be downloaded.")}
+          <span class="status-badge">${msg("Download required")}</span>
+          <wa-button variant="brand" size="small" @click=${this.#startDownload} style="margin-left: 8px">${msg("Download Now")}</wa-button>
         </div>
       `;
     }
     return html`
-      <div class="info">Generate unique NPC responses via Gemini Nano.</div>
+      <div class="info">${msg("Generate unique NPC responses via Gemini Nano.")}</div>
     `;
   }
 }

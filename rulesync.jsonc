@@ -1,6 +1,6 @@
 {
 	"$schema": "https://github.com/dyoshikawa/rulesync/releases/download/v8.15.0/config-schema.json",
-	"targets": ["geminicli", "claudecode"],
+	"targets": ["geminicli", "claudecode", "antigravity"],
 	"features": [
 		"rules",
 		"ignore",
@@ -20,6 +20,15 @@
 	"simulateSubagents": false,
 	"simulateSkills": false,
 	"mcpServers": {
+		"squeezr": {
+			"description": "AI context compressor for token savings (real-time stats and status)",
+			"type": "stdio",
+			"command": "node",
+			"args": [
+				"/Users/jorgecasar/.nvm/versions/node/v24.11.0/lib/node_modules/squeezr-ai/dist/mcp.js"
+			],
+			"env": {}
+		},
 		"serena": {
 			"description": "Semantic code analysis and search (symbols, references, definitions)",
 			"type": "stdio",
