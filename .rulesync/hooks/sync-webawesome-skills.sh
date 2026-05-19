@@ -19,22 +19,9 @@ for skill_path in "$SOURCE_DIR"/*; do
         skill_name=$(basename "$skill_path")
         target_path="$TARGET_DIR/$skill_name"
         
-        # Check if it's already a symlink or directory
-        if [ -L "$target_path" ]; then
-            # If it's a symlink, check if it points to the right place
-            current_link=$(readlink "$target_path")
-            if [ "$current_link" != "$skill_path" ]; then
-                rm "$target_path"
-                ln -s "$skill_path" "$target_path"
-                echo "Updated symlink for skill: $skill_name"
-            fi
-        elif [ -e "$target_path" ]; then
-            # If it's a real file/dir but not a symlink, don't overwrite it unless it's empty
-            echo "Skipping $skill_name: existing file/directory at $target_path"
-        else
-            # Create symlink
-            ln -s "$skill_path" "$target_path"
-            echo "Created symlink for skill: $skill_name"
-        fi
+        # Always update the copy to ensure it matches node_modules
+        rm -rf "$target_path"
+        cp -r "$skill_path" "$target_path"
+        echo "Synced skill: $skill_name"
     fi
 done

@@ -9,6 +9,10 @@
       {
         "type": "command",
         "command": "git fetch origin main --quiet"
+      },
+      {
+        "type": "command",
+        "command": ".rulesync/hooks/sync-webawesome-skills.sh"
       }
     ],
     "preToolUse": [
