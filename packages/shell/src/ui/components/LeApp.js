@@ -228,6 +228,7 @@ export class LeApp extends SignalWatcher(LitElement) {
       const level = this.renderRoot.querySelector("le-game-level");
       const menu = /** @type {any} */ (level?.shadowRoot?.querySelector("le-menu"));
       if (menu) {
+        e.preventDefault();
         menu.open = !menu.open;
         return;
       }

@@ -3,13 +3,12 @@ import "@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js";
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
-import { html, LitElement } from "lit";
+import { html, css, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { msg } from "@lit/localize";
 import { aiCapabilityPortContext } from "@legacys-end/core/infrastructure/AICapabilityPort.context.js";
 import { aiGenerationPortContext } from "@legacys-end/core/infrastructure/AIGenerationPort.context.js";
 import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
-import { settingsStyles } from "./LeSettings.styles.js";
 
 /**
  * LeSettings
@@ -19,7 +18,16 @@ import { settingsStyles } from "./LeSettings.styles.js";
  * @customElement le-settings
  */
 export class LeSettings extends SignalWatcher(LitElement) {
-  static styles = settingsStyles;
+  static styles = css`
+    :host {
+      display: block;
+      padding: var(--wa-spacing-medium);
+      background-color: var(--wa-color-surface-sunken);
+      border: 1px solid var(--wa-color-border-default);
+      border-radius: var(--wa-border-radius-medium);
+      margin-top: var(--wa-spacing-large);
+    }
+  `;
 
   /** @type {import("@legacys-end/core/use-cases/ports/AICapabilityPort.js").AICapabilityPort} */
   @consume({ context: aiCapabilityPortContext, subscribe: true })
@@ -94,13 +102,13 @@ export class LeSettings extends SignalWatcher(LitElement) {
     if (!this.gameStore) return html``;
 
     return html`
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="margin: 0;">${msg("AI Settings")}</h2>
+      <div class="wa-split" style="margin-bottom: var(--wa-spacing-medium);">
+        <h2 class="wa-heading-l" style="margin: 0;">${msg("AI Settings")}</h2>
         <wa-button variant="neutral" size="small" @click=${this.#recheck}>
           ${msg("Re-check Status")}
         </wa-button>
       </div>
-      <div class="setting-group">
+      <div class="wa-stack" style="gap: var(--wa-spacing-medium);">
         ${this.#renderSetting({
           id: "npc-voice",
           label: msg("NPC Voice (TTS)"),
@@ -129,12 +137,12 @@ export class LeSettings extends SignalWatcher(LitElement) {
         })}
         ${this.#renderPromptAPIInfo()}
 
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--wa-color-surface-border);">
+        <div style="margin-top: var(--wa-spacing-large); padding-top: var(--wa-spacing-medium); border-top: 1px solid var(--wa-color-surface-border);">
           <wa-button variant="danger" @click=${() => this.gameStore.resetProgress()} fill>
             <wa-icon slot="prefix" name="trash"></wa-icon>
             ${msg("Reset All Progress")}
           </wa-button>
-          <div class="info" style="margin-top: 8px;">${msg("Clears inventory, objectives, and returns to Hub.")}</div>
+          <div class="wa-body-s wa-color-text-quiet" style="margin-top: var(--wa-spacing-small);">${msg("Clears inventory, objectives, and returns to Hub.")}</div>
         </div>
       </div>
     `;
@@ -142,7 +150,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
 
   #renderSetting({ id, label, info, unavailableInfo, isAvailable, signal }) {
     return html`
-      <div class="setting-item">
+      <div class="wa-split" style="align-items: center; gap: var(--wa-spacing-medium);">
         <label for=${id}>${label}</label>
         <wa-switch
           id=${id}
@@ -154,9 +162,9 @@ export class LeSettings extends SignalWatcher(LitElement) {
       </div>
       ${
         !isAvailable && unavailableInfo
-          ? html`<div class="info unavailable">${unavailableInfo}</div>`
+          ? html`<div class="wa-body-s wa-color-text-quiet" style="color: var(--wa-color-danger-default); margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">${unavailableInfo}</div>`
           : info
-            ? html`<div class="info">${info}</div>`
+            ? html`<div class="wa-body-s wa-color-text-quiet" style="margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">${info}</div>`
             : html``
       }
     `;
@@ -166,11 +174,11 @@ export class LeSettings extends SignalWatcher(LitElement) {
     const status = this.#capabilities.promptAPI;
     if (status === "unavailable") {
       return html`
-        <div class="info unavailable">
+        <div class="wa-body-s" style="color: var(--wa-color-danger-default); margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">
           ${msg("Prompt API (Gemini Nano) not available.")}
-          <div style="margin-top: 8px">
+          <div style="margin-top: var(--wa-spacing-small)">
             <strong>${msg("Troubleshooting Checklist:")}</strong>
-            <ol style="margin: 4px 0; padding-left: 20px">
+            <ol style="margin: var(--wa-spacing-small) 0; padding-left: var(--wa-spacing-large)">
               <li>
                 ${msg("Flags:")} <code>#optimization-guide-on-device-model</code> (${msg("Enabled BypassPref")}) ${msg("and")}
                 <code>#prompt-api-for-gemini-nano</code> (${msg("Enabled")}).
@@ -193,7 +201,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
         ? Math.round((this.#downloadProgress.loaded / this.#downloadProgress.total) * 100)
         : 0;
       return html`
-        <div class="info">
+        <div class="wa-body-s wa-color-text-quiet" style="margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">
           ${msg("Downloading model:")} ${percent}%
           <wa-progress-bar value=${percent}></wa-progress-bar>
         </div>
@@ -202,15 +210,15 @@ export class LeSettings extends SignalWatcher(LitElement) {
 
     if (status === "after-download") {
       return html`
-        <div class="info">
+        <div class="wa-body-s wa-color-text-quiet" style="margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">
           ${msg("Gemini Nano needs to be downloaded.")}
-          <span class="status-badge">${msg("Download required")}</span>
-          <wa-button variant="brand" size="small" @click=${this.#startDownload} style="margin-left: 8px">${msg("Download Now")}</wa-button>
+          <span style="font-size: var(--wa-font-size-2xs); padding: 2px 6px; border-radius: var(--wa-border-radius-small); background: var(--wa-color-surface-raised); border: 1px solid var(--wa-color-border-default);">${msg("Download required")}</span>
+          <wa-button variant="brand" size="small" @click=${this.#startDownload} style="margin-left: var(--wa-spacing-small)">${msg("Download Now")}</wa-button>
         </div>
       `;
     }
     return html`
-      <div class="info">${msg("Generate unique NPC responses via Gemini Nano.")}</div>
+      <div class="wa-body-s wa-color-text-quiet" style="margin-top: calc(-1 * var(--wa-spacing-small)); margin-bottom: var(--wa-spacing-small);">${msg("Generate unique NPC responses via Gemini Nano.")}</div>
     `;
   }
 }

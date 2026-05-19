@@ -4,11 +4,10 @@ import "@awesome.me/webawesome/dist/components/card/card.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/skeleton/skeleton.js";
 import { msg } from "@lit/localize";
-import { html, LitElement } from "lit";
+import { html, css, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { QuestSelectedEvent } from "../../domain/events/QuestSelectedEvent.js";
-import { questCardStyles } from "./LeQuestCard.styles.js";
 
 /** @typedef {import("../../domain/entities/Quest.js").Quest} Quest */
 /** @typedef {import("../../domain/entities/QuestStatus.js").QuestStatusValues} QuestStatusValues */
@@ -26,7 +25,27 @@ import { questCardStyles } from "./LeQuestCard.styles.js";
  * @fires {CustomEvent} quest-locked-attempt - Emitted when the user tries to click a locked mission.
  */
 export class LeQuestCard extends LitElement {
-  static styles = questCardStyles;
+  static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      max-width: 340px;
+    }
+    .card {
+      width: 100%;
+      cursor: pointer;
+    }
+    :host([status="LOCKED"]) .card {
+      cursor: not-allowed;
+      opacity: 0.7;
+      filter: grayscale(1);
+    }
+    img[slot="media"] {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+  `;
 
   /**
    * The Quest Entity from Domain.
@@ -80,13 +99,13 @@ export class LeQuestCard extends LitElement {
       <wa-card class="card" @click=${this._handleQuestClick}>
         ${this.quest.image ? html`<img slot="media" src="${this.quest.image}" alt="${this.quest.title}" />` : ""}
 
-        <div slot="header" class="header-container">
-          <h3 class="title">${this.quest.title}</h3>
-          ${this.quest.level ? html`<span class="level">${msg("Lvl")} ${this.quest.level}</span>` : ""}
+        <div slot="header" class="wa-split">
+          <h3 class="wa-body-l wa-font-weight-bold wa-color-text-normal" style="margin: 0;">${this.quest.title}</h3>
+          ${this.quest.level ? html`<span class="wa-body-s wa-color-text-quiet">${msg("Lvl")} ${this.quest.level}</span>` : ""}
         </div>
 
-        <p class="description">${this.quest.description}</p>        
-        <div slot="footer" class="footer-container">
+        <p class="wa-body-m wa-color-text-normal" style="margin: 0;">${this.quest.description}</p>        
+        <div slot="footer" class="wa-split">
           <wa-badge variant=${badgeVariant} pill>${statusLabel}</wa-badge>
           
           ${
