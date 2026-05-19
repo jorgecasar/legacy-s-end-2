@@ -37,6 +37,7 @@ export const AdvanceChapter = {
         nextPosResult.value,
         heroState.inventory,
         nextChapter.id,
+        heroState.objectivesMet,
       );
 
       if (!nextHeroStateResult.success) {

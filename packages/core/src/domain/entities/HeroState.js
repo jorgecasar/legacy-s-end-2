@@ -12,6 +12,7 @@ export class HeroState {
   #position;
   #inventory;
   #chapterId;
+  #objectivesMet;
 
   /**
    * @param {number} hp
@@ -19,13 +20,15 @@ export class HeroState {
    * @param {Position} position
    * @param {string[]} inventory
    * @param {string} chapterId
+   * @param {string[]} objectivesMet
    */
-  constructor(hp, maxHp, position, inventory, chapterId) {
+  constructor(hp, maxHp, position, inventory, chapterId, objectivesMet = []) {
     this.#hp = hp;
     this.#maxHp = maxHp;
     this.#position = position;
     this.#inventory = inventory;
     this.#chapterId = chapterId;
+    this.#objectivesMet = objectivesMet;
   }
 
   /**
@@ -35,14 +38,17 @@ export class HeroState {
    * @param {Position} position
    * @param {string[]} inventory
    * @param {string} chapterId
+   * @param {string[]} objectivesMet
    * @returns {Result<HeroState>}
    */
-  static create(hp, maxHp, position, inventory, chapterId) {
+  static create(hp, maxHp, position, inventory, chapterId, objectivesMet = []) {
     if (hp <= 0) return Result.failure("Hero is dead.");
     if (hp > maxHp) return Result.failure("HP cannot exceed Max HP.");
     if (!position) return Result.failure("Position is required.");
     if (!chapterId) return Result.failure("Chapter ID is required.");
-    return Result.success(new HeroState(hp, maxHp, position, inventory || [], chapterId));
+    return Result.success(
+      new HeroState(hp, maxHp, position, inventory || [], chapterId, objectivesMet || []),
+    );
   }
 
   get hp() {
@@ -59,6 +65,9 @@ export class HeroState {
   }
   get chapterId() {
     return this.#chapterId;
+  }
+  get objectivesMet() {
+    return [...this.#objectivesMet];
   }
 
   /**
@@ -77,6 +86,27 @@ export class HeroState {
       this.#position,
       [...this.#inventory, item],
       this.#chapterId,
+      this.#objectivesMet,
+    );
+  }
+
+  /**
+   * Meets an objective.
+   * @param {string} objectiveId
+   * @returns {Result<HeroState>}
+   */
+  meetObjective(objectiveId) {
+    if (this.#objectivesMet.includes(objectiveId)) {
+      return Result.success(this);
+    }
+
+    return HeroState.create(
+      this.#hp,
+      this.#maxHp,
+      this.#position,
+      this.#inventory,
+      this.#chapterId,
+      [...this.#objectivesMet, objectiveId],
     );
   }
 
@@ -87,16 +117,28 @@ export class HeroState {
       position: this.#position.toJSON(),
       inventory: this.#inventory,
       chapterId: this.#chapterId,
+      objectivesMet: this.#objectivesMet,
     };
   }
 
   static fromJSON(json) {
     if (!json || json.hp === undefined || !json.position) {
-      return null;
+      return Result.failure("Invalid HeroState JSON structure.");
     }
-    const position = Position.fromJSON(json.position);
-    if (!position) return null;
+    const positionResult = Position.fromJSON(json.position);
+    if (!positionResult.success) {
+      return Result.failure(
+        `Failed to parse position during deserialization: ${positionResult.error}`,
+      );
+    }
 
-    return new HeroState(json.hp, json.maxHp, position, json.inventory || [], json.chapterId);
+    return HeroState.create(
+      json.hp,
+      json.maxHp,
+      positionResult.value,
+      json.inventory || [],
+      json.chapterId,
+      json.objectivesMet || [],
+    );
   }
 }

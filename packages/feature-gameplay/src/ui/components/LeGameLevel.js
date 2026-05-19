@@ -97,11 +97,10 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
 
       const { quest, exitZone, entities } = result.value;
       const heroState = this._restoreProgress(result.value);
+      console.log("[LeGameLevel] Initializing GameStore with heroState:", heroState.toJSON());
 
       this.gameStore.initialize(heroState, result.value.obstacles, entities, quest, exitZone);
       this.gameStore.currentChapterIndex.set(this.chapterIndex);
-
-      this._triggerIntroDialogue(entities, heroState, quest);
 
       this._gameInitialized = true;
       this.initialized = true;
@@ -123,6 +122,9 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
   }
 
   async _loadChapterData() {
+    const loadResult = LoadProgress.execute({ storageAdapter: this.storageAdapter });
+    const savedHero = loadResult.success ? loadResult.value : null;
+
     return await InitializeQuest.execute({
       contentAdapter: this.contentAdapter,
       questData,
@@ -131,6 +133,8 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
       chaptersMessages: chapterMessages,
       entityDecks,
       chapterIndex: this.chapterIndex,
+      initialInventory: savedHero?.inventory || [],
+      initialObjectives: savedHero?.objectivesMet || [],
     });
   }
 
@@ -146,19 +150,6 @@ export class LeGameLevel extends SignalWatcher(LitElement) {
       }
     }
     return initialHeroState;
-  }
-
-  _triggerIntroDialogue(entities, heroState, quest) {
-    const currentChapterId = quest.chapters?.[this.chapterIndex]?.id;
-    const loadResult = LoadProgress.execute({ storageAdapter: this.storageAdapter });
-    const isNewChapter = !loadResult.success || loadResult.value.chapterId !== currentChapterId;
-
-    if (isNewChapter) {
-      const firstNPC = entities[0];
-      if (firstNPC?.decks) {
-        this.gameStore.setDialogue(firstNPC.decks.talk);
-      }
-    }
   }
 
   _showToast(message) {

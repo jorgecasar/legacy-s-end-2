@@ -13,8 +13,9 @@ describe("TDD: Entity Serialization", () => {
     assert.strictEqual(parsed.x, 10);
     assert.strictEqual(parsed.y, 20);
 
-    const restored = Position.fromJSON(parsed);
-    assert.ok(restored.equals(pos));
+    const restoredResult = Position.fromJSON(parsed);
+    assert.ok(restoredResult.success);
+    assert.ok(restoredResult.value.equals(pos));
   });
 
   it("should serialize and deserialize HeroState", () => {
@@ -29,9 +30,10 @@ describe("TDD: Entity Serialization", () => {
     assert.strictEqual(parsed.inventory[0], "sword");
     assert.strictEqual(parsed.chapterId, "chap-01");
 
-    const restored = HeroState.fromJSON(parsed);
-    assert.strictEqual(restored.hp, 100);
-    assert.strictEqual(restored.chapterId, "chap-01");
-    assert.ok(restored.position.equals(pos));
+    const restoredResult = HeroState.fromJSON(parsed);
+    assert.ok(restoredResult.success);
+    assert.strictEqual(restoredResult.value.hp, 100);
+    assert.strictEqual(restoredResult.value.chapterId, "chap-01");
+    assert.ok(restoredResult.value.position.equals(pos));
   });
 });

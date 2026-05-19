@@ -27,13 +27,14 @@ describe("Domain: Position Value Object", () => {
   });
 
   it("should handle fromJSON correctly", () => {
-    const valid = Position.fromJSON({ x: 1, y: 2 });
-    assert.strictEqual(valid.x, 1);
-    assert.strictEqual(valid.y, 2);
+    const result = Position.fromJSON({ x: 1, y: 2 });
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.x, 1);
+    assert.strictEqual(result.value.y, 2);
 
-    assert.strictEqual(Position.fromJSON(null), null);
-    assert.strictEqual(Position.fromJSON({ x: 1 }), null);
-    assert.strictEqual(Position.fromJSON({ y: 1 }), null);
-    assert.strictEqual(Position.fromJSON({ x: "1", y: 1 }), null);
+    assert.strictEqual(Position.fromJSON(null).success, false);
+    assert.strictEqual(Position.fromJSON({ x: 1 }).success, false);
+    assert.strictEqual(Position.fromJSON({ y: 1 }).success, false);
+    assert.strictEqual(Position.fromJSON({ x: "1", y: 1 }).success, false);
   });
 });

@@ -1,5 +1,12 @@
 import "@awesome.me/webawesome/dist/styles/themes/awesome.css";
 import { html } from "lit";
+import { registerIconLibrary } from "@awesome.me/webawesome/dist/components/icon/library.js";
+
+// Register default icon library using public Font Awesome 6 free CDN to prevent 403 kit access errors in Storybook.
+registerIconLibrary("default", {
+  resolver: (name) => `https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/svgs/solid/${name}.svg`,
+});
+
 
 /** @type { import('@storybook/web-components-vite').Preview } */
 const preview = {

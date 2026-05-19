@@ -23,7 +23,7 @@ export default defineConfig({
       use: {
         baseURL: "http://localhost:3000",
       },
-      testMatch: /(routing|example|ai-settings)\.spec\.ts/,
+      testMatch: /(routing|example|ai-settings|diagnostics)\.spec\.ts/,
     },
   ],
   webServer: [

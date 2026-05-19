@@ -17,6 +17,8 @@ export const InitializeQuest = {
    * @param {object} params.chaptersMessages
    * @param {object} params.entityDecks
    * @param {number} [params.chapterIndex] - The chapter to initialize (default 0)
+   * @param {string[]} [params.initialObjectives] - Initial objectives met (for persistence)
+   * @param {string[]} [params.initialInventory] - Initial inventory items (for persistence)
    * @returns {Promise<Result<object>>}
    */
   execute: async (params) => {
@@ -29,6 +31,8 @@ export const InitializeQuest = {
         chaptersMessages,
         entityDecks,
         chapterIndex = 0,
+        initialObjectives = [],
+        initialInventory = [],
       } = params;
 
       const loadResult = await contentAdapter.getQuest({
@@ -58,9 +62,10 @@ export const InitializeQuest = {
         initialMaxHp: 100,
         initialX: chapter.startPos.x,
         initialY: chapter.startPos.y,
-        initialInventory: [],
+        initialInventory,
         obstacles: chapter.obstacles,
         chapterId: chapter.id,
+        initialObjectives,
       });
 
       if (!startResult.success) {

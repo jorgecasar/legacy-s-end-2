@@ -114,10 +114,18 @@ export class GameStore {
   initialize(heroState, obstacles = [], entities = [], quest = null, exitZone = null) {
     this.heroState.set(heroState);
     this.obstacles.set(obstacles);
-    this.entities.set(entities);
+
+    // Filter out items already in inventory
+    const inventory = heroState.inventory;
+    const filteredEntities = entities.filter((ent) => !inventory.includes(ent.id));
+    this.entities.set(filteredEntities);
+
     this.activeQuest.set(quest);
     this.exitZone.set(exitZone);
     this.currentChapterIndex.set(0);
+
+    // Restore objectives from hero state
+    this.objectivesMet.set(new Set(heroState.objectivesMet));
   }
 
   /**
@@ -136,6 +144,14 @@ export class GameStore {
 
     const entity = this.entities.get().find((e) => e.id === entityId);
     if (!entity) return;
+
+    // Check if hero already has this item or objective
+    if (this.heroState.get().inventory.includes(entityId)) {
+      console.warn(`[GameStore] Hero already has item: ${entityId}`);
+      // Clean up world if item somehow re-appeared
+      this.entities.set(this.entities.get().filter((e) => e.id !== entityId));
+      return;
+    }
 
     console.log(`[GameStore] Interacting with entity: ${entity.id} (${entity.type})`);
     const quest = this.activeQuest.get();
@@ -176,8 +192,19 @@ export class GameStore {
     switch (type) {
       case "ITEM_PICKUP":
         console.log(`[GameStore] Item picked up: ${entity.name || entity.id}`);
-        this.heroState.set(updatedHero);
-        this.#autoSaveService?.requestSave(updatedHero);
+        console.log("[GameStore] Hero inventory before:", this.heroState.get().inventory);
+
+        // Ensure objective is also met if provided
+        let finalHero = updatedHero;
+        if (metObjective) {
+          const objectiveResult = updatedHero.meetObjective(metObjective);
+          if (objectiveResult.success) finalHero = objectiveResult.value;
+        }
+
+        this.heroState.set(finalHero);
+        console.log("[GameStore] Hero inventory after:", this.heroState.get().inventory);
+
+        this.#autoSaveService?.requestSave(finalHero);
 
         // Apply pickup objectives immediately
         if (metObjective) this.#applyObjective(metObjective);
@@ -205,10 +232,18 @@ export class GameStore {
    * @param {string} objectiveId
    */
   #applyObjective(objectiveId) {
-    const current = this.objectivesMet.get();
-    if (!current.has(objectiveId)) {
+    const currentSet = this.objectivesMet.get();
+    if (!currentSet.has(objectiveId)) {
       console.log(`[GameStore] Objective met: ${objectiveId}`);
-      this.objectivesMet.set(new Set([...current, objectiveId]));
+      this.objectivesMet.set(new Set([...currentSet, objectiveId]));
+
+      // Also update hero state for persistence
+      const hero = this.heroState.get();
+      const result = hero.meetObjective(objectiveId);
+      if (result.success) {
+        this.heroState.set(result.value);
+        this.#autoSaveService?.requestSave(result.value);
+      }
     }
   }
 
@@ -295,7 +330,12 @@ export class GameStore {
     const zone = this.exitZone.get();
     if (!zone) return;
 
-    const zonePos = Position.create(zone.x, zone.y).value;
+    const posResult = Position.create(zone.x, zone.y);
+    if (!posResult.success) {
+      console.warn(`[GameStore] Invalid exit zone coordinates: ${posResult.error}`);
+      return;
+    }
+    const zonePos = posResult.value;
     if (SensorService.getNearbyEntity(position, [{ id: "exit", position: zonePos }], zone.radius)) {
       this.advanceChapter();
     }
@@ -361,6 +401,25 @@ export class GameStore {
     } else {
       console.error(result.error);
     }
+  }
+
+  /**
+   * Resets all progress (memory and storage).
+   */
+  resetProgress() {
+    console.log("[GameStore] Resetting all progress...");
+    this.#autoSaveService?.stop();
+    this.heroState.set(null);
+    this.objectivesMet.set(new Set());
+    this.entities.set([]);
+
+    if (this.#storageAdapter) {
+      // Keep settings but clear hero state
+      const current = this.#storageAdapter.load().value || {};
+      this.#storageAdapter.save({ settings: current.settings });
+    }
+
+    window.location.href = "/";
   }
 
   /**

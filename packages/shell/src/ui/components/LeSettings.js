@@ -127,6 +127,14 @@ export class LeSettings extends SignalWatcher(LitElement) {
           signal: this.gameStore.aiDialogueEnabled,
         })}
         ${this.#renderPromptAPIInfo()}
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--wa-color-surface-border);">
+          <wa-button variant="danger" @click=${() => this.gameStore.resetProgress()} fill>
+            <wa-icon slot="prefix" name="trash"></wa-icon>
+            Reset All Progress
+          </wa-button>
+          <div class="info" style="margin-top: 8px;">Clears inventory, objectives, and returns to Hub.</div>
+        </div>
       </div>
     `;
   }

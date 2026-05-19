@@ -36,6 +36,12 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
 
   #lastDialogueId = "";
 
+  willUpdate(_changedProperties) {
+    if (this.gameStore) {
+      this.hidden = !this.gameStore.currentDialogue.get();
+    }
+  }
+
   updated(changedProperties) {
     super.updated(changedProperties);
     const dialogue = this.gameStore?.currentDialogue.get();
@@ -65,9 +71,6 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
 
     const dialogue = this.gameStore.currentDialogue.get();
 
-    // Update hidden state during render to avoid the "update after update completed" warning
-    this.hidden = !dialogue;
-
     if (!dialogue) {
       return html`
         <!-- No active dialogue -->
@@ -86,6 +89,7 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
   }
 
   _handleNext() {
+    console.log("[LeDialogueOverlay] 'Next' clicked.");
     this.gameStore.advanceDialogue();
   }
 }

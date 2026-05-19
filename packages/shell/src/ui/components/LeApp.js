@@ -2,6 +2,13 @@ import { provide } from "@lit/context";
 import { Router } from "@lit-labs/router";
 import { SignalWatcher } from "@lit-labs/signals";
 import { html, LitElement } from "lit";
+import { registerIconLibrary } from "@awesome.me/webawesome/dist/components/icon/library.js";
+
+// Register default icon library using public Font Awesome 6 free CDN to prevent 403 kit access errors.
+registerIconLibrary("default", {
+  resolver: (name) =>
+    `https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/svgs/solid/${name}.svg`,
+});
 
 import { contentAdapterContext } from "@legacys-end/core/infrastructure/ContentAdapter.context.js";
 import { storageAdapterContext } from "@legacys-end/core/infrastructure/StorageAdapter.context.js";
@@ -125,7 +132,9 @@ export class LeApp extends SignalWatcher(LitElement) {
     });
 
     window.addEventListener("quest-completed", async (e) => {
-      const { questId } = /** @type {any} */ (e).detail;
+      const customEvent = /** @type {CustomEvent} */ (e);
+      console.log("[LeApp] quest-completed event received:", customEvent.detail);
+      const { questId } = customEvent.detail;
       await completeQuestUseCase.execute({ questId });
 
       // Return to hub
@@ -134,6 +143,7 @@ export class LeApp extends SignalWatcher(LitElement) {
     });
 
     window.addEventListener("navigate-to-hub", () => {
+      console.log("[LeApp] navigate-to-hub event received.");
       this.gameStore.activeQuest.set(null);
       this.#router.goto("/");
     });

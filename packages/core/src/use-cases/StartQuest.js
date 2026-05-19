@@ -17,6 +17,7 @@ export const StartQuest = {
    * @param {string[]} params.initialInventory
    * @param {any[]} params.obstacles
    * @param {string} params.chapterId
+   * @param {string[]} [params.initialObjectives]
    * @returns {Result<{ heroState: HeroState, obstacles: any[] }>}
    */
   execute: (params) => {
@@ -29,6 +30,7 @@ export const StartQuest = {
         initialInventory,
         obstacles,
         chapterId,
+        initialObjectives,
       } = params || {};
       const positionResult = Position.create(initialX, initialY);
       if (!positionResult.success) {
@@ -41,6 +43,7 @@ export const StartQuest = {
         positionResult.value,
         initialInventory,
         chapterId,
+        initialObjectives,
       );
 
       if (!heroResult.success) {

@@ -1,11 +1,13 @@
 import { Result } from "../domain/Result.js";
+import { StoragePort } from "../use-cases/ports/StoragePort.js";
 
 /**
  * LocalStorageAdapter
  *
  * Infrastructure service that persists game state to browser LocalStorage.
+ * @extends StoragePort
  */
-export class LocalStorageAdapter {
+export class LocalStorageAdapter extends StoragePort {
   #key = "legacys_end_save";
 
   /**

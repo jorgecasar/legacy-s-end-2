@@ -20,13 +20,13 @@ export const LoadProgress = {
 
     // Try new structure first
     if (loadResult.value.heroState) {
-      const hero = HeroState.fromJSON(loadResult.value.heroState);
-      if (hero) return Result.success(hero);
+      const heroResult = HeroState.fromJSON(loadResult.value.heroState);
+      if (heroResult.success) return Result.success(heroResult.value);
     }
 
     // Fallback to old flat structure if it looks valid
-    const hero = HeroState.fromJSON(loadResult.value);
-    if (hero) return Result.success(hero);
+    const heroResult = HeroState.fromJSON(loadResult.value);
+    if (heroResult.success) return Result.success(heroResult.value);
 
     return Result.failure("Invalid or missing hero state in save data");
   },

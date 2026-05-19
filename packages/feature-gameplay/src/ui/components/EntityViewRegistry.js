@@ -29,3 +29,18 @@ export const EntityViewRegistry = {
     registry[type] = config;
   },
 };
+
+const itemRegistry = {
+  "item-relic": { icon: "gift", label: "Relic" },
+  default: { icon: "box", label: "Item" },
+};
+
+export const ItemViewRegistry = {
+  /**
+   * Returns the view metadata for a specific item ID.
+   * @param {string} itemId
+   */
+  getItemView: (itemId) => {
+    return itemRegistry[itemId] || itemRegistry.default;
+  },
+};

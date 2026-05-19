@@ -5,6 +5,7 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { inventoryStyles } from "./LeInventory.styles.js";
+import { ItemViewRegistry } from "./EntityViewRegistry.js";
 
 /**
  * LeInventory
@@ -21,22 +22,41 @@ export class LeInventory extends SignalWatcher(LitElement) {
   accessor gameStore;
 
   render() {
-    const inventory = this.gameStore?.heroState?.get()?.inventory || [];
+    const heroState = this.gameStore?.heroState?.get();
+    if (!heroState) {
+      return html``;
+    }
+
+    const inventory = heroState.inventory || [];
+    console.log("[LeInventory] Rendering slots. Inventory data:", JSON.stringify(inventory));
+
     const MAX_SLOTS = 5;
     const slots = Array.from({ length: MAX_SLOTS });
 
     return html`
-      <div class="inventory-bar">
+      <div class="inventory-bar" role="region" aria-label="Inventory">
         ${slots.map((_, i) => {
           const item = inventory[i];
+          const hasItem = typeof item === "string" && item.length > 0;
+          const itemView = hasItem ? ItemViewRegistry.getItemView(item) : null;
+
+          if (hasItem) {
+            console.log(`[LeInventory] Slot ${i} has item: "${item}". View:`, itemView);
+          }
+
           return html`
-            <div class="slot ${item ? "occupied" : ""}">
+            <div 
+              class="slot ${hasItem ? "occupied" : "empty"}" 
+              data-slot-index=${i}
+              title=${hasItem ? itemView.label : "Empty Slot"}
+            >
               ${
-                item
+                hasItem
                   ? html`
-                      <wa-tooltip content=${item}>
-                        <wa-icon name="gift"></wa-icon>
-                      </wa-tooltip>
+                      <wa-icon 
+                        name=${itemView.icon || "star"} 
+                        label=${itemView.label}
+                      ></wa-icon>
                     `
                   : ""
               }

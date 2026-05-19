@@ -34,7 +34,7 @@ export class LeHero extends SignalWatcher(LitElement) {
     }
 
     return html`
-      <wa-icon name="person-arms-up"></wa-icon>
+      <wa-icon name="user-ninja"></wa-icon>
     `;
   }
 }

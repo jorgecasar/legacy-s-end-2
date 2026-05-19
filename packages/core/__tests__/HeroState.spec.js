@@ -88,13 +88,27 @@ describe("Domain: HeroState Entity", () => {
       inventory: [],
       chapterId: "c1",
     };
-    const valid = HeroState.fromJSON(validJson);
-    assert.strictEqual(valid.hp, 100);
-    assert.strictEqual(valid.position.x, 5);
+    const result = HeroState.fromJSON(validJson);
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.value.hp, 100);
+    assert.strictEqual(result.value.position.x, 5);
 
-    assert.strictEqual(HeroState.fromJSON(null), null);
-    assert.strictEqual(HeroState.fromJSON({}), null);
-    assert.strictEqual(HeroState.fromJSON({ hp: 100 }), null);
-    assert.strictEqual(HeroState.fromJSON({ hp: 100, position: { x: 1 } }), null); // Invalid position
+    assert.strictEqual(HeroState.fromJSON(null).success, false);
+    assert.strictEqual(HeroState.fromJSON({}).success, false);
+    assert.strictEqual(HeroState.fromJSON({ hp: 100 }).success, false);
+    assert.strictEqual(HeroState.fromJSON({ hp: 100, position: { x: 1 } }).success, false); // Invalid position
+  });
+
+  it("should reject corrupted/invalid state during fromJSON", () => {
+    const invalidJson = {
+      hp: 120, // hp > maxHp
+      maxHp: 100,
+      position: { x: 5, y: 5 },
+      inventory: [],
+      chapterId: "c1",
+    };
+    const result = HeroState.fromJSON(invalidJson);
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.error, "HP cannot exceed Max HP.");
   });
 });
