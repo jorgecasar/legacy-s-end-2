@@ -20,6 +20,8 @@ export class GameStore {
   #storageAdapter = null;
   /** @type {import("@legacys-end/core/use-cases/ports/AIGenerationPort.js").AIGenerationPort | null} */
   #aiGenerationPort = null;
+  /** @type {import("@legacys-end/core/infrastructure/UserSettingsStore.js").UserSettingsStore | null} */
+  #userSettingsStore = null;
 
   /** @type {import("@lit-labs/signals").State<any>} */
   heroState = signal(null);
@@ -47,10 +49,7 @@ export class GameStore {
   /** @type {import("@lit-labs/signals").State<Set<string>>} */
   objectivesMet = signal(new Set());
 
-  /** AI Settings */
-  npcVoiceEnabled = signal(false);
-  aiDialogueEnabled = signal(false);
-  voiceCommandsEnabled = signal(false);
+  /** User settings store reference */
 
   /** Granular signals for UI performance */
   heroPosition = computed(() => this.heroState.get()?.position || { x: 0, y: 0 });
@@ -101,6 +100,14 @@ export class GameStore {
    */
   setAIGenerationPort(port) {
     this.#aiGenerationPort = port;
+  }
+
+  /**
+   * Sets the User Settings Store.
+   * @param {import("@legacys-end/core/infrastructure/UserSettingsStore.js").UserSettingsStore} store
+   */
+  setUserSettingsStore(store) {
+    this.#userSettingsStore = store;
   }
 
   /**
@@ -191,7 +198,8 @@ export class GameStore {
     const chapter = quest?.chapters?.[this.currentChapterIndex.get()];
 
     // Show loading state if AI is enabled
-    if (this.aiDialogueEnabled.get() && this.#aiGenerationPort && entity.persona) {
+    const aiDialogueEnabled = this.#userSettingsStore?.aiDialogueEnabled.get() || false;
+    if (aiDialogueEnabled && this.#aiGenerationPort && entity.persona) {
       this.currentDialogue.set({
         id: "ai-loading",
         speaker: entity.name || entity.id,
@@ -202,7 +210,7 @@ export class GameStore {
     const result = await PerformInteraction.execute({
       entity,
       heroState: this.heroState.get(),
-      aiDialogueEnabled: this.aiDialogueEnabled.get(),
+      aiDialogueEnabled,
       aiGenerationPort: this.#aiGenerationPort,
       chapterName: chapter?.name || "World",
     });
@@ -488,22 +496,6 @@ export class GameStore {
     }
 
     window.location.href = "/";
-  }
-
-  /**
-   * Saves AI settings to the storage adapter if available.
-   */
-  saveSettings() {
-    if (!this.#storageAdapter) return;
-
-    const settings = {
-      npcVoiceEnabled: this.npcVoiceEnabled.get(),
-      aiDialogueEnabled: this.aiDialogueEnabled.get(),
-      voiceCommandsEnabled: this.voiceCommandsEnabled.get(),
-    };
-
-    const currentData = this.#storageAdapter.load().value || {};
-    this.#storageAdapter.save({ ...currentData, settings });
   }
 
   /**

@@ -1,8 +1,9 @@
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/dialog/dialog.js";
-import { LitElement, html, css } from "lit";
+import { LitElement, html } from "lit";
 import { property } from "lit/decorators.js";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
+import { menuStyles } from "./LeMenu.styles.js";
 
 /**
  * LeMenu
@@ -12,14 +13,12 @@ import { msg } from "@lit/localize";
  * @customElement le-menu
  */
 export class LeMenu extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-    }
-    wa-button {
-      width: 100%;
-    }
-  `;
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
+  static styles = menuStyles;
 
   @property({ type: Boolean, reflect: true })
   accessor open = false;

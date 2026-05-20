@@ -3,9 +3,10 @@ import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/card/card.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/skeleton/skeleton.js";
-import { msg } from "@lit/localize";
-import { html, css, LitElement } from "lit";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
+import { html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
+import { questCardStyles } from "./LeQuestCard.styles.js";
 import { QuestStatus } from "../../domain/entities/QuestStatus.js";
 import { QuestSelectedEvent } from "../../domain/events/QuestSelectedEvent.js";
 
@@ -25,27 +26,12 @@ import { QuestSelectedEvent } from "../../domain/events/QuestSelectedEvent.js";
  * @fires {CustomEvent} quest-locked-attempt - Emitted when the user tries to click a locked mission.
  */
 export class LeQuestCard extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-      width: 100%;
-      max-width: 340px;
-    }
-    .card {
-      width: 100%;
-      cursor: pointer;
-    }
-    :host([status="LOCKED"]) .card {
-      cursor: not-allowed;
-      opacity: 0.7;
-      filter: grayscale(1);
-    }
-    img[slot="media"] {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-    }
-  `;
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
+  static styles = questCardStyles;
 
   /**
    * The Quest Entity from Domain.

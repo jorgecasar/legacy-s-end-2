@@ -4,7 +4,7 @@ import { consume } from "@lit/context";
 import { html, LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/signals";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { gameStoreContext } from "./GameStore.context.js";
 import { questRepositoryContext } from "@legacys-end/feature-quest-hub/ui/components/QuestRepository.context.js";
 import { QuestId } from "@legacys-end/feature-quest-hub/domain/entities/QuestId.js";
@@ -35,6 +35,11 @@ import "./le-menu.js";
  * @customElement le-game-level
  */
 export class LeGameLevel extends SignalWatcher(LitElement) {
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
   static styles = gameLevelStyles;
 
   @property({ type: String })

@@ -2,7 +2,7 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/badge/badge.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { gameViewportStyles } from "./LeGameViewport.styles.js";
@@ -19,6 +19,11 @@ import "./le-inventory.js";
  * @customElement le-game-viewport
  */
 export class LeGameViewport extends SignalWatcher(LitElement) {
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
   static styles = gameViewportStyles;
 
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */

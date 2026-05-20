@@ -1,8 +1,10 @@
 import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { Task } from "@lit/task";
-import { html, css, LitElement } from "lit";
+import { html, LitElement } from "lit";
+import { questHubStyles } from "./LeQuestHub.styles.js";
 import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
 import { questUseCaseContext } from "./LeQuestHub.context.js";
 import "./le-quest-card.js";
@@ -22,12 +24,12 @@ import "@legacys-end/shell/ui/components/le-settings.js";
  * @customElement le-quest-hub
  */
 export class LeQuestHub extends SignalWatcher(LitElement) {
-  static styles = css`
-    :host {
-      display: block;
-      padding: var(--wa-spacing-large);
-    }
-  `;
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
+  static styles = questHubStyles;
 
   /**
    * The use case implementation for listing quests.
@@ -103,19 +105,19 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
             border-color: var(--wa-color-brand-border-normal);
           "
         >
-          <h2 class="wa-heading-l wa-color-brand-on-quiet" style="margin-top: 0">Active Mission</h2>
+          <h2 class="wa-heading-l wa-color-brand-on-quiet" style="margin-top: 0">${msg("Active Mission")}</h2>
           <p class="wa-body-m wa-color-text-normal">
-            You don't have an active mission. Select one from the catalogue below.
+            ${msg("You don't have an active mission. Select one from the catalogue below.")}
           </p>
         </wa-card>
       `;
 
     return html`
       <wa-card class="active-mission" id="active-mission-section" style="margin-bottom: var(--wa-spacing-large); width: 100%; background: var(--wa-color-brand-fill-quiet); border-color: var(--wa-color-brand-border-normal);">
-        <h2 class="wa-heading-l wa-color-brand-on-quiet" style="margin-top: 0;">Active Mission: ${activeQuest.title}</h2>
+        <h2 class="wa-heading-l wa-color-brand-on-quiet" style="margin-top: 0;">${msg("Active Mission:")} ${activeQuest.title}</h2>
         <p class="wa-body-m wa-color-text-normal">${activeQuest.description}</p>
         <div class="meta wa-body-m wa-color-text-normal">
-          <span><strong>Objective:</strong> ${activeQuest.objective}</span>
+          <span><strong>${msg("Objective:")}</strong> ${activeQuest.objective}</span>
         </div>
       </wa-card>
     `;
@@ -131,7 +133,7 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
         class="wa-cluster wa-body-l wa-color-text-quiet"
         style="justify-content: center; padding: var(--wa-spacing-large)"
       >
-        <wa-spinner></wa-spinner> Waiting for Use Case...
+        <wa-spinner></wa-spinner> ${msg("Waiting for Use Case...")}
       </div>
     `;
   }
@@ -146,7 +148,7 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
         class="wa-cluster wa-body-l wa-color-text-quiet"
         style="justify-content: center; padding: var(--wa-spacing-large)"
       >
-        <wa-spinner></wa-spinner> Loading missions...
+        <wa-spinner></wa-spinner> ${msg("Loading missions...")}
       </div>
     `;
   }
@@ -172,13 +174,13 @@ export class LeQuestHub extends SignalWatcher(LitElement) {
           class="wa-cluster wa-body-l wa-color-text-quiet"
           style="justify-content: center; padding: var(--wa-spacing-large)"
         >
-          No missions available.
+          ${msg("No missions available.")}
         </div>
       `;
     }
 
     return html`
-        <h1 class="wa-heading-2xl">Quest Hub</h1>
+        <h1 class="wa-heading-2xl">${msg("Quest Hub")}</h1>
         <div class="wa-grid" style="--min-column-size: 280px; gap: var(--wa-spacing-medium);">
           ${quests.map(
             (quest) => html`

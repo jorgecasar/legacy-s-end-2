@@ -2,7 +2,7 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/tooltip/tooltip.js";
 import { LitElement, html } from "lit";
 import { SignalWatcher } from "@lit-labs/signals";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { consume } from "@lit/context";
 import { gameStoreContext } from "./GameStore.context.js";
 import { inventoryStyles } from "./LeInventory.styles.js";
@@ -16,6 +16,11 @@ import { ItemViewRegistry } from "./EntityViewRegistry.js";
  * @customElement le-inventory
  */
 export class LeInventory extends SignalWatcher(LitElement) {
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
   static styles = inventoryStyles;
 
   /** @type {import("../../infrastructure/GameStore.js").GameStore} */

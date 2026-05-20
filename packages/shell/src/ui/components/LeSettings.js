@@ -3,12 +3,15 @@ import "@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js";
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
-import { html, css, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
+import { setLocale, getLocale } from "@legacys-end/core/i18n/localization.js";
 import { aiCapabilityPortContext } from "@legacys-end/core/infrastructure/AICapabilityPort.context.js";
 import { aiGenerationPortContext } from "@legacys-end/core/infrastructure/AIGenerationPort.context.js";
 import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/GameStore.context.js";
+import { userSettingsStoreContext } from "@legacys-end/core/infrastructure/UserSettingsStore.context.js";
+import { settingsStyles } from "./LeSettings.styles.js";
 
 /**
  * LeSettings
@@ -18,16 +21,12 @@ import { gameStoreContext } from "@legacys-end/feature-gameplay/ui/components/Ga
  * @customElement le-settings
  */
 export class LeSettings extends SignalWatcher(LitElement) {
-  static styles = css`
-    :host {
-      display: block;
-      padding: var(--wa-spacing-medium);
-      background-color: var(--wa-color-surface-sunken);
-      border: 1px solid var(--wa-color-border-default);
-      border-radius: var(--wa-border-radius-medium);
-      margin-top: var(--wa-spacing-large);
-    }
-  `;
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
+  static styles = settingsStyles;
 
   /** @type {import("@legacys-end/core/use-cases/ports/AICapabilityPort.js").AICapabilityPort} */
   @consume({ context: aiCapabilityPortContext, subscribe: true })
@@ -40,6 +39,10 @@ export class LeSettings extends SignalWatcher(LitElement) {
   /** @type {import("@legacys-end/feature-gameplay/infrastructure/GameStore.js").GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
   accessor gameStore;
+
+  /** @type {import("@legacys-end/core/infrastructure/UserSettingsStore.js").UserSettingsStore} */
+  @consume({ context: userSettingsStoreContext, subscribe: true })
+  accessor userSettingsStore;
 
   @state()
   accessor #capabilities = {
@@ -70,11 +73,11 @@ export class LeSettings extends SignalWatcher(LitElement) {
     const checked = e.target.checked;
     console.log(`[LeSettings] Setting changed: ${checked}`);
     signal.set(checked);
-    this.gameStore.saveSettings();
+    this.userSettingsStore.saveSettings();
 
     // Special case: AI Dialogue needs to check for download
     if (
-      signal === this.gameStore.aiDialogueEnabled &&
+      signal === this.userSettingsStore.aiDialogueEnabled &&
       checked &&
       this.#capabilities.promptAPI === "after-download"
     ) {
@@ -98,15 +101,32 @@ export class LeSettings extends SignalWatcher(LitElement) {
     }
   }
 
+  async #onLanguageChange(e) {
+    const lang = e.target.value;
+    console.log(`[LeSettings] Changing language to: ${lang}`);
+    await setLocale(lang);
+    this.userSettingsStore.language.set(lang);
+    this.userSettingsStore.saveSettings();
+  }
+
   render() {
     if (!this.gameStore) return html``;
 
     return html`
       <div class="wa-split" style="margin-bottom: var(--wa-spacing-medium);">
-        <h2 class="wa-heading-l" style="margin: 0;">${msg("AI Settings")}</h2>
+        <h2 class="wa-heading-l" style="margin: 0;">${msg("Settings")}</h2>
         <wa-button variant="neutral" size="small" @click=${this.#recheck}>
           ${msg("Re-check Status")}
         </wa-button>
+      </div>
+      <div class="wa-stack" style="gap: var(--wa-spacing-medium); margin-bottom: var(--wa-spacing-medium);">
+        <div class="wa-split" style="align-items: center; gap: var(--wa-spacing-medium);">
+          <label for="language-select" style="font-weight: var(--wa-font-weight-semibold);">${msg("Language")}</label>
+          <select id="language-select" @change=${this.#onLanguageChange}>
+            <option value="en" ?selected=${getLocale() === "en"}>English</option>
+            <option value="es" ?selected=${getLocale() === "es"}>Español</option>
+          </select>
+        </div>
       </div>
       <div class="wa-stack" style="gap: var(--wa-spacing-medium);">
         ${this.#renderSetting({
@@ -115,7 +135,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
           info: msg("Read NPC dialogue aloud."),
           unavailableInfo: msg("Speech Synthesis API not available."),
           isAvailable: this.#capabilities.speechSynthesis,
-          signal: this.gameStore.npcVoiceEnabled,
+          signal: this.userSettingsStore.npcVoiceEnabled,
         })}
 
         ${this.#renderSetting({
@@ -124,7 +144,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
           info: msg("Use your voice to control the hero."),
           unavailableInfo: msg("Speech Recognition API not available."),
           isAvailable: this.#capabilities.speechRecognition,
-          signal: this.gameStore.voiceCommandsEnabled,
+          signal: this.userSettingsStore.voiceCommandsEnabled,
         })}
 
         ${this.#renderSetting({
@@ -133,7 +153,7 @@ export class LeSettings extends SignalWatcher(LitElement) {
           info: "", // Handled by #renderPromptAPIInfo
           unavailableInfo: "",
           isAvailable: this.#capabilities.promptAPI !== "unavailable",
-          signal: this.gameStore.aiDialogueEnabled,
+          signal: this.userSettingsStore.aiDialogueEnabled,
         })}
         ${this.#renderPromptAPIInfo()}
 

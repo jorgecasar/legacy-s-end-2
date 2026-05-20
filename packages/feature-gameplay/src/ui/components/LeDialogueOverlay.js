@@ -2,12 +2,14 @@ import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/card/card.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
-import { html, css, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
-import { msg } from "@lit/localize";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
+import { dialogueOverlayStyles } from "./LeDialogueOverlay.styles.js";
 import { ReadDialogueAloud } from "@legacys-end/core/use-cases/ReadDialogueAloud.js";
 import { ttsPortContext } from "@legacys-end/core/infrastructure/TextToSpeechPort.context.js";
 import { gameStoreContext } from "./GameStore.context.js";
+import { userSettingsStoreContext } from "@legacys-end/core/infrastructure/UserSettingsStore.context.js";
 
 /** @typedef {import("../../infrastructure/GameStore.js").GameStore} GameStore */
 /** @typedef {import("@legacys-end/core/use-cases/ports/TextToSpeechPort.js").TextToSpeechPort} TextToSpeechPort */
@@ -21,31 +23,20 @@ import { gameStoreContext } from "./GameStore.context.js";
  * @customElement le-dialogue-overlay
  */
 export class LeDialogueOverlay extends SignalWatcher(LitElement) {
-  static styles = css`
-    :host {
-      position: absolute;
-      bottom: var(--wa-spacing-large);
-      left: var(--wa-spacing-large);
-      right: var(--wa-spacing-large);
-      z-index: 100;
-    }
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
 
-    :host([hidden]) {
-      display: none !important;
-    }
-
-    :host(:not([hidden])) {
-      display: flex !important;
-    }
-
-    wa-card {
-      width: 100%;
-    }
-  `;
+  static styles = dialogueOverlayStyles;
 
   /** @type {GameStore} */
   @consume({ context: gameStoreContext, subscribe: true })
   accessor gameStore;
+
+  /** @type {import("@legacys-end/core/infrastructure/UserSettingsStore.js").UserSettingsStore} */
+  @consume({ context: userSettingsStoreContext, subscribe: true })
+  accessor userSettingsStore;
 
   /** @type {TextToSpeechPort} */
   @consume({ context: ttsPortContext, subscribe: true })
@@ -70,7 +61,7 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
     if (dialogue && dialogue.id !== this.#lastDialogueId) {
       this.#lastDialogueId = dialogue.id;
 
-      if (this.gameStore?.npcVoiceEnabled.get() && this.ttsPort) {
+      if (this.userSettingsStore?.npcVoiceEnabled.get() && this.ttsPort) {
         this.#speak(dialogue);
       }
     } else if (!dialogue) {
@@ -99,8 +90,8 @@ export class LeDialogueOverlay extends SignalWatcher(LitElement) {
 
     return html`
       <wa-card>
-        <div slot="header" class="wa-heading-l wa-font-weight-bold wa-color-brand-on-quiet">${dialogue.speaker}</div>
-        <div class="wa-body-m wa-color-text-normal" style="min-height: 2em; padding: var(--wa-spacing-medium) 0;">${dialogue.text}</div>
+        <div slot="header" class="speaker wa-heading-l wa-font-weight-bold wa-color-brand-on-quiet">${dialogue.speaker}</div>
+        <div class="text wa-body-m wa-color-text-normal" style="min-height: 2em; padding: var(--wa-spacing-medium) 0;">${dialogue.text}</div>
         <div slot="footer" class="wa-cluster" style="justify-content: flex-end;">
           <wa-button variant="brand" @click=${this._handleNext}>${msg("Next")}</wa-button>
         </div>
